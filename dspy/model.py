@@ -8,7 +8,7 @@ import os
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 
-model = ChatOpenAI(model="gpt-4", api_key=api_key, temperature=0)
+model = ChatOpenAI(model="gpt-4o", api_key=api_key, temperature=0)
 
 class Subtask(BaseModel):
     subtask_name: str = Field(description="Name of the subtask")
