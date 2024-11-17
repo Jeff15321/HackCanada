@@ -55,3 +55,6 @@ def run_gpt(text_prompt, temperature: float = 0, model="gpt-4-1106-preview"):
     resp = response.choices[0].message.content
 
     return resp
+
+
+
