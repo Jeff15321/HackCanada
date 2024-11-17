@@ -1,9 +1,16 @@
+"""
+     This file takes role and a task to provide subtasks which may/may not be automatable by an LLM.
+     The output of this is in the format of a JSON file, an example is given in the folder model-outputs. 
+     When running this file please pipe the output to another .json file in model-outputs.
+"""
+
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 import os
+import json  # Import JSON library for formatting
 
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
@@ -45,11 +52,15 @@ def initialize_task_to_json(user_role, user_task):
     # Run the chain and parse the response
     chain = prompt | model | parser
     response = chain.invoke({"query": query})
-    return response
+    
+    # Format the response as a properly formatted JSON string
+    # Convert the output dictionary to JSON with proper formatting
+    formatted_json = json.dumps(response, indent=4)  # Double quotes and indented formatting
+    return formatted_json
 
 if __name__ == "__main__":
-    # This should probably be moved somewhere else lol
+    # Example usage
     role = "Biomass Power Plant Manager"
     task = "Prepare and manage biomass plant budgets"
     json_result = initialize_task_to_json(role, task)
-    print(json_result)  
+    print(json_result)  # Properly formatted JSON with double quotes

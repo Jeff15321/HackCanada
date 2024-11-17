@@ -3,3 +3,4 @@ anthropic
 python-dotenv
 langchain
 pydantic
+dspy-ai
