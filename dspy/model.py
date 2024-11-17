@@ -1,60 +1,55 @@
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import PromptTemplate
+from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 import os
-import traceback
-from openai import OpenAI
-import anthropic
 
 load_dotenv()
+api_key = os.getenv("OPENAI_API_KEY")
 
-# model prompt -> plan
-# str str -> str
-def run_api(model, prompt, max_tokens_to_sample: int = 100000, temperature: float = 0):
-    if model.startswith('claude') or model.startswith('Claude'):
-        print("Use Claude-2 to generate action plan...")
-        plan = run_claude(prompt, max_tokens_to_sample=max_tokens_to_sample, temperature=temperature)
-    elif (model.startswith('gpt') or model.startswith('GPT')) and '4o' in model and 'mini' not in model:
-        print("Use GPT-4o to generate action plan...")
-        plan = run_gpt(prompt, temperature=temperature, model="gpt-4o")
-    elif (model.startswith('gpt') or model.startswith('GPT')) and '4o' in model and 'mini' in model:
-        print("Use GPT-4o-mini to generate action plan...")
-        plan = run_gpt(prompt, temperature=temperature, model="gpt-4o-mini-2024-07-18")
-    else:
-        raise ValueError("Invalid model name")
-    return plan
+model = ChatOpenAI(model="gpt-4", api_key=api_key, temperature=0)
 
-def run_claude(text_prompt, max_tokens_to_sample: int = 100000, temperature: float = 0):
-    claude_api_key = os.getenv("CLAUDE_API_KEY")
-    if not claude_api_key:
-        raise KeyError("CLAUDE_API_KEY is not set. Ensure it's defined in your .env file.")
-    
-    client = anthropic.Anthropic(api_key=claude_api_key)
-    prompt = f"{anthropic.HUMAN_PROMPT} {text_prompt}{anthropic.AI_PROMPT}"
-    resp = client.completions.create(
-        prompt=prompt,
-        stop_sequences=[anthropic.HUMAN_PROMPT],
-        model="claude-2",
-        max_tokens_to_sample=max_tokens_to_sample,
-        temperature=temperature,
-    ).completion
-    return resp
+class Subtask(BaseModel):
+    subtask_name: str = Field(description="Name of the subtask")
+    recommendation: str = Field(description="Whether an LLM is recommended for this task")
+    explanation: str = Field(description="Explanation for the recommendation or lack of recommendation")
 
-def run_gpt(text_prompt, temperature: float = 0, model="gpt-4-1106-preview"):
-    open_ai_key = os.getenv("OPENAI_API_KEY")
-    if not open_ai_key:
-        raise KeyError("OPENAI_API_KEY is not set. Ensure it's defined in your .env file.")
+# Set up a JSON parser for the Subtask schema
+parser = JsonOutputParser(pydantic_object=Subtask)
 
-    print(f"open_ai_key = {open_ai_key}")  # Debugging to check if the key is loaded
-    client = OpenAI(api_key=open_ai_key)
-    response = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "user", "content": text_prompt},
-        ],
-        temperature=temperature,
-    )
-    resp = response.choices[0].message.content
+# Prepare the prompt template
+template = """
+Answer the following query in JSON format:
+{format_instructions}
+{query}
+"""
 
-    return resp
+prompt = PromptTemplate(
+    template=template,
+    input_variables=["query"],
+    partial_variables={"format_instructions": parser.get_format_instructions()},
+)
 
+def initialize_task_to_json(user_role, user_task):
+    # Generate the task-specific prompt
+    query = f"""
+    You are an AI agent that has the role: {user_role}.
+    You are given the task: {user_task}.
+    Partition the task into subtasks each with the following format:
+    - Subtask name
+    - Recommendation (whether an LLM is recommended for this task)
+    - Explanation (why you made or did not make a recommendation to use an LLM for this task)
+    For the given role ({user_role}) and the given task ({user_task}), output a list of subtasks in JSON format.
+    """
+    # Run the chain and parse the response
+    chain = prompt | model | parser
+    response = chain.invoke({"query": query})
+    return response
 
-
+if __name__ == "__main__":
+    # This should probably be moved somewhere else lol
+    role = "Biomass Power Plant Manager"
+    task = "Prepare and manage biomass plant budgets"
+    json_result = initialize_task_to_json(role, task)
+    print(json_result)  
