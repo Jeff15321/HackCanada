@@ -1,0 +1,16 @@
+
+Refined prompt for 'Gather Historical Financial Data' in the context of 'Investment Research':
+"Please gather historical financial data for the past 10 years for the following companies: [List of Companies]. Focus on key metrics such as revenue, net income, earnings per share, and stock price performance. Ensure to source the data from reputable financial databases or company filings. Additionally, provide context on any significant market events that may have influenced
+--------------------------------------------------------------------------------
+
+Refined prompt for 'Implement Machine Learning Model' in the context of 'Predictive Analytics':
+"Please outline a step-by-step plan for implementing a machine learning model for predictive analytics. The model should be designed to predict [specific outcome] using [specific dataset or type of data]. Include recommendations for data preprocessing techniques, suitable algorithms (e.g
+--------------------------------------------------------------------------------
+
+Refined prompt for 'Conduct User Experience Survey' in the context of 'Product Development':
+"Create a comprehensive user experience survey aimed at gathering feedback on our product's usability, satisfaction, and feature effectiveness. The survey should include a mix of multiple-choice questions, Likert scale ratings, and open-ended questions to allow users to
+--------------------------------------------------------------------------------
+
+Refined prompt for 'Perform Environmental Impact Assessment' in the context of 'Sustainability Planning':
+"Conduct a thorough Environmental Impact Assessment for the specified project or activity. Please include an evaluation of the following key environmental components: air quality, water resources, biodiversity
+--------------------------------------------------------------------------------
