@@ -21,7 +21,7 @@ if not openai_api_key:
     raise ValueError("OpenAI API key not found in .env file")
 
 # Configure DSPy
-lm = dspy.OpenAI(api_key=openai_api_key, model="gpt-4")
+lm = dspy.OpenAI(api_key=openai_api_key, model="gpt-4o-mini")
 dspy.configure(lm=lm)
 
 # Define the subtask (this can be changed or passed as an argument)
