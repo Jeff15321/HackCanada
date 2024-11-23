@@ -38,7 +38,29 @@ prompt = PromptTemplate(
     partial_variables={"format_instructions": parser.get_format_instructions()},
 )
 
+CACHE_FILE = 'task_cache.json'
+
+def load_cache():
+    if os.path.exists(CACHE_FILE):
+        with open(CACHE_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+def save_cache(cache):
+    with open(CACHE_FILE, "w") as f:
+        json.dump(cache, f, indent=4)
+
 def initialize_task_to_json(user_role, user_task):
+    cache = load_cache()
+
+    cache_key = f'{user_role}::{user_task}' # maybe also add some level of semantic similarity to this
+
+    if cache_key in cache:
+        print(f'Cache hit for key: {cache_key}')
+        return cache[cache_key]
+
+    print(f'Cache miss for key: {cache_key}')
+
     # Generate the task-specific prompt
     query = f"""
     You are an AI agent that has the role: {user_role}.
@@ -56,6 +78,10 @@ def initialize_task_to_json(user_role, user_task):
     # Format the response as a properly formatted JSON string
     # Convert the output dictionary to JSON with proper formatting
     formatted_json = json.dumps(response, indent=4)  # Double quotes and indented formatting
+    
+    cache[cache_key] = formatted_json
+    save_cache(cache) # maybe change the save_cache function so that it doesn't rewrite the entire file every time
+    
     return formatted_json
 
 if __name__ == "__main__":
