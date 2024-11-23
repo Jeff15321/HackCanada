@@ -1,0 +1,230 @@
+Index: dspy/biomass_budget/cost_est.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import dspy\n\ncost_estimation = dspy.Predict('relevant_data -> cost_estimates')
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/dspy/biomass_budget/cost_est.py b/dspy/biomass_budget/cost_est.py
+--- a/dspy/biomass_budget/cost_est.py	(revision 5da70f9cdae4e42426341cadfd2e0824fbd78e2c)
++++ b/dspy/biomass_budget/cost_est.py	(date 1732401484444)
+@@ -1,3 +1,6 @@
+-import dspy
++from dspy import ChainOfThought
+ 
+-cost_estimation = dspy.Predict('relevant_data -> cost_estimates')
+\ No newline at end of file
++def cost_estimation(relevant_data):
++    cot = ChainOfThought('input : str -> reasoning: str -> output str')
++    result = cot(input = relevant_data).output
++    return result
+Index: dspy/biomass_budget/data_coll.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import dspy\n\ndata_collection = spy.Predict('documents -> relevant_data')
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/dspy/biomass_budget/data_coll.py b/dspy/biomass_budget/data_coll.py
+--- a/dspy/biomass_budget/data_coll.py	(revision 5da70f9cdae4e42426341cadfd2e0824fbd78e2c)
++++ b/dspy/biomass_budget/data_coll.py	(date 1732402591713)
+@@ -1,3 +1,18 @@
+-import dspy
++from dspy import ChainOfThought
++
++def data_collection_analysis(documents):
++    cot = ChainOfThought('input: str -> reasoning: str -> output: str')
++    result = cot(input=documents).output
++    return {"relevant_data": result}
+ 
+-data_collection = spy.Predict('documents -> relevant_data')
+\ No newline at end of file
++def save_output(file_name, output):
++    import os
++    if not os.path.exists('dspy-outputs'):
++        os.makedirs('dspy-outputs')
++    with open(f'dspy-outputs/{file_name}.txt', 'w') as f:
++        f.write(output)
++
++# Example usage:
++documents = "Sample documents about biomass plant operations."
++output = data_collection_analysis(documents)
++save_output("data_collection_output", output["relevant_data"])
+\ No newline at end of file
+Index: dspy/main.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from model import *\r\nfrom prompt import *\r\n\r\nuser_role = \"Biomass Power Plant Managers\"\r\nuser_task = \"Prepare and manage biomass plant budgets.\"\r\n\r\nmodel = \"gpt-4o-mini\"\r\n\r\nclass BiomassBudgetPipeline(dspy.biomass_budget):\r\n    def __init__(self):\r\n        self.data_collection = data_collection\r\n        self.cost_estimation = cost_estimation\r\n        self.budget_drafting = budget_drafting\r\n        self.stakeholder_communication = stakeholder_communication\r\n\r\n\r\n    def forward(self, documents, market_data):\r\n        relevant_data = self.data_collection_analysis(documents=documents).relevant_data\r\n        cost_estimates = self.cost_estimation(relevant_data=relevant_data).cost_estimates\r\n        revenue_forecast = self.revenue_forecasting(market_data=market_data).revenue_forecast\r\n        budget_draft = self.budget_drafting(cost_estimates=cost_estimates, revenue_forecast=revenue_forecast).budget_draft\r\n\r\n        presentation = self.stakeholder_communication(budget_draft=budget_draft).presentation\r\n        performance_metrics = self.performance_monitoring(budget_draft=budget_draft).performance_metrics\r\n        scenario_report = self.scenario_planning(market_data=market_data).scenario_report\r\n\r\n        return {\r\n            \"presentation\": presentation,\r\n            \"performance_metrics\": performance_metrics,\r\n            \"scenario_report\": scenario_report,\r\n        }\r\n\r\nif __name__ == \"__main__\":\r\n\r\n    initial_prompt = initialize_initial_task_prompt(user_role, user_task)\r\n    print(initial_prompt)\r\n\r\n    print(\"*\"*50)\r\n    print(\"*\"*50)\r\n    print(\"*\"*50)\r\n\r\n    resp = run_api(model, initial_prompt)\r\n    print(resp)
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/dspy/main.py b/dspy/main.py
+--- a/dspy/main.py	(revision 5da70f9cdae4e42426341cadfd2e0824fbd78e2c)
++++ b/dspy/main.py	(date 1732402094481)
+@@ -1,43 +1,31 @@
+-from model import *
+-from prompt import *
++# main.py
+ 
++from pipeline import BiomassBudgetPipeline
++from prompt import initialize_initial_task_prompt
++from model import run_api
++
++# User role and task
+ user_role = "Biomass Power Plant Managers"
+ user_task = "Prepare and manage biomass plant budgets."
+ 
+-model = "gpt-4o-mini"
+-
+-class BiomassBudgetPipeline(dspy.biomass_budget):
+-    def __init__(self):
+-        self.data_collection = data_collection
+-        self.cost_estimation = cost_estimation
+-        self.budget_drafting = budget_drafting
+-        self.stakeholder_communication = stakeholder_communication
+-
+-
+-    def forward(self, documents, market_data):
+-        relevant_data = self.data_collection_analysis(documents=documents).relevant_data
+-        cost_estimates = self.cost_estimation(relevant_data=relevant_data).cost_estimates
+-        revenue_forecast = self.revenue_forecasting(market_data=market_data).revenue_forecast
+-        budget_draft = self.budget_drafting(cost_estimates=cost_estimates, revenue_forecast=revenue_forecast).budget_draft
+-
+-        presentation = self.stakeholder_communication(budget_draft=budget_draft).presentation
+-        performance_metrics = self.performance_monitoring(budget_draft=budget_draft).performance_metrics
+-        scenario_report = self.scenario_planning(market_data=market_data).scenario_report
+-
+-        return {
+-            "presentation": presentation,
+-            "performance_metrics": performance_metrics,
+-            "scenario_report": scenario_report,
+-        }
+-
+ if __name__ == "__main__":
+-
++    # Generate initial prompt using helper function
+     initial_prompt = initialize_initial_task_prompt(user_role, user_task)
+     print(initial_prompt)
+ 
+-    print("*"*50)
+-    print("*"*50)
+-    print("*"*50)
++    print("*" * 50)
++    print("*" * 50)
++    print("*" * 50)
+ 
++    # Run the API call with the model and initial prompt
++    model = "gpt-4o-mini"
+     resp = run_api(model, initial_prompt)
+-    print(resp)
+\ No newline at end of file
++    print(resp)
++
++    # Example of running the pipeline (optional)
++    pipeline = BiomassBudgetPipeline()
++    documents = "Sample documents about biomass plant operations."
++    market_data = "Sample market data about biomass energy trends."
++    outputs = pipeline.forward(documents, market_data)
++
++    print(outputs)
+\ No newline at end of file
+Index: dspy/biomass_budget/revenue_forecasting.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/dspy/biomass_budget/revenue_forecasting.py b/dspy/biomass_budget/revenue_forecasting.py
+new file mode 100644
+--- /dev/null	(date 1732401556882)
++++ b/dspy/biomass_budget/revenue_forecasting.py	(date 1732401556882)
+@@ -0,0 +1,6 @@
++from dspy import ProgramOfThought
++
++def revenue_forecasting(market_data):
++    pot = ProgramOfThought('input: str -> code: str -> output: str')
++    result = pot(input=market_data).output
++    return result
+\ No newline at end of file
+Index: dspy/biomass_budget/pipeline.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/dspy/biomass_budget/pipeline.py b/dspy/biomass_budget/pipeline.py
+new file mode 100644
+--- /dev/null	(date 1732402067275)
++++ b/dspy/biomass_budget/pipeline.py	(date 1732402067275)
+@@ -0,0 +1,39 @@
++# pipeline.py
++
++from dspy import ChainOfThought, ProgramOfThought, ReAct, Module
++
++class BiomassBudgetPipeline:
++    def __init__(self):
++        self.data_collection = ChainOfThought('input: str -> reasoning: str -> output: str')
++        self.cost_estimation = ChainOfThought('input: str -> reasoning: str -> output: str')
++        self.revenue_forecasting = ProgramOfThought('input: str -> code: str -> output: str')
++        self.budget_drafting = ReAct('input: str -> action: str -> output: str')
++
++        class StakeholderModule(Module):
++            def __init__(self):
++                super().__init__('input: str -> output: str')
++
++            def predict(self, input):
++                return {"output": f"Stakeholder presentation based on {input}"}
++
++        self.stakeholder_communication = StakeholderModule()
++        self.performance_monitoring = ChainOfThought('input: str -> reasoning: str -> output: str')
++        self.scenario_planning = ReAct('input: str -> action: str -> output: str')
++
++    def forward(self, documents, market_data):
++        relevant_data = self.data_collection(input=documents).output
++        cost_estimates = self.cost_estimation(input=relevant_data).output
++        revenue_forecast = self.revenue_forecasting(input=market_data).output
++
++        combined_input = f"Cost Estimates: {cost_estimates}, Revenue Forecast: {revenue_forecast}"
++        budget_draft = self.budget_drafting(input=combined_input).output
++
++        presentation = self.stakeholder_communication(input=budget_draft)["output"]
++        performance_metrics = self.performance_monitoring(input=budget_draft).output
++        scenario_report = self.scenario_planning(input=market_data).output
++
++        return {
++            "presentation": presentation,
++            "performance_metrics": performance_metrics,
++            "scenario_report": scenario_report,
++        }
+\ No newline at end of file
+Index: dspy/save_outputs.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/dspy/save_outputs.py b/dspy/save_outputs.py
+new file mode 100644
+--- /dev/null	(date 1732401778124)
++++ b/dspy/save_outputs.py	(date 1732401778124)
+@@ -0,0 +1,22 @@
++# Instantiate your BiomassBudgetPipeline
++pipeline = BiomassBudgetPipeline()
++
++# Provide required inputs (replace with actual data)
++documents = "example documents"
++market_data = "example market data"
++
++# Run the pipeline
++outputs = pipeline.forward(documents, market_data)
++
++# Extract specific outputs
++cost_estimates = outputs["presentation"]
++presentation = outputs["performance_metrics"]
++
++
++def save_output(file_name, output):
++    with open(f'dspy-outputs/{file_name}.txt', 'w') as f:
++        f.write(output)
++
++# Save outputs
++save_output('cost_estimation_output', cost_estimates)
++save_output('stakeholder_output', presentation)
+\ No newline at end of file

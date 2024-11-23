@@ -1,3 +1,3 @@
 import dspy
 
-data_collection = spy.Predict('documents -> relevant_data')
+data_collection = dspy.Predict('documents -> relevant_data')

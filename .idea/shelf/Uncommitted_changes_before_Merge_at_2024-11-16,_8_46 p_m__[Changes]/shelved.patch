@@ -1,0 +1,19 @@
+Index: dspy/main.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from model import *\r\n\r\nmodel = \"gpt-4o-mini\"\r\nprompt = \"what is the velocity of an unladden swallow\"\r\n\r\nif __name__ == \"__main__\":\r\n    resp = run_api(model, prompt)\r\n    print(resp)
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/dspy/main.py b/dspy/main.py
+--- a/dspy/main.py	(revision 5358b1437531cdb8e4fbe37aa5ad31912317068b)
++++ b/dspy/main.py	(date 1731807200779)
+@@ -5,4 +5,6 @@
+ 
+ if __name__ == "__main__":
+     resp = run_api(model, prompt)
+-    print(resp)
+\ No newline at end of file
++    print(resp)
++
++
