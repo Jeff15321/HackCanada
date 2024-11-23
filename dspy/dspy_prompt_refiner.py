@@ -10,11 +10,12 @@ import os
 from dotenv import load_dotenv
 import dspy
 from dspy.evaluate import Evaluate
-from dspy.teleprompt import BootstrapFewShot
+from dspy.teleprompt import BootstrapFewShot, BootstrapFewShotWithRandomSearch
 from nltk.metrics import edit_distance
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+import pandas as pd
 
 load_dotenv()
 
@@ -59,7 +60,16 @@ def comprehensive_prompt_metric(example, pred, trace=None):
     
     return overall_score
 
-trainset = [
+def load_trainset_from_csv(fp, n=50):
+    df = pd.read_csv(fp)
+    sample = df.sample(n=n, random_state=42)
+    trainset = [
+        dspy.Example(subtask=row['Task'], job_context=row['Title'])
+        for _, row in sample.iterrows()
+    ]
+    return trainset
+
+trainset_small = [
     dspy.Example(
         subtask="Gather Historical Financial Data",
         job_context="Investment Research"
@@ -78,11 +88,37 @@ trainset = [
     ).with_inputs("subtask", "job_context"),
 ]
 
-optimizer = BootstrapFewShot(metric=comprehensive_prompt_metric, max_bootstrapped_demos=3)
+trainset_large = load_trainset_from_csv(fp='task_statements.csv')
 
-compiled_generator = optimizer.compile(PromptGenerator(), trainset=trainset)
+class OptimizerManager:
+    def __init__(self, optimizer_type, metric, config=None):
+        self.metric = metric
+        self.config = config
+        self.optimizer = self._initialize_optimizer(optimizer_type)
 
-def get_refined_prompt(subtask, job_context):
+    def _initialize_optimizer(self, optimizer_type):
+        if optimizer_type == 'BootstrapFewShot':
+            return BootstrapFewShot(metric=self.metric, **self.config)
+        elif optimizer_type == 'BootstrapFewShotWithRandomSearch':
+            return BootstrapFewShotWithRandomSearch(metric=self.metric, **self.config)
+        else:
+            raise ValueError("Invalid optimizer type. Choose 'BootstrapFewShot' or 'BootstrapFewShotWithRandomSearch'")
+
+    def compile(self, module, trainset):
+        return self.optimizer.compile(module, trainset=trainset)
+
+# Optimizers
+optimizer_type = 'BootstrapFewShot'
+# optimizer_type = 'BootstrapFewShotWithRandomSearch'
+
+config = dict(max_bootstrapped_demos=3)
+config_random = dict(max_bootstrapped_demos=3, max_labeled_demos=3, num_candidate_programs=10, num_threads=4)
+
+optimizer_manager = OptimizerManager(optimizer_type, metric=comprehensive_prompt_metric, config=config)
+
+compiled_generator = optimizer_manager.compile(PromptGenerator(), trainset=trainset_small)
+
+def get_refined_prompt(subtask, job_context, compiled_generator):
     print(f"Generating refined prompt for '{subtask}' in '{job_context}'...")
     result = compiled_generator(subtask=subtask, job_context=job_context)
     return result.refined_prompt
@@ -95,7 +131,7 @@ if __name__ == "__main__":
     ]
 
     for subtask, job_context in test_cases:
-        refined_prompt = get_refined_prompt(subtask, job_context)
+        refined_prompt = get_refined_prompt(subtask, job_context, compiled_generator)
         print(f"\nRefined prompt for '{subtask}' in the context of '{job_context}':")
         print(refined_prompt)
         print("-" * 80)

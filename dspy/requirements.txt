@@ -7,3 +7,4 @@ dspy-ai
 nltk
 scikit-learn
 numpy
+pandas
