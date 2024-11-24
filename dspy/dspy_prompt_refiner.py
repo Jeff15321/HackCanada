@@ -28,9 +28,15 @@ dspy.configure(lm=lm)
 
 class EnhancedPromptRefiner(dspy.Signature):
     """Refine a prompt for a given subtask with enhanced context."""
-    subtask = dspy.InputField(desc="The specific subtask for which a prompt needs to be refined")
-    job_context = dspy.InputField(desc="The broader job context in which the subtask exists")
-    refined_prompt = dspy.OutputField(desc="A refined, detailed prompt for the LLM based on the given subtask and job context")
+    subtask = dspy.InputField(desc="The specific subtask for which a prompt needs to be refined."
+                                   "This should be a concise description of the task (e.g., 'Analyze sales data').")
+    # ,validate=lambda x: isinstance(x, str) and len(x.strip()) > 0
+    job_context = dspy.InputField(desc="The broader job context in which the subtask exists"
+                                       "This provides additional information about the purpose or environment of the task.")
+    # ,validate=lambda x: isinstance(x, str) and len(x.strip()) > 5
+    refined_prompt = dspy.OutputField(desc="A refined, detailed prompt for the LLM based on the given subtask and job context"
+                                           "The output includes structured sections such as task requirements, context, "
+                                           "and expected output format to guide the model effectively."  )
 
 class PromptGenerator(dspy.Module):
     def __init__(self):

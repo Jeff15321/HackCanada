@@ -5,7 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3a2d0040-5661-408d-803f-a79ab994356c" name="Changes" comment="Added structure/pipeline for dspy">
-      <change beforePath="$PROJECT_DIR$/dspy/biomass_budget/data_coll.py" beforeDir="false" afterPath="$PROJECT_DIR$/dspy/biomass_budget/data_coll.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dspy/dspy_prompt_refiner.py" beforeDir="false" afterPath="$PROJECT_DIR$/dspy/dspy_prompt_refiner.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -132,7 +134,7 @@
       <updated>1731804353167</updated>
       <workItem from="1731804354618" duration="2879000" />
       <workItem from="1731807272655" duration="3886000" />
-      <workItem from="1732400395008" duration="5089000" />
+      <workItem from="1732400395008" duration="6778000" />
     </task>
     <task id="LOCAL-00001" summary="Added structure/pipeline for dspy">
       <option name="closed" value="true" />
