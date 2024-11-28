@@ -30,13 +30,14 @@ class EnhancedPromptRefiner(dspy.Signature):
     """Refine a prompt for a given subtask with enhanced context."""
     subtask = dspy.InputField(desc="The specific subtask for which a prompt needs to be refined."
                                    "This should be a concise description of the task (e.g., 'Analyze sales data').")
-
+    # ,validate=lambda x: isinstance(x, str) and len(x.strip()) > 0
     job_context = dspy.InputField(desc="The broader job context in which the subtask exists"
                                        "This provides additional information about the purpose or environment of the task.")
-    
+    # ,validate=lambda x: isinstance(x, str) and len(x.strip()) > 5
     audience = dspy.InputField(
         desc="The target audience for the refined prompt. "
-             "This helps tailor the prompt to the needs and expertise of the audience.")
+             "This helps tailor the prompt to the needs and expertise of the audience."
+    )
     
     tone = dspy.InputField(
         desc="The desired tone or style of the refined prompt (e.g., 'Formal', 'Casual', 'Technical').",
@@ -46,37 +47,61 @@ class EnhancedPromptRefiner(dspy.Signature):
         desc="The desired structure or format of the LLM's response (e.g., 'Bullet Points', 'Step-by-Step Instructions').",
         default="Freeform"
     )
+    # priority = dspy.InputField(
+    #     desc="The priority level of the task (e.g., 'High', 'Medium', 'Low').",
+    #     default="Medium"
+    # )
 
-    refined_prompt = dspy.OutputField(desc="A refined, detailed prompt for the LLM based on the given subtask and job context"
-                                           "The output includes structured sections such as task requirements, context, "
-                                           "and expected output format to guide the model effectively."  )
+    # deadline = dspy.InputField(
+    #     desc="An optional deadline for completing the task (e.g., '2024-12-31').",
+    #     default=None
+    # )
 
+    # examples = dspy.InputField(
+    #     desc="Optional examples of desired outputs to guide refinement (few-shot prompting).",
+    #     default=None
+    # )
+
+    refined_prompt = dspy.OutputField(
+        desc=(
+            "A refined, detailed prompt for the LLM based on the given subtask, job context, audience, tone, "
+            "and output format. The output includes structured sections such as task requirements, context, "
+            "and expected output format to guide the model effectively."
+        )
+    )
 class PromptGenerator(dspy.Module):
     def __init__(self):
         super().__init__()
         self.generate = dspy.ChainOfThought(EnhancedPromptRefiner)
 
-    def forward(self, subtask, job_context, audience, tone, output_format):
-        return self.generate(subtask=subtask, job_context=job_context, audience=audience, tone=tone, output_format=output_format)
+    def forward(self, subtask, job_context,audience, tone, output_format):
+        signature_input = EnhancedPromptRefiner(
+            subtask=subtask,
+            job_context=job_context,
+            audience=audience,
+            tone=tone,
+            output_format=output_format
+        )
+        return self.generate(signature_input)
 
 def comprehensive_prompt_metric(example, pred, trace=None):
     prompt = pred.refined_prompt
-    
+
     # Readability score (using NLTK's edit distance for complexity this will be changed later)
-    readability_score = 1 / (1 + edit_distance(prompt, example.subtask + " " + example.job_context + " " + example.audience + " " + example.tone + " " + example.output_format))
-    
+    readability_score = 1 / (1 + edit_distance(prompt, example.subtask + " " + example.job_context))
+
     # TF-IDF and cosine similarity
     vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform([prompt, example.subtask + " " + example.job_context + " " + example.audience + " " + example.tone + " " + example.output_format])
+    tfidf_matrix = vectorizer.fit_transform([prompt, example.subtask + " " + example.job_context])
     relevance_score = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
-    
+
     # Structural completeness
     structural_elements = ["Context:", "Task:", "Requirements:", "Output format:"]
     structure_score = sum(1 for element in structural_elements if element in prompt) / len(structural_elements)
-    
-    # Combine 
+
+    # Combine
     overall_score = np.mean([readability_score, relevance_score, structure_score])
-    
+
     return overall_score
 
 def load_trainset_from_csv(fp, n=50):
@@ -91,32 +116,20 @@ def load_trainset_from_csv(fp, n=50):
 trainset_small = [
     dspy.Example(
         subtask="Gather Historical Financial Data",
-        job_context="Investment Research",
-        audience="Professors",
-        tone="Formal",
-        output_format="Numbered list"
-    ).with_inputs("subtask", "job_context", "audience", "tone", "output_format"),
+        job_context="Investment Research"
+    ).with_inputs("subtask", "job_context"),
     dspy.Example(
         subtask="Implement Machine Learning Model",
-        job_context="Predictive Analytics",
-        audience="Child",
-        tone="Formal",
-        output_format="Numbered list"
-    ).with_inputs("subtask", "job_context", "audience", "tone", "output_format"),
+        job_context="Predictive Analytics"
+    ).with_inputs("subtask", "job_context"),
     dspy.Example(
         subtask="Conduct User Experience Survey",
-        job_context="Product Development",
-        audience="Students",
-        tone="Formal",
-        output_format="Numbered list"
-    ).with_inputs("subtask", "job_context", "audience", "tone", "output_format"),
+        job_context="Product Development"
+    ).with_inputs("subtask", "job_context"),
     dspy.Example(
         subtask="Perform Environmental Impact Assessment",
-        job_context="Sustainability Planning",
-        audience="Workers",
-        tone="Formal",
-        output_format="Numbered list"
-    ).with_inputs("subtask", "job_context", "audience", "tone", "output_format"),
+        job_context="Sustainability Planning"
+    ).with_inputs("subtask", "job_context"),
 ]
 
 trainset_large = load_trainset_from_csv(fp='task_statements.csv')
@@ -148,54 +161,80 @@ config_random = dict(max_bootstrapped_demos=3, max_labeled_demos=3, num_candidat
 optimizer_manager = OptimizerManager(optimizer_type, metric=comprehensive_prompt_metric, config=config)
 
 compiled_generator = optimizer_manager.compile(PromptGenerator(), trainset=trainset_small)
+def get_refined_prompt(subtask, job_context, audience, tone, output_format):
+    """
+    Generate a refined prompt based on the provided inputs.
 
-def get_refined_prompt(subtask, job_context, audience, tone, output_format, compiled_generator):
-    print(f"Generating refined prompt for '{subtask}' in '{job_context}' with audience '{audience}'...")
-    result = compiled_generator(subtask=subtask, job_context=job_context, audience=audience, tone=tone, output_format=output_format)
+    Args:
+        subtask (str): The specific subtask for which a prompt needs to be refined.
+        job_context (str): The broader job context in which the subtask exists.
+        audience (str): The target audience for the refined prompt.
+        tone (str): The desired tone or style of the refined prompt.
+        output_format (str): The desired structure or format of the LLM's response.
+
+    Returns:
+        str: The refined prompt generated by the compiled generator.
+    """
+    print(f"Generating refined prompt for '{subtask}' in '{job_context}'...")
+    # Pass inputs to the compiled generator
+    result = compiled_generator.forward(
+        subtask=subtask,
+        job_context=job_context,
+        audience=audience,
+        tone=tone,
+        output_format=output_format
+    )
     return result.refined_prompt
 
-if __name__ == "__main__":
-    # test_cases = [
-    #     ("Gather Historical Financial Data", "Investment Research"),
-    #     ("Conduct User Experience Survey", "Product Development"),
-    #     ("Perform Environmental Impact Assessment", "Sustainability Planning")
-    # ]
 
+if __name__ == "__main__":
+    # Updated test cases to include all input variables
     test_cases = [
         {
-            'subtask': 'Gather Historical Financial Data', 
-            'context': 'Investment Research',
-            'audience': 'Child',
-            'tone': 'Fun',
-            'output_format': 'Bullet Points'
+            "subtask": "Gather Historical Financial Data",
+            "job_context": "Investment Research",
+            "audience": "Financial Analysts",
+            "tone": "Formal",
+            "output_format": "Bullet Points"
         },
         {
-            'subtask': 'Conduct User Experience Survey', 
-            'context': 'Product Development',
-            'audience': 'Professor',
-            'tone': 'Formal',
-            'output_format': 'Paragraphs'
+            "subtask": "Gather Historical Financial Data",
+            "job_context": "Investment Research",
+            "audience": "A child",
+            "tone": "Casual",
+            "output_format": "Paragraph"
         },
         {
-            'subtask': 'Perform Environmental Impact Assessment', 
-            'context': 'Sustainability Planning',
-            'audience': 'Student',
-            'tone': 'Formal',
-            'output_format': 'Numbered List'
+            "subtask": "Conduct User Experience Survey",
+            "job_context": "Product Development",
+            "audience": "UX Researchers",
+            "tone": "Neutral",
+            "output_format": "Step-by-Step Instructions"
+        },
+        {
+            "subtask": "Perform Environmental Impact Assessment",
+            "job_context": "Sustainability Planning",
+            "audience": "Environmental Scientists",
+            "tone": "Technical",
+            "output_format": "Detailed Report"
         }
     ]
 
-    for elem in test_cases:
-        subtask = elem['subtask']
-        job_context = elem['context']
-        audience = elem['audience']
-        tone = elem['tone']
-        output_format = elem['output_format']
-        refined_prompt = get_refined_prompt(subtask, job_context, audience, tone, output_format, compiled_generator)
-        print(f"\nRefined prompt for '{subtask}' in the context of '{job_context}' with audience '{audience}':")
+    # Loop through test cases and generate refined prompts
+    for case in test_cases:
+        refined_prompt = get_refined_prompt(
+            subtask=case["subtask"],
+            job_context=case["job_context"],
+            audience=case["audience"],
+            tone=case["tone"],
+            output_format=case["output_format"]
+        )
+
+        print(f"\nRefined prompt for '{case['subtask']}' in the context of '{case['job_context']}':")
         print(refined_prompt)
         print("-" * 80)
 
+    # Evaluate the compiled generator
     print("\nEvaluating the compiled generator...")
     evaluator = Evaluate(devset=trainset_small, metric=comprehensive_prompt_metric, num_threads=4, display_progress=True)
     score = evaluator(compiled_generator)
