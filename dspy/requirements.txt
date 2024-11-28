@@ -8,3 +8,8 @@ nltk
 scikit-learn
 numpy
 pandas
+PyMuPDF
+fitz
+pillow
+langchain-openai
+bs4

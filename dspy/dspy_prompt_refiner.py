@@ -155,33 +155,13 @@ def get_refined_prompt(subtask, job_context, audience, tone, output_format, comp
     return result.refined_prompt
 
 if __name__ == "__main__":
-    # test_cases = [
-    #     ("Gather Historical Financial Data", "Investment Research"),
-    #     ("Conduct User Experience Survey", "Product Development"),
-    #     ("Perform Environmental Impact Assessment", "Sustainability Planning")
-    # ]
-
     test_cases = [
         {
-            'subtask': 'Gather Historical Financial Data', 
-            'context': 'Investment Research',
-            'audience': 'Child',
-            'tone': 'Fun',
+            'subtask': 'Examine documents to determine degree of risk from factors such as applicant health, financial standing and value, and condition of property.', 
+            'context': 'Insurance Underwriters',
+            'audience': 'LLM',
+            'tone': 'Clear',
             'output_format': 'Bullet Points'
-        },
-        {
-            'subtask': 'Conduct User Experience Survey', 
-            'context': 'Product Development',
-            'audience': 'Professor',
-            'tone': 'Formal',
-            'output_format': 'Paragraphs'
-        },
-        {
-            'subtask': 'Perform Environmental Impact Assessment', 
-            'context': 'Sustainability Planning',
-            'audience': 'Student',
-            'tone': 'Formal',
-            'output_format': 'Numbered List'
         }
     ]
 
