@@ -1,0 +1,120 @@
+Generating refined prompt for 'Examine documents to determine degree of risk from factors such as applicant health, financial standing and value, and condition of property.' in 'Insurance Underwriters' with audience 'LLM'...
+
+Refined prompt for 'Examine documents to determine degree of risk from factors such as applicant health, financial standing and value, and condition of property.' in the context of 'Insurance Underwriters' with audience 'LLM':
+- **Objective**: Assess the degree of risk associated with an insurance application by examining relevant documents.
+- **Factors to Consider**:
+  - **Applicant Health**: Review medical records and health history to identify any pre-existing conditions or health risks.
+  - **Financial Standing**: Analyze financial documents such as credit reports, income statements, and debt levels to evaluate the applicant's financial stability.
+  - **Property Value**: Examine property appraisals and market analyses to determine the current value of the property being insured.
+  - **Condition of Property**: Inspect property inspection reports and maintenance records to assess the physical condition and any potential hazards.
+- **Documentation Required**: List the specific documents needed for each factor, such as:
+  - Medical records for health assessment
+  - Financial statements for financial standing
+  - Appraisal reports for property value
+  - Inspection reports for property condition
+- **Risk Assessment Criteria**: Define the criteria for evaluating risk levels based on the gathered information, including thresholds for acceptable risk.
+- **Final Evaluation**: Summarize the findings and provide a risk rating or recommendation based on the analysis of the documents.
+--------------------------------------------------------------------------------
+
+Evaluating the compiled generator...
+Average Metric: 0.16 / 4 (4.1%): 100%|██████████| 4/4 [00:05<00:00,  1.38s/it]
+2024/11/28 14:25:28 INFO dspy.evaluate.evaluate: Average Metric: 0.16422176669083682 / 4 (4.1%)
+
+Overall score: 4.11
+
+refined_prompt_edited = '''
+    - **Objective**: Assess the degree of risk associated with an insurance application by examining relevant documents.
+    - **Factors to Consider**:
+        - **Applicant Health**: Review medical records and health history to identify any pre-existing conditions or health risks.
+    - **Documentation Required**: List the specific documents needed for each factor, such as:
+        - Medical records for health assessment
+    - **Risk Assessment Criteria**: Define the criteria for evaluating risk levels based on the gathered information, including thresholds for acceptable risk.
+    - **Final Evaluation**: Summarize the findings and provide a risk rating or recommendation based on the analysis of the documents.
+    - **Output Format**: Provide the criteria and evaluation as an output in JSON format. 
+'''
+
+Here's a structured JSON output based on the information provided in the insurance application document:
+
+```json
+{
+  "insurance_application": {
+    "applicant_info": {
+      "name": "Lovelytics",
+      "social_security_number": "101010101",
+      "birthdate": "01/01/2000",
+      "address": {
+        "street": "1 UTMIST Avenue",
+        "city": "Toronto",
+        "state": "ON",
+        "zip": "10101"
+      },
+      "occupation": "Engineer",
+      "salary": 100000
+    },
+    "application_information": {
+      "type_of_application": {
+        "initial": true,
+        "increase_coverage": false,
+        "late_application": false
+      },
+      "coverage_requested": {
+        "short_term_disability": 750,
+        "long_term_disability": 100000,
+        "life_insurance": 50000,
+        "dependents_life": 15000
+      }
+    },
+    "medical_history": {
+      "questions": [
+        {
+          "question": "Have you now or have you ever been unable to work full-time because of any physical or mental condition or injury?",
+          "answer": "No"
+        },
+        {
+          "question": "Has a medical professional ever treated you, diagnosed you as having, or prescribed medication for you any of the following: scoliosis?",
+          "answer": "Yes",
+          "details": {
+            "condition": "Scoliosis",
+            "month_year": "02/2014",
+            "duration": "5 years",
+            "final_result": "Surgery",
+            "physician": "John, Toronto ON"
+          }
+        },
+        {
+          "question": "In the past 7 years have you had any illness or injury not listed above which resulted in the use of prescribed medication or physician visits?",
+          "answer": "Yes",
+          "details": {
+            "condition": "Anxiety",
+            "month_year": "11/2019",
+            "treatment": "Medication",
+            "physician": "Christina, Toronto ON"
+          }
+        },
+        {
+          "question": "Are you currently pregnant?",
+          "answer": "No"
+        }
+      ]
+    },
+    "risk_assessment": {
+      "criteria": {
+        "acceptable_risk_threshold": {
+          "health_conditions": {
+            "no_conditions": "Low Risk",
+            "one_condition": "Moderate Risk",
+            "multiple_conditions": "High Risk"
+          }
+        }
+      },
+      "risk_rating": "Moderate Risk"
+    },
+    "final_evaluation": {
+      "summary": "Applicant has a history of scoliosis and anxiety, both of which are managed with appropriate medical treatment.",
+      "recommendation": "Consider coverage with moderate risk rating."
+    }
+  }
+}
+```
+
+This JSON structure provides a comprehensive overview of the applicant's information, medical history, risk assessment criteria, and final evaluation.
