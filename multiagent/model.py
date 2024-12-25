@@ -5,7 +5,7 @@ from openai import OpenAI
 load_dotenv()
 open_ai_key = os.getenv("OPENAI_API_KEY")
 
-def run_gpt(text_prompt, agent_role, temperature: float = 0, model = "gpt-4o-mini"):
+def run_gpt(text_prompt, agent_role, model = "gpt-4o-mini", temperature: float = 0):
     open_ai_key = os.environ["OPENAI_API_KEY"]
     client = OpenAI(api_key=open_ai_key)
     response = client.chat.completions.create(

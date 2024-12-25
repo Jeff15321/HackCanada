@@ -1,0 +1,55 @@
+***** Original Prompt *****
+What is the velocity of an unladden swallow?
+
+
+***** Prompt Generator Agent *****
+Calculate the velocity of an unladen swallow, considering factors such as its species, wing span, and flight mechanics. Provide a detailed explanation of your calculations and any assumptions made.
+
+
+
+
+---------------
+Intermediate Round 1
+---------------
+***** Relevance Agent *****
+Calculate the velocity of an unladen swallow, specifying the species and any relevant flight mechanics. Include your calculations and assumptions.
+***** Precision Agent *****
+Calculate the velocity of an unladen European swallow (Hirundo rustica), taking into account its average wing span of approximately 12.5 inches and specific flight mechanics. Provide a detailed explanation of your calculations, including any assumptions regarding air density and flight conditions.
+***** Consolidator Agent *****
+Calculate the velocity of an unladen swallow by analyzing its species, wing span, and flight mechanics. Include a step-by-step breakdown of your calculations, detailing any assumptions and factors that influence the swallow's flight speed.
+***** Completeness Agent *****
+Calculate the velocity of an unladen swallow by examining its species, wing span, and flight mechanics. Provide a detailed, step-by-step breakdown of your calculations, including any assumptions made and the factors that may affect the swallow's flight speed.
+
+
+
+
+---------------
+Intermediate Round 2
+---------------
+***** Relevance Agent *****
+Calculate the velocity of an unladen swallow by analyzing its species, wing span, and flight mechanics. Provide a step-by-step breakdown of your calculations and any assumptions made.
+***** Precision Agent *****
+Calculate the velocity of an unladen European swallow (Hirundo rustica) by analyzing its average wing span of approximately 12.5 cm and its flight mechanics. Provide a detailed, step-by-step breakdown of your calculations, including specific assumptions about air density and drag coefficients, as well as any environmental factors such as wind speed and altitude that may influence the swallow's flight speed.
+***** Consolidator Agent *****
+Calculate the velocity of an unladen swallow by analyzing its species, wing span, and flight mechanics. Provide a comprehensive, step-by-step breakdown of your calculations, detailing any assumptions made and discussing the various factors that could influence the swallow's flight speed.
+***** Completeness Agent *****
+Calculate the velocity of an unladen swallow by examining its species, wing span, and flight mechanics. Provide a detailed, step-by-step breakdown of your calculations, including any assumptions made. Additionally, discuss the various biological and environmental factors that could affect the swallow's flight speed.
+
+
+
+
+---------------
+Intermediate Round 3
+---------------
+***** Relevance Agent *****
+Calculate the velocity of an unladen swallow by analyzing its species, wing span, and flight mechanics. Provide a step-by-step breakdown of your calculations and discuss the biological and environmental factors affecting its flight speed.
+***** Precision Agent *****
+Calculate the velocity of an unladen European swallow (Hirundo rustica) by examining its average wing span of approximately 12.5 cm and its flight mechanics. Provide a detailed, step-by-step breakdown of your calculations, including specific assumptions about air density and drag coefficients. Additionally, discuss how factors such as temperature, wind conditions, and altitude may influence the swallow's flight speed.
+***** Consolidator Agent *****
+Calculate the velocity of an unladen swallow by analyzing its species, wing span, and flight mechanics. Provide a comprehensive, step-by-step breakdown of your calculations, including any assumptions made. Furthermore, explore the biological and environmental factors that may influence the swallow's flight speed, detailing how each factor could impact the overall velocity.
+***** Completeness Agent *****
+Calculate the velocity of an unladen swallow by examining its species, wing span, and flight mechanics. Provide a detailed, step-by-step breakdown of your calculations, including any assumptions made. Additionally, investigate the biological and environmental factors that could affect the swallow's flight speed, and explain how each factor may influence the overall velocity.
+
+
+
+
