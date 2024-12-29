@@ -17,17 +17,17 @@ from agents import *
 import os
 import argparse
 
-intermediate_agents = []
+intermediate_agents = ["Clarity Agent", "Relevance Agent", "Precision Agent", "Creativity Agent", "Contextualization Agent", "Engagement Agent", "Brevity Agent"]
 
 def create_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--prompt', type=str, default='Write me an essay on the fall of the Ming Dynasty', help='prompt that is to be refined')
+    parser.add_argument('--prompt', type=str, default='Come up with Python exercises/ideas for a class for somebody that has just learned the basics', help='prompt that is to be refined')
     parser.add_argument('--rounds', type=int, default=3, help='number of rounds')
     parser.add_argument('--model', type=str, default='gpt-4o-mini', help='model name as specified by api documentation')
     return parser
 
 def runMultiagentPrompting(prompt, intermediate_agents, rounds, model):
-    agents_dict = initialize_prompt_agents(["Clarity Agent", "Relevance Agent", "Precision Agent", "Creativity Agent", "Contextualization Agent", "Engagement Agent", "Brevity Agent"], args.model)
+    agents_dict = initialize_prompt_agents(intermediate_agents, model)
     
     print("***** Original Prompt *****")
     print(prompt)
