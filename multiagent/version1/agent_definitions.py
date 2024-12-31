@@ -15,7 +15,7 @@ agent_definitions = {
         "function": "Assesses whether the prompt directly addresses the core elements of the user's question or task. Remove extraneous details and sharpens the focus."
     },
     "Precision Agent": {
-        "name": "Precision Agent", 
+        "name": "Precision Agent",  
         "role": "You are an agent that increases the precision of the prompt, asking for specific details to narrow down the response scope.", 
         "function": "Tighten the prompt to target very specific information or answers, facilitating more detailed and targeted responses."
     },

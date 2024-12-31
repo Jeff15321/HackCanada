@@ -50,7 +50,7 @@ def runMultiagentPrompting(prompt, intermediate_agents, rounds, model):
             print(f"***** {intermediate_agent.name} *****")
             print(refined_prompt)
 
-        combined_refinements_prompt = f"Original prompt: " + prompt + " | " + " | ".join(combined_refinements)
+        combined_refinements_prompt = f"Original prompt: " + prompt + " | " + " | ".join(combined_refinements) # ok so smtg here is probably wrong, I don't think I used completeness agent correctly :skull:
         prompt = agents_dict["Consolidator Agent"].run_api(prompt)
         print(f"***** Consolidator Agent *****")
         print(prompt)

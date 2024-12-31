@@ -46,7 +46,7 @@ returns:
 def initialize_prompt_agents(list_of_intermediate_agents, model):
     prompt_generator_agent = Agent(agent_definitions["Prompt Generator Agent"]["name"], agent_definitions["Prompt Generator Agent"]["role"], agent_definitions["Prompt Generator Agent"]["function"], model)
     consolidator_agent = Agent(agent_definitions["Consolidator Agent"]["name"], agent_definitions["Prompt Generator Agent"]["role"], agent_definitions["Prompt Generator Agent"]["function"], model)
-    completeness_agent = Agent(agent_definitions["Completeness Agent"]["name"], agent_definitions["Prompt Generator Agent"]["role"], agent_definitions["Prompt Generator Agent"]["function"], model)
+    completeness_agent = CompletenessAgent(agent_definitions["Completeness Agent"]["name"], agent_definitions["Prompt Generator Agent"]["role"], agent_definitions["Prompt Generator Agent"]["function"], model)
 
     intermediate_agents = []
     for name in list_of_intermediate_agents:
