@@ -35,8 +35,6 @@ class CompletenessAgent(Agent):
     def run_api(self, input_prompt, original_task):
         text_prompt = self.query_llm(input_prompt, original_task)
         agent_role = self.role
-        print("MONKE BRUGA")
-        print(text_prompt)
         response = run_gpt(text_prompt, agent_role, self.model)
         return response
 
