@@ -29,12 +29,14 @@ class CompletenessAgent(Agent):
         {system_prompt}<|eot_id|><|start_header_id|>user<|end_header_id|>
         Original Task: {original_task}
         # Final Prompt: {input_prompt}
-        # Make sure the final prompt contains all requirements of the original task. Modify the prompt if necessary and return only the final prompt.<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
+        # Make sure the final prompt contains all requirements of the original task. Modify the prompt if necessary and return only the final prompt in the specified format.<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
         return full_prompt
     
     def run_api(self, input_prompt, original_task):
         text_prompt = self.query_llm(input_prompt, original_task)
         agent_role = self.role
+        print("MONKE BRUGA")
+        print(text_prompt)
         response = run_gpt(text_prompt, agent_role, self.model)
         return response
 
@@ -66,7 +68,7 @@ def initialize_prompt_agents(list_of_agents, list_of_file_paths, model):
         if name == "Search Agent": # prevent duplicate Search Agents that don't actually do anything
             continue
         elif name == "Completeness Agent":
-            completeness_agent = CompletenessAgent(agent_definitions["Completeness Agent"]["name"], agent_definitions["Prompt Generator Agent"]["role"], agent_definitions["Prompt Generator Agent"]["function"], model)
+            completeness_agent = CompletenessAgent(agent_definitions["Completeness Agent"]["name"], agent_definitions["Completeness Agent"]["role"], agent_definitions["Completeness Agent"]["function"], model)
             agents_dict[completeness_agent.name] = completeness_agent
         else:
             new_agent = Agent(agent_definitions[name]["name"], agent_definitions[name]["role"], agent_definitions[name]["function"], model)
