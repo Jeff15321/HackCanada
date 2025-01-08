@@ -19,10 +19,15 @@ agent_definitions = {
         "role": "You are an agent that takes into account relevant section from a given file for useful or important information and edits prompt based on that to ensure that the prompt takes into account the specific information from the user uploaded file.",
         "function": "Based on the information given in the retrieved sections of the document the user uploaded, ensure that the prompt takes into consideration the user-specific and task-specific information outlined in the file uploaed by the user. If nothing is relevant then do not change something for the sake of changing it. Keep the formating of the prompt as it currently is (Task, Role, Type of Task, Working Steps)."
     },
+    "Search Agent": {
+        "name": "Search Agent",
+        "role": "You are an agent that takes into account relevant section from a given file for useful or important information and states very clearly and in detail what the information is and how the prompt for the given task should include this information to ensure that the prompt correctly incorporates the specific information from the user uploaded file.",
+        "function": "Based on the information given in the retrieved sections of the document the user uploaded, outline clearly and in detail the parts of the information that are useful in completing which specific part(s) of the steps for the task laid out in the prompt. Outline the contents of the information, why it is relevant to which part of the steps in the prompt, and how it should be incorporated into the prompt. Say this as if you are providing instructions for somebody to add this information to the prompt. If nothing is relevant just say that."
+    },
     "Search Consolidator Agent": {
         "name": "Search Consolidator Agent",
         "role": "You are the search consolidator agent responsible for synthesizing the relevant information from the files given by the user to ensure that the prompt follows the specifications and information given by the files.",
-        "function": "Review the relevant information given by the source agents and merge the elements from them into the single refined prompt. Give me back the final prompt and nothing else. Do not add anything like 'here is the final prompt' or 'this is the final prompt' etc..  Keep the formating of the prompt as it currently is (Task, Role, Type of Task, Working Steps)."
+        "function": "Review the relevant information given by the source agents and merge the elements from them into the single refined prompt. Make sure to keep all the relevant information. Give me back the final prompt and nothing else. Do not add anything like 'here is the final prompt' or 'this is the final prompt' etc..  Keep the formating of the prompt as it currently is (Task, Role, Type of Task, Working Steps)."
     },
     "Title Context Agent": {
         "name": "Title Context Agent",

@@ -57,13 +57,23 @@ class multiagentSystem:
             logger.info("---------------")
             logger.info(f"Search Agents Round {i}")
             logger.info("---------------")
-            for agent_name, intermediate_agent in self.agents_dict.items():
+            for agent_name, search_agent in self.agents_dict.items():
                 if "Search Agent" not in agent_name:
                     continue
-                logger.info("MONKE BRUGA")
-                logger.info(f"Search Agent name: {agent_name}")
+                search_result = search_agent.run_api(prompt)
+                combined_searches.append(f"{search_agent.name} content: {search_result}")
+                logger.info(f"***** {search_agent.name} *****")
+                logger.info(search_result)
 
+            combined_searches_prompt = f"Original prompt: " + prompt + " |||||| " + " |||||| ".join(combined_searches)
+            prompt = combined_searches_prompt
 
+            logger.info("MONKE BRUGA BEGIN MONKE BRUGA BEGIN MONKE BRUGA BEGIN MONKE BRUGA BEGIN")
+            logger.info(combined_searches_prompt)
+            logger.info("MONKE BRUGA END MONKE BRUGA END MONKE BRUGA END MONKE BRUGA END ")
+
+            prompt = self.agents_dict["Search Consolidator Agent"].run_api(prompt)
+            logger.info(f"*****Search Consolidator Agent*****\n{prompt}")
 
         prompt = self.agents_dict["Completeness Agent"].run_api(prompt, original_prompt)
         logger.info(f"*****Completeness Agent*****\n{prompt}")

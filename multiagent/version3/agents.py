@@ -54,6 +54,12 @@ class SearchAgent(Agent): # one SearchAgent instance will be created per file up
         super().__init__(name, role, function, model)
         self.file_path = file_path
 
+    def query_llm(self, input_prompt):
+        """Simulates querying the LLM with a role-specific prompt."""
+        system_prompt=f"You are a: {self.name}. Your role: {self.role}. Your function: {self.function}."
+        full_prompt=f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>{system_prompt}<|eot_id|><|start_header_id|>user<|end_header_id|>Based on your role and function, provide the relevant information from the file that should be added to the new prompt. Do not give me anything else other than what was just specified.<|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
+        return full_prompt
+
     def run_api(self, input_prompt):
         text_prompt = self.query_llm(input_prompt)
         agent_role = self.role
@@ -72,7 +78,7 @@ def initialize_prompt_agents(list_of_agents, instructional_files, supplementary_
     for file_path in supplementary_files: # one SearchAgent per file uploaded
         name = "Search Agent"
         new_search_agent = SearchAgent(agent_definitions[name]["name"] + f" {file_path}", agent_definitions[name]["role"], agent_definitions[name]["function"], model, file_path)
-        agents_dict[new_search_agent.name + f" {file_path}"] = new_search_agent
+        agents_dict[new_search_agent.name] = new_search_agent
     for name in list_of_agents:
         if name == "Search Agent": # prevent duplicate Search Agents that don't actually do anything
             continue
