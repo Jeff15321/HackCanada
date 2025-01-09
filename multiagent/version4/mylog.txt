@@ -1,27 +1,72 @@
 Bootstrapped 3 full traces after 3 examples for up to 1 rounds, amounting to 3 attempts.
-Generating refined prompt for 'Write Pyschology Essay' in 'Academic Writing' with audience 'LLM'...
-MONKE BRUGA
-Please write a psychology essay that covers the following key points in bullet format:
+Generating refined prompt for 'Write a 2500 word Psychology Course essay where you assume the role of an expert personality coach and use material from five of the last six weeks of the course (Love, Power, Meaning, Virtue, Wisdom, Myth-Religion/FreudPsychoanalysis) to advise your client on how to support their own and others’ thriving. ' in 'Academic Writing' with audience 'LLM'...
+############### dspy refined prompt ###############
+Please write a 2500-word essay for a psychology course, assuming the role of an expert personality coach. Your essay should incorporate material from five of the last six weeks of the course, focusing on the following themes: Love, Power, Meaning, Virtue, and Wisdom. The goal is to advise your client on how to support their own and others’ thriving. Structure your essay using bullet points to clearly outline the main ideas and arguments. Include the following sections:
 
-- **Introduction**: 
-  - Define psychology and its significance in understanding human behavior.
-  - Briefly outline the main topics to be discussed in the essay.
+1. **Introduction**:
+   - Define the role of a personality coach.
+   - Briefly introduce the themes to be discussed.
 
-- **Historical Background**: 
-  - Highlight key figures in psychology (e.g., Freud, Skinner, Rogers) and their contributions.
-  - Discuss the evolution of psychological theories over time.
+2. **Love**:
+   - Discuss the importance of love in personal and interpersonal thriving.
+   - Provide strategies for cultivating love in oneself and in relationships.
 
-- **Major Psychological Approaches**: 
-  - Describe the main schools of thought in psychology (e.g., behaviorism, cognitive psychology, humanistic psychology).
-  - Provide examples of how each approach is applied in real-world scenarios.
+3. **Power**:
+   - Explain the concept of power in the context of personal growth.
+   - Offer advice on how to harness personal power positively.
 
-- **Current Trends in Psychology**: 
-  - Discuss contemporary issues and research areas in psychology (e.g., mental health, neuropsychology, social psychology).
-  - Mention the impact of technology on psychological research and practice.
+4. **Meaning**:
+   - Explore the significance of finding meaning in life.
+   - Suggest ways to help clients discover and create meaning in their lives.
 
-- **Conclusion**: 
-  - Summarize the key points discussed in the essay.
-  - Reflect on the future of psychology and its importance in society.
+5. **Virtue**:
+   - Define virtue and its role in ethical living and thriving.
+   - Recommend practices for developing virtuous habits.
 
-Ensure that each bullet point is concise yet informative, providing a clear overview of the topic.
-MONKE BRUGA END
+6. **Wisdom**:
+   - Discuss the relationship between wisdom and thriving.
+   - Provide insights on how to cultivate wisdom in decision-making.
+
+7. **Conclusion**:
+   - Summarize the key points discussed.
+   - Reinforce the importance of integrating these themes for personal and collective thriving.
+
+Ensure that the essay is coherent, well-structured, and provides actionable advice based on psychological principles.
+############### multiagent (further) refined prompt ###############
+Task: Write a 2500-word psychology essay as an expert personality coach.
+
+Context: Incorporate material from five of the last six weeks, focusing on Love, Power, Meaning, Virtue, and Wisdom. Provide actionable advice for clients to support thriving, with relevant citations.
+
+Working Steps:
+1. **Introduction**:
+   - Define the personality coach's role, including specific responsibilities and skills.
+   - Outline the significance of Love, Power, Meaning, Virtue, and Wisdom, with examples of their relevance to personal development.
+
+2. **Love**:
+   - Analyze love's role in thriving using specific psychological theories (name at least two).
+   - Provide three actionable strategies for cultivating love in oneself and in relationships, detailing implementation methods. Include insights on the qualities most desired in relationships, such as acceptance, understanding, and appreciation, and discuss the historical context of parenting styles and their impact on the capacity to love, including critiques of cold parenting styles that stifle emotional development. Incorporate findings from the "Porcupine problem" and the "Complaints experiment," illustrating how rejection impacts self-control and social behavior, and mention how secure attachment can mitigate social pain.
+   - Cite relevant course material appropriately.
+
+3. **Power**:
+   - Explain the concept of power in personal growth, including definitions and examples of different types (e.g., personal, social).
+   - Offer three pieces of advice on harnessing personal power positively, with real-life examples. Emphasize the relationship between power and personality development, highlighting the balance of love and personal power, and the potential negative consequences of excessive power, including the dual nature of power that can lead to narcissism or callousness. Use specific examples from course material to support your points.
+
+4. **Meaning**:
+   - Explore the significance of finding meaning in life, referencing at least two psychological studies or theories. Highlight the concepts of goal efficacy and goal integrity, emphasizing that goal integrity predicts a sense of purpose more than mere goal efficacy. Discuss the importance of aligning personal goals with abstract values and the impact of this alignment on overall life meaning.
+   - Suggest three practical ways to help clients discover and create meaning, including potential challenges and solutions. Mention the importance of meaningful identities and values in providing resilience against anxiety.
+   - Reference course materials to substantiate your arguments.
+
+5. **Virtue**:
+   - Define virtue and its role in ethical living and thriving, including historical perspectives and modern interpretations. Discuss how virtuous identities are more stable when they integrate personal priorities with concern for others' priorities, emphasizing the prosocial criterion for viable meaning.
+   - Recommend three specific practices for developing virtuous habits, explaining integration into daily life. Highlight the importance of self-transcendent values, such as universalism and benevolence, for fostering meaningful life orientations.
+   - Cite relevant theories or studies from the course.
+
+6. **Wisdom**:
+   - Discuss the relationship between wisdom and thriving, including different dimensions of wisdom (e.g., cognitive, reflective). Emphasize the interconnectedness of uncertainty, integrity, and relationships in shaping personality development and wisdom, noting how chronic uncertainty can lead to anxiety and defensive behaviors.
+   - Provide insights on cultivating wisdom in decision-making, with at least two practical examples. Include the motivational role of wisdom traditions and how they can inspire moral behavior and personal identity, referencing the adaptive functions of religion and the Five Pillars of Islam as practical guides for virtuous living.
+   - Include citations from course materials to enhance credibility.
+
+7. **Conclusion**:
+   - Summarize key points discussed in each section, highlighting interconnections between themes.
+   - Reinforce the importance of integrating these themes for personal and collective thriving, focusing on practical application.
+   - Reflect on the most important ideas or insights learned in the course in approximately 250 words, citing course material as needed.

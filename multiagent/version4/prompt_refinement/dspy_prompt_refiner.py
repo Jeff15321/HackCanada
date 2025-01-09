@@ -119,7 +119,7 @@ trainset_small = [
     ).with_inputs("task", "job_context", "audience", "tone", "output_format"),
 ]
 
-trainset_large = load_trainset_from_csv(fp='task_statements.csv')
+# trainset_large = load_trainset_from_csv(fp='task_statements.csv')
 
 class OptimizerManager:
     def __init__(self, optimizer_type, metric, config=None):
