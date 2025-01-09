@@ -1,0 +1,27 @@
+Bootstrapped 3 full traces after 3 examples for up to 1 rounds, amounting to 3 attempts.
+Generating refined prompt for 'Write Pyschology Essay' in 'Academic Writing' with audience 'LLM'...
+MONKE BRUGA
+Please write a psychology essay that covers the following key points in bullet format:
+
+- **Introduction**: 
+  - Define psychology and its significance in understanding human behavior.
+  - Briefly outline the main topics to be discussed in the essay.
+
+- **Historical Background**: 
+  - Highlight key figures in psychology (e.g., Freud, Skinner, Rogers) and their contributions.
+  - Discuss the evolution of psychological theories over time.
+
+- **Major Psychological Approaches**: 
+  - Describe the main schools of thought in psychology (e.g., behaviorism, cognitive psychology, humanistic psychology).
+  - Provide examples of how each approach is applied in real-world scenarios.
+
+- **Current Trends in Psychology**: 
+  - Discuss contemporary issues and research areas in psychology (e.g., mental health, neuropsychology, social psychology).
+  - Mention the impact of technology on psychological research and practice.
+
+- **Conclusion**: 
+  - Summarize the key points discussed in the essay.
+  - Reflect on the future of psychology and its importance in society.
+
+Ensure that each bullet point is concise yet informative, providing a clear overview of the topic.
+MONKE BRUGA END
