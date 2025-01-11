@@ -17,7 +17,7 @@ class multiagentSystem:
 
         original_prompt = f"Task: {task}\nContext:{context}\n{dspy_prompt}"
         prompt = original_prompt
-        logger.info(f"*****Original Prompt*****{prompt}")
+        logger.info(f"*****Original Prompt*****\n{prompt}")
 
         prompt = self.agents_dict["Prompt Generator Agent"].run_api(prompt)
         logger.info(f"*****Prompt Generator Agent***** \n{prompt}")
