@@ -73,19 +73,25 @@ class multiagentTaskExecutionSystem:
                 task_execution_plan = self.agents_dict["Task Planner Agent"].run_api(prompt)
                 task_execution_plan = task_execution_plan.replace("""```json""", '').replace("""```""", '')
                 task_execution_plan_formatted = json.loads(task_execution_plan)
-                logger.info(f"*****Task Planner Agent*****\n{task_execution_plan_formatted['task_plan']}")
-            except:
+                logger.info(f"*****Task Planner Agent*****\n{task_execution_plan_formatted}")
+            except Exception as e:
                 logger.warning(f"FILE PARSING FAILED (Task Planner Agent) on:\n{task_execution_plan}")
+                logger.error(f"Error details: {str(e)}", exc_info=True)
                 task_execution_plan = ""
 
+
+        print("MONKE BRUGA")
+        print(task_execution_plan_formatted)
+
+        
         # Now do the task delegation into subtasks and task executon for each subtask
         subtask_outputs = []
-        for subtask, steps in task_delegation_plan_formatted.items():
+        for subtask, steps in task_execution_plan_formatted.items():
             specific_prompt = (
                 "\nHere is the task execution plan that you are to reference:\n"
                 f"{task_execution_plan}"
             )
-            subtask_output = run_subtask(subtask, task_execution_plan_formatted, prompt, specific_prompt)
+            subtask_output = self.run_subtask(subtask, task_execution_plan_formatted, prompt, specific_prompt)
             subtask_outputs.append[(subtask, subtask_output)]
         
         # Now merge the work from the subtasks together with the merger agent
