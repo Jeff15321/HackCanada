@@ -53,7 +53,8 @@ class multiagentTaskExecutionSystem:
     #     elif type(subtask) == tuple:
     #         return
 
-        
+    def run_subtask(self, subtask, task_execution_plan_formatted, overall_prompt, specific_prompt):
+        return ""
 
     def run(self, task, context, refined_prompt, max_rounds=3):
         logger = setup_logger()
@@ -76,15 +77,34 @@ class multiagentTaskExecutionSystem:
             except:
                 logger.warning(f"FILE PARSING FAILED (Task Planner Agent) on:\n{task_execution_plan}")
                 task_execution_plan = ""
+
+        # Now do the task delegation into subtasks and task executon for each subtask
+        subtask_outputs = []
+        for subtask, steps in task_delegation_plan_formatted.items():
+            specific_prompt = (
+                "\nHere is the task execution plan that you are to reference:\n"
+                f"{task_execution_plan}"
+            )
+            subtask_output = run_subtask(subtask, task_execution_plan_formatted, prompt, specific_prompt)
+            subtask_outputs.append[(subtask, subtask_output)]
+        
+        # Now merge the work from the subtasks together with the merger agent
+        # INSERT MERGER AGENT WORK HERE
+
+        # Do standards and verification work here
+        # INSERT STANDARDS AGENTS AND VERIFICATION AGENT HERE (Which also means everything above probably has to be put in a loop)
+
+        return "WORK IN PROGRESS"
+
+
+
     
-        # next steps
+        # next steps:
         # - break up task_execution_plan_formatted into its items (which are the subtasks)
         # for each subtask: put through the task delegator agent -> do the tasks step by step
         # merge the work from the subtasks together 
         # put the work up for review agent 
         # go through the standards and verification process (maybe not yet tho)
-
-        
 
         # ^up to here should still be good, everything below this needs reworking in accordance with new system :skull:
         ######################################################################################################
