@@ -17,7 +17,7 @@ class multiagentTaskExecutionSystem:
 
     # This function literally only exists in case llm gives messed up agent nameing in task delegation
     # the subtask_dict type is supposed to be a dict, but since the llm was the one who generated all this then who knows if it followed formatting instructions
-    def run_executor_agent(self, subtask_dict, prompt: str) -> str:
+    def run_executor_agent(self, subtask_dict, common_prompt, specific_prompt) -> str:
         executor_agent = self.agents_dict["Writing Agent"] # default agent
         try:
             # since format is {subtask: agent to use}
@@ -27,17 +27,35 @@ class multiagentTaskExecutionSystem:
             logger.warning(f"FORMATTING ISSUE (run_executor_agent): {subtask_dict}")
             subtask_dict = str(subtask_dict)
         prompt = (
-            f"{prompt}"
-            f"The specific subtask you are to execute is:\n{subtask}"
-            "This is the only thing you are to do, do not return anything other than the output for you exact subtask you have been assigned that is a part of the greater picture outlined in the task execution plan."
-            f"While you must take into account how your assigned subtask fits into the task execution plan, you must only output the exact output for the subtask you have been assigned: {subtask}"
+            f"{prompt}\n"
+            f"{specific_prompt}"
+            f"Your specific subtask is: {subtask}\n"
+            # f"The specific subtask you are to execute is:\n{subtask}"
+            # "This is the only thing you are to do, do not return anything other than the output for you exact subtask you have been assigned that is a part of the greater picture outlined in the task execution plan."
+            # f"While you must take into account how your assigned subtask fits into the task execution plan, you must only output the exact output for the subtask you have been assigned: {subtask}"
         )
         return executor_agent.run_api(prompt)
 
     def execute_subtasks(self, subtask, common_prompt, specific_prompt) -> str:
         if type(subtask) != list and type(subtask) != tuple:
             return self.run_executor_agent(self, subtask, common_prompt)
-        
+        elif type(subtask) == list:
+            list_prompt = (
+                "You are to execute a specific subtask in a list of sequential subtasks which then contribute to the overall task execution. This this list of sequential subtasks, each task subtask (including the one you are to execute) builds upon the previous subtask. As such, make sure to incorporate the content from the previous subtasks in the sequence without missing anything\n"
+                f"The sequence of subtasks that your subtask is a part of is (as well as the name of the corresponding agent which executes each subtask) is: \n {subtask}\n"
+                f"You are to execute and output the result for your assigned subtask and make sure that the output properly, coherently, and holistically includes the content outputted during the previous subtasks.\n"
+            )
+            previous_outputs = []
+            for i in range(0, len(subtask)):
+                if len(previous_outputs) != 0:
+                    list_prompt += "Previous outputs in the series of subtasks that you are to include and upon which your subtask content is built/added:\n"
+                    for i in range(0, len(previous_outputs)):
+                        list_prompt = list_prompt + f"Part {i+1} from the series: \n" + f"Subtask(s) involved: {subtask[i]}" + f"Output from part {i+1}:\n{previous_outputs[i]}"
+                else:
+                    list_prompt
+        elif type(subtask) == tuple:
+            return
+
         
 
     def run(self, task, context, refined_prompt, max_rounds=3):
