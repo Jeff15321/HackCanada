@@ -1,7 +1,7 @@
 import os
 import json
 
-from task_execution.agents import *
+from task_execution.agents import * # this would include everything in agent_definitions.py as if they were part of this file
 from task_execution.logger import setup_logger
 
 
@@ -11,50 +11,47 @@ class multiagentTaskExecutionSystem:
         self.supplementary_files = supplementary_files
         self.model = model
         self.agents_dict = initialize_task_execution_agents(self.instructional_files, self.supplementary_files, self.model)
-        self.format_explanation = (
-            "The task execution plan is formatted as follows: \n\n1. Sequential tasks (where each action buils upon the previous one) will be represented as arrays [] with the order of actions clearly defined. \n2. Parallel tasks (where actions can happen simultaneously) will be represented as tuples () where the order of execution doesn't matter. \n3. A combination of both parallel and sequential actions can be included, using tuples inside arrays or arrays inside tuples as needed."
-        )
 
-    # This function literally only exists in case llm gives messed up agent nameing in task delegation
-    # the subtask_dict type is supposed to be a dict, but since the llm was the one who generated all this then who knows if it followed formatting instructions
-    def run_executor_agent(self, subtask_dict, common_prompt, specific_prompt) -> str:
-        executor_agent = self.agents_dict["Writing Agent"] # default agent
-        try:
-            # since format is {subtask: agent to use}
-            subtask = subtask_dict.keys()[0]
-            executor_agent = self.agents_dict[subtask_dict.items()[0]]
-        except:
-            logger.warning(f"FORMATTING ISSUE (run_executor_agent): {subtask_dict}")
-            subtask_dict = str(subtask_dict)
-        prompt = (
-            f"{prompt}\n"
-            f"{specific_prompt}"
-            f"Your specific subtask is: {subtask}\n"
-            # f"The specific subtask you are to execute is:\n{subtask}"
-            # "This is the only thing you are to do, do not return anything other than the output for you exact subtask you have been assigned that is a part of the greater picture outlined in the task execution plan."
-            # f"While you must take into account how your assigned subtask fits into the task execution plan, you must only output the exact output for the subtask you have been assigned: {subtask}"
-        )
-        return executor_agent.run_api(prompt)
+    # # This function literally only exists in case llm gives messed up agent nameing in task delegation
+    # # the subtask_dict type is supposed to be a dict, but since the llm was the one who generated all this then who knows if it followed formatting instructions
+    # def run_executor_agent(self, subtask_dict, common_prompt, specific_prompt) -> str:
+    #     executor_agent = self.agents_dict["Writing Agent"] # default agent
+    #     try:
+    #         # since format is {subtask: agent to use}
+    #         subtask = subtask_dict.keys()[0]
+    #         executor_agent = self.agents_dict[subtask_dict.items()[0]]
+    #     except:
+    #         logger.warning(f"FORMATTING ISSUE (run_executor_agent): {subtask_dict}")
+    #         subtask_dict = str(subtask_dict)
+    #     prompt = (
+    #         f"{prompt}\n"
+    #         f"{specific_prompt}"
+    #         f"Your specific subtask is: {subtask}\n"
+    #         # f"The specific subtask you are to execute is:\n{subtask}"
+    #         # "This is the only thing you are to do, do not return anything other than the output for you exact subtask you have been assigned that is a part of the greater picture outlined in the task execution plan."
+    #         # f"While you must take into account how your assigned subtask fits into the task execution plan, you must only output the exact output for the subtask you have been assigned: {subtask}"
+    #     )
+    #     return executor_agent.run_api(prompt)
 
-    def execute_subtasks(self, subtask, common_prompt, specific_prompt) -> str:
-        if type(subtask) != list and type(subtask) != tuple:
-            return self.run_executor_agent(self, subtask, common_prompt)
-        elif type(subtask) == list:
-            list_prompt = (
-                "You are to execute a specific subtask in a list of sequential subtasks which then contribute to the overall task execution. This this list of sequential subtasks, each task subtask (including the one you are to execute) builds upon the previous subtask. As such, make sure to incorporate the content from the previous subtasks in the sequence without missing anything\n"
-                f"The sequence of subtasks that your subtask is a part of is (as well as the name of the corresponding agent which executes each subtask) is: \n {subtask}\n"
-                f"You are to execute and output the result for your assigned subtask and make sure that the output properly, coherently, and holistically includes the content outputted during the previous subtasks.\n"
-            )
-            previous_outputs = []
-            for i in range(0, len(subtask)):
-                if len(previous_outputs) != 0:
-                    list_prompt += "Previous outputs in the series of subtasks that you are to include and upon which your subtask content is built/added:\n"
-                    for i in range(0, len(previous_outputs)):
-                        list_prompt = list_prompt + f"Part {i+1} from the series: \n" + f"Subtask(s) involved: {subtask[i]}" + f"Output from part {i+1}:\n{previous_outputs[i]}"
-                else:
-                    list_prompt
-        elif type(subtask) == tuple:
-            return
+    # def execute_subtasks(self, subtask, common_prompt, specific_prompt) -> str:
+    #     if type(subtask) != list and type(subtask) != tuple:
+    #         return self.run_executor_agent(self, subtask, common_prompt)
+    #     elif type(subtask) == list:
+    #         list_prompt = (
+    #             "You are to execute a specific subtask in a list of sequential subtasks which then contribute to the overall task execution. This this list of sequential subtasks, each task subtask (including the one you are to execute) builds upon the previous subtask. As such, make sure to incorporate the content from the previous subtasks in the sequence without missing anything\n"
+    #             f"The sequence of subtasks that your subtask is a part of is (as well as the name of the corresponding agent which executes each subtask) is: \n {subtask}\n"
+    #             f"You are to execute and output the result for your assigned subtask and make sure that the output properly, coherently, and holistically includes the content outputted during the previous subtasks.\n"
+    #         )
+    #         previous_outputs = []
+    #         for i in range(0, len(subtask)):
+    #             if len(previous_outputs) != 0:
+    #                 list_prompt += "Previous outputs in the series of subtasks that you are to include and upon which your subtask content is built/added:\n"
+    #                 for i in range(0, len(previous_outputs)):
+    #                     list_prompt = list_prompt + f"Part {i+1} from the series: \n" + f"Subtask(s) involved: {subtask[i]}" + f"Output from part {i+1}:\n{previous_outputs[i]}"
+    #             else:
+    #                 list_prompt
+    #     elif type(subtask) == tuple:
+    #         return
 
         
 
@@ -80,6 +77,18 @@ class multiagentTaskExecutionSystem:
                 logger.warning(f"FILE PARSING FAILED (Task Planner Agent) on:\n{task_execution_plan}")
                 task_execution_plan = ""
     
+        # next steps
+        # - break up task_execution_plan_formatted into its items (which are the subtasks)
+        # for each subtask: put through the task delegator agent -> do the tasks step by step
+        # merge the work from the subtasks together 
+        # put the work up for review agent 
+        # go through the standards and verification process (maybe not yet tho)
+
+        
+
+        # ^up to here should still be good, everything below this needs reworking in accordance with new system :skull:
+        ######################################################################################################
+
         # Put it through Task Delegator Agent, output: the execution plan from above but each thing is a dict where it's {subtask: executor agent to use}
         prompt = (
             f"{prompt}"

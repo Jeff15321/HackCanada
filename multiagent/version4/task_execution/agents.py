@@ -85,7 +85,7 @@ def initialize_task_execution_agents(instructional_files, supplementary_files, m
         if key == "Task Planner Agent" or key == "Task Delegator Agent":
             new_agent = InstructionalFileAgent(val["name"], val["role"], val["function"], model, instructional_files)
             agents_dict[key] = new_agent
-        elif key == "Verification Agent" or key == "Standards Agent":
+        elif key == "Merger Agent" or key == "Verification Agent" or key == "Standards Agent":
             new_agent = BaseAgent(val["name"], val["role"], val["function"], model)
             agents_dict[key] = new_agent
     for key,val in subtask_executor_agent_definitions.items():
