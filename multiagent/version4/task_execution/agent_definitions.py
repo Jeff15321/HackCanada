@@ -46,6 +46,9 @@ subtask_executor_agent_definitions = {
     },
 }
 
+################################################################################################################################################
+################################################################################################################################################
+################################################################################################################################################
 
 ##### task execution plan and task delegation plan: formatting specifications and examples #####
 task_execution_plan_example = {
@@ -130,6 +133,35 @@ subtask_delegation_plan_output_example_conclusion = [
     ("Review and edit section as a whole for cohesiveness and clarity", "Review Agent")
 ]
 
+list_of_metrics_example = [
+    {"metric": "Clarity and Conciseness", "description": "The report is easy to understand and avoids unnecessary jargon or wordiness.  Information is presented efficiently."},
+    {"metric": "Accuracy of Information", "description": "All facts, figures, and data presented are correct and verifiable. Sources are properly cited."},
+    {"metric": "Completeness", "description": "The report covers all aspects of the assigned topic comprehensively.  No significant information is missing."},
+    {"metric": "Logical Structure and Organization", "description": "The report follows a clear and logical structure with a well-defined introduction, body, and conclusion.  Sections are appropriately organized and flow smoothly."},
+    {"metric": "Grammar and Mechanics", "description": "The report is free of grammatical errors, spelling mistakes, and punctuation issues."},
+    {"metric": "Style and Tone", "description": "The writing style is appropriate for the intended audience and purpose.  The tone is consistent and professional."},
+    {"metric": "Citation and Referencing", "description": "Sources are properly cited using a consistent citation style (e.g., APA, MLA).  A bibliography or works cited page is included."},
+    {"metric": "Adherence to Formatting Guidelines", "description": "The report follows all specified formatting guidelines, including font, spacing, margins, and page numbers."},
+    {"metric": "Originality", "description": "The report demonstrates original thought and analysis, rather than simply summarizing existing information.  Appropriate attribution is given to sources."},
+    {"metric": "Overall Impact", "description": "The report effectively communicates its findings and makes a clear and convincing argument (if applicable)."}
+]
+
+verification_input_example = """
+Metric: Clarity and Conciseness
+Description: The report is easy to understand and avoids unnecessary jargon or wordiness.  Information is presented efficiently.
+"""
+
+# note for outputs: the metric itself will be added in code
+verification_output_pass_example = {
+    "pass": True,
+    "comments": "The report is exceptionally clear and concise.  The language used is accessible, and the information flows logically and efficiently. No unnecessary jargon or overly complex sentence structures were observed."
+}
+
+verification_output_fail_example = {
+    "pass": False,
+    "comments": "The report suffers from several instances of unclear writing and excessive jargon.  Several sentences are overly long and complex, hindering readability.  For example, the section on [specific section] could be significantly improved with simpler language and more direct phrasing.  The use of technical terms like [specific jargon term] without sufficient explanation also impacts clarity."
+}
+
 task_execution_plan_format = f"""
 The task execution plan outlines the overall organization of the subtasks and steps for each subtask that are to be completed in order to complete the overall task.
 The task execution plan is in JSON dictionary format, each item (in order) is a subtask that is to be completed: for each item the key is a string with the subtask and the value is a corresponding list of strings where each string in the list is a step in the subtask to complete. In the list of strings for each subtask, each step builds upon the output in the previous steps. Meanwhile, as a whole the subtasks are combined together to make the final task.
@@ -156,8 +188,27 @@ And its subtask delegation output could be:
 {subtask_delegation_plan_output_example_conclusion}
 """
 
+list_of_metrics_format = f"""
+The list of metrics serves as a checklist to evaluate the accuracy, completeness, efficiency, adherence to instructions, style guidelines (if specified), and the overall quality of the task execution output.
+The list of metrics format is a list where each item is a dictionary that has a "metric" key and a "description" key. The item "metric" is the specific metric that must be assessed, and the corresponding item in "description" outlines what the metric is about and what is expected.
+For example, a list of metrics for a generic report could be:
+{list_of_metrics_example}
+"""
 
+verification_output_format = f"""
+Each verification output takes one metric along with its description and evaluates the expecatations for the task output based on that metric, determing whether it passes the metric or not.
+The verification output format is a dictionary with two items: the first item has the exact key "pass" and a boolean value indicating whether it is True or False that the task output passes the metric, the second item has the exact key "comments" and provides comments on specifically what was good or bad about the task output based on that metric.
+For example, for a report writing task, with this metric as input:
+{verification_input_example}
+If it is determined that the task output fullfils the expectations and requirements then a potential output would be in the format:
+{verification_output_pass_example}
+If it is determined that the task output does not fullfil the expecations and requirements then it would look something like:
+{verification_output_fail_example}
+"""
 
+################################################################################################################################################
+################################################################################################################################################
+################################################################################################################################################
 
 overall_task_agent_definitions = {
 ##### agents during the pre-work/process creating stage #####
@@ -191,18 +242,28 @@ overall_task_agent_definitions = {
             "You will be given the specific task execution plan for the task being executed, the list of the subtasks in order, and the outputs for each subtask. You are to combine the outputs from the subtasks into one large output that will be the final product of the task execution. Do not remove or modify any information, you are only to merge them in a coherent manner. You may add minimal transitions between subtask sections if absolutely necessary. Do not return anything other than the final product which consists of the subtasks section merge together."
         )
     },
-    "Verification Agent": {
-        "name": "Verification Agent",
-        "role": "",
-        "function": ""
-    },
     "Standards Agent": {
         "name": "Standards Agent",
-        "role": "",
-        "function": ""
+        "role": "Examine the original task prompt and instructional files for said task, then determine a list of metrics to check for in list format",
+        "function": (
+            "Analyzes the provided task prompt and any associated instructional files to identify key aspects and generate a structured list of verification metrics. These metrics will serve as a checklist to assess the completeness and correctness of any solution generated for the task.\n"
+            f"The output format specifications and instructions are outlined below:\n{list_of_metrics_format}"
+            "Consider various aspects, including but not limited to: accuracy, completeness, efficiency, adherence to instructions, style guidelines (if specified), and the overall quality of the solution.\n"
+            "Only return the properly formatted list of metrics in the format specified above. Do not return anything else. Do not include anything about visuals or graphcial/display concerns"
+        )
     },
-
+    "Verificiation Agent": {
+        "name": "Verification Agent",
+        "role": "Examine the original task prompt and the instructional files for said task. Then, go through the task output and evaluate it based on the given metric for evaluation.",
+        "function": (
+            "Examine the original task prompt and the instructional files for the task to understand what the task is about. Then, closely read the entirety of the task output and evaluate it based on a given metric of evaluation. Determine whether the task output fullfils the expectations and write in detail why or why not.\n"
+            f"This is the exact format you are to follow:\n{verification_output_format}\n"
+            "Only return the properly formatted verification output as specified above. Do not return anything else. Make sure to be specific in your comments and reference exact parts of the task output, include as much relevant information as possible in the comments item."
+        )
+    },
 }
+
+
 
 
 if __name__ == '__main__':
