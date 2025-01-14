@@ -21,23 +21,38 @@ class multiagentTaskExecutionSystem:
             f"Subtask: {subtask}\n"
             f"Subtask items as formatted from task execution plan:\n{task_execution_plan_formatted[subtask]}"
         )
-
-        subtask_delegation_plan = self.agents_dict["Task Delegator Agent"].run_api(delegation_prompt)
-        logger.info(f"*****Task Delegator Agent ({subtask})*****\n{subtask_delegation_plan}")
-
-        print("MONKE BRUGA")
-        print(subtask_delegation_plan)
-
-
-        list_of_steps = task_execution_plan_formatted[subtask]
-
-        for step in list_of_steps:
-            pass
-
-        print(subtask_delegation_plan)
+        subtask_delegation_plan = ""
+        subtask_delegation_plan_formatted = [] # listof((subtask step, assigned agent))
+        while subtask_delegation_plan == ""
+            try:
+                subtask_delegation_plan = self.agents_dict["Task Delegator Agent"].run_api(delegation_prompt)
+                subtask_delegation_plan = subtask_delegation_plan.replace("""```json""", '').replace("""```""", '') # this one's more of a just in case whereas for task_execution_plan you needed to do it
+                subtask_delegation_plan_formatted = json.loads(subtask_delegation_plan)
+                assert isinstance(subtask_delegation_plan_formatted, list) # should probably replace these with a more comprehensive check for formatting
+                assert isinstance(subtask_delegation_plan_formatted[0], tuple)
+                logger.info(f"*****Task Delegator Agent ({subtask})*****\n{subtask_delegation_plan}")
+            except Exception as e:
+                logger.warning(f"FILE PARSING FAILED (Task Delegator Agent subtask: {subtask}) on:\n{subtask_delegation_plan}")
+                logger.error(f"Error details: {str(e)}", exc_info=True)
+                subtask_delegation_plan = ""
         
-        
-        return ""
+        completed_steps_outputs = [] # listof((step, step output))
+        # Do each subtask
+        for step, agent in subtask_delegation_plan_formatted:
+            # add to the prompt: overall list of steps, your step to do, previous outputs,
+            step_prompt = (
+                f"{delegation_prompt}\n"
+                f"The specific step of the subtask that you are responsible for is: {step}"
+                "Your output is to draw from and build upon the steps that came before you in the subtask. Here are the steps in the subtask that came before you:\n"
+            )
+            for i, (prev_step, prev_output) in enumerate(completed_steps_outputs): # adding output from previous steps
+                step_prompt = step_prompt + f"Step {i+1}: {prev_step}\n{prev_output}\n"
+            if agent not in agents_dict.keys():  # default to writing agent :monkey:
+                agent = "Writing Agent"
+            step_output = agents_dict[agent].run_api(step_prompt)
+            completed_steps_outputs.append((step, step_output))
+       
+        return completed_steps_outputs[-1][1]
 
     def run(self, task, context, refined_prompt, max_rounds=3):
         logger = setup_logger()
@@ -56,6 +71,8 @@ class multiagentTaskExecutionSystem:
                 task_execution_plan = self.agents_dict["Task Planner Agent"].run_api(prompt)
                 task_execution_plan = task_execution_plan.replace("""```json""", '').replace("""```""", '')
                 task_execution_plan_formatted = json.loads(task_execution_plan)
+                assert isinstance(task_delegation_plan_formatted, dict) # should probably replace these with a more comprehensive check for formatting
+                assert isinstance(task_delegation_plan_formatted.items()[0], list)
                 logger.info(f"*****Task Planner Agent*****\n{task_execution_plan_formatted}")
             except Exception as e: # most likely errors: format issues, duplicate keys
                 logger.warning(f"FILE PARSING FAILED (Task Planner Agent) on:\n{task_execution_plan}")
@@ -63,103 +80,24 @@ class multiagentTaskExecutionSystem:
                 task_execution_plan = ""
         
         # Now do the task delegation into subtasks and task executon for each subtask
-        subtask_outputs = []
+        subtask_outputs = [] # listof((subtask name, subtask output))
         for subtask in task_execution_plan_formatted.keys():
             # Run each subtask through the Task Delegator Agent, and then the execution agents for each step of the subtask
             subtask_output = self.run_subtask(subtask, task_execution_plan_formatted, prompt)
             subtask_outputs.append((subtask, subtask_output))
         
         # Now merge the work from the subtasks together with the merger agent
-        # INSERT MERGER AGENT WORK HERE
+        merging_prompt = (
+            f"Here is the task execution file for the overall task: {task_execution_plan}\n"
+            f"Below are the outputs for each subtask for the overall task (the subtasks: {task_execution_plan_formatted.keys()}):\n"
+        )
+        for i, (subtask, subtask_output) in enumerate(subtask_outputs): # feed it all the subtask outputs
+            merging_prompt = merging_prompt + f"Subtask {i+1}: {subtask}\n{subtask_output}\n"
+        final_output = agents_dict["Merger Agent"].run_api(merging_prompt)
+
+        return final_output
 
         # Do standards and verification work here
         # INSERT STANDARDS AGENTS AND VERIFICATION AGENT HERE (Which also means everything above probably has to be put in a loop)
 
         return "WORK IN PROGRESS"
-
-
-
-    
-        # next steps:
-        # - break up task_execution_plan_formatted into its items (which are the subtasks)
-        # for each subtask: put through the task delegator agent -> do the tasks step by step
-        # merge the work from the subtasks together 
-        # put the work up for review agent 
-        # go through the standards and verification process (maybe not yet tho)
-
-        # ^up to here should still be good, everything below this needs reworking in accordance with new system :skull:
-        ######################################################################################################
-
-        # Put it through Task Delegator Agent, output: the execution plan from above but each thing is a dict where it's {subtask: executor agent to use}
-        prompt = (
-            f"{prompt}"
-            "\nHere is the task execution plan that you are to reference (make sure to keep the same structure of lists and tuples, except this time each string will be replaced with a dictionary that has is in the format of {original subtask string, task executor agent name}):\n"
-            f"{task_execution_plan}"
-        )
-        task_delegation_plan = ""
-        task_delegation_plan_formatted = {}
-        while task_delegation_plan == "":
-            try:
-                task_delegation_plan = self.agents_dict["Task Delegator Agent"].run_api(prompt)
-                task_delegation_plan = task_delegation_plan.replace("""```json""", '').replace("""```""", '')
-                task_delegation_plan_formatted = json.loads(task_delegation_plan)
-                logger.info(f"*****Task Delegator Agent*****\n{task_delegation_plan_formatted['task_plan']}")
-            except:
-                logger.warning(f"FILE PARSING FAILED (Task Delegator Agent) on:\n{task_delegation_plan}")
-                task_delegation_plan = ""
-        
-        # Now do task exection
-        prompt = (
-            f"You are to properly execute a subtask that is part of completing the overall task, the subtask is a part of the Task Execution Plan and {self.format}\n"
-            f"This is the prompt for the overall task that you are given: \n {initial_prompt}"
-            f"This is the task execution plan that you are to follow: \n{task_execution_plan}"
-        )
-
-        task_output = self.execute_subtasks(task_delegation_plan_formatted, prompt, "")
-
-        # INSERT STANDARDS AGENTS AND VERIFICATION AGENT HERE
-        # (Which also means everything above probably has to be put in a loop)
-
-        return task_output
-    
-
-    # # This function literally only exists in case llm gives messed up agent nameing in task delegation
-    # # the subtask_dict type is supposed to be a dict, but since the llm was the one who generated all this then who knows if it followed formatting instructions
-    # def run_executor_agent(self, subtask_dict, common_prompt, specific_prompt) -> str:
-    #     executor_agent = self.agents_dict["Writing Agent"] # default agent
-    #     try:
-    #         # since format is {subtask: agent to use}
-    #         subtask = subtask_dict.keys()[0]
-    #         executor_agent = self.agents_dict[subtask_dict.items()[0]]
-    #     except:
-    #         logger.warning(f"FORMATTING ISSUE (run_executor_agent): {subtask_dict}")
-    #         subtask_dict = str(subtask_dict)
-    #     prompt = (
-    #         f"{prompt}\n"
-    #         f"{specific_prompt}"
-    #         f"Your specific subtask is: {subtask}\n"
-    #         # f"The specific subtask you are to execute is:\n{subtask}"
-    #         # "This is the only thing you are to do, do not return anything other than the output for you exact subtask you have been assigned that is a part of the greater picture outlined in the task execution plan."
-    #         # f"While you must take into account how your assigned subtask fits into the task execution plan, you must only output the exact output for the subtask you have been assigned: {subtask}"
-    #     )
-    #     return executor_agent.run_api(prompt)
-
-    # def execute_subtasks(self, subtask, common_prompt, specific_prompt) -> str:
-    #     if type(subtask) != list and type(subtask) != tuple:
-    #         return self.run_executor_agent(self, subtask, common_prompt)
-    #     elif type(subtask) == list:
-    #         list_prompt = (
-    #             "You are to execute a specific subtask in a list of sequential subtasks which then contribute to the overall task execution. This this list of sequential subtasks, each task subtask (including the one you are to execute) builds upon the previous subtask. As such, make sure to incorporate the content from the previous subtasks in the sequence without missing anything\n"
-    #             f"The sequence of subtasks that your subtask is a part of is (as well as the name of the corresponding agent which executes each subtask) is: \n {subtask}\n"
-    #             f"You are to execute and output the result for your assigned subtask and make sure that the output properly, coherently, and holistically includes the content outputted during the previous subtasks.\n"
-    #         )
-    #         previous_outputs = []
-    #         for i in range(0, len(subtask)):
-    #             if len(previous_outputs) != 0:
-    #                 list_prompt += "Previous outputs in the series of subtasks that you are to include and upon which your subtask content is built/added:\n"
-    #                 for i in range(0, len(previous_outputs)):
-    #                     list_prompt = list_prompt + f"Part {i+1} from the series: \n" + f"Subtask(s) involved: {subtask[i]}" + f"Output from part {i+1}:\n{previous_outputs[i]}"
-    #             else:
-    #                 list_prompt
-    #     elif type(subtask) == tuple:
-    #         return
