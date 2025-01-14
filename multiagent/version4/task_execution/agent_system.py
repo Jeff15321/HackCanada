@@ -11,8 +11,10 @@ class multiagentTaskExecutionSystem:
         self.supplementary_files = supplementary_files
         self.model = model
         self.agents_dict = initialize_task_execution_agents(self.instructional_files, self.supplementary_files, self.model)
+    
+    # should probably have some functions to verify for function formats
 
-    def run_subtask(self, subtask, task_execution_plan_formatted, overall_prompt):
+    def run_subtask(self, subtask, task_execution_plan_formatted, overall_prompt, logger):
         # Run the Task Delegator Agent to get the task delegation plan
         delegation_prompt = (
             f"{overall_prompt}\n"
@@ -83,7 +85,7 @@ class multiagentTaskExecutionSystem:
         subtask_outputs = [] # listof((subtask name, subtask output))
         for subtask in task_execution_plan_formatted.keys():
             # Run each subtask through the Task Delegator Agent, and then the execution agents for each step of the subtask
-            subtask_output = self.run_subtask(subtask, task_execution_plan_formatted, prompt)
+            subtask_output = self.run_subtask(subtask, task_execution_plan_formatted, prompt, logger)
             subtask_outputs.append((subtask, subtask_output))
         
         # Now merge the work from the subtasks together with the merger agent
