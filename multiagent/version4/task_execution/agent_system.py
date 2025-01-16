@@ -1,5 +1,6 @@
 import os
 import json
+import ast
 
 from task_execution.agents import * # this would include everything in agent_definitions.py as if they were part of this file
 from task_execution.logger import setup_logger
@@ -25,13 +26,14 @@ class multiagentTaskExecutionSystem:
         )
         subtask_delegation_plan = ""
         subtask_delegation_plan_formatted = [] # listof((subtask step, assigned agent))
-        while subtask_delegation_plan == ""
+        while subtask_delegation_plan == "":
             try:
                 subtask_delegation_plan = self.agents_dict["Task Delegator Agent"].run_api(delegation_prompt)
                 subtask_delegation_plan = subtask_delegation_plan.replace("""```json""", '').replace("""```""", '') # this one's more of a just in case whereas for task_execution_plan you needed to do it
-                subtask_delegation_plan_formatted = json.loads(subtask_delegation_plan)
+                subtask_delegation_plan_formatted = ast.literal_eval(subtask_delegation_plan)
                 assert isinstance(subtask_delegation_plan_formatted, list) # should probably replace these with a more comprehensive check for formatting
-                assert isinstance(subtask_delegation_plan_formatted[0], tuple)
+                # assert isinstance(subtask_delegation_plan_formatted[0], tuple)
+                # ^oh and pretty sure this test is wrong
                 logger.info(f"*****Task Delegator Agent ({subtask})*****\n{subtask_delegation_plan}")
             except Exception as e:
                 logger.warning(f"FILE PARSING FAILED (Task Delegator Agent subtask: {subtask}) on:\n{subtask_delegation_plan}")
@@ -49,10 +51,12 @@ class multiagentTaskExecutionSystem:
             )
             for i, (prev_step, prev_output) in enumerate(completed_steps_outputs): # adding output from previous steps
                 step_prompt = step_prompt + f"Step {i+1}: {prev_step}\n{prev_output}\n"
-            if agent not in agents_dict.keys():  # default to writing agent :monkey:
+            if agent not in self.agents_dict.keys():  # default to writing agent :monkey:
+                logger.warning(f"Wrong agent name: {agent}")
                 agent = "Writing Agent"
-            step_output = agents_dict[agent].run_api(step_prompt)
+            step_output = self.agents_dict[agent].run_api(step_prompt)
             completed_steps_outputs.append((step, step_output))
+            logger.info(f"*****Subtask step: {step} (agent: {agent})*****\n{step_output}")
        
         return completed_steps_outputs[-1][1]
 
@@ -73,8 +77,9 @@ class multiagentTaskExecutionSystem:
                 task_execution_plan = self.agents_dict["Task Planner Agent"].run_api(prompt)
                 task_execution_plan = task_execution_plan.replace("""```json""", '').replace("""```""", '')
                 task_execution_plan_formatted = json.loads(task_execution_plan)
-                assert isinstance(task_delegation_plan_formatted, dict) # should probably replace these with a more comprehensive check for formatting
-                assert isinstance(task_delegation_plan_formatted.items()[0], list)
+                assert isinstance(task_execution_plan_formatted, dict) # should probably replace these with a more comprehensive check for formatting
+                # assert isinstance(list(task_execution_plan_formatted.items())[0], list) 
+                # ^smtg wrong about the code for this one
                 logger.info(f"*****Task Planner Agent*****\n{task_execution_plan_formatted}")
             except Exception as e: # most likely errors: format issues, duplicate keys
                 logger.warning(f"FILE PARSING FAILED (Task Planner Agent) on:\n{task_execution_plan}")
@@ -88,6 +93,13 @@ class multiagentTaskExecutionSystem:
             subtask_output = self.run_subtask(subtask, task_execution_plan_formatted, prompt, logger)
             subtask_outputs.append((subtask, subtask_output))
         
+
+
+
+        # ***********VERY IMPORTANT NOTICE***********
+        # So the Merger Agent has a tendency to remove over half the content from each subtask output during the merging process which is not good, so we are going to both the merger agent result, and just hard concatenating everything together
+        # Both will go into the logs, but the hard concatenated one will be the return value
+
         # Now merge the work from the subtasks together with the merger agent
         merging_prompt = (
             f"Here is the task execution file for the overall task: {task_execution_plan}\n"
@@ -95,7 +107,13 @@ class multiagentTaskExecutionSystem:
         )
         for i, (subtask, subtask_output) in enumerate(subtask_outputs): # feed it all the subtask outputs
             merging_prompt = merging_prompt + f"Subtask {i+1}: {subtask}\n{subtask_output}\n"
-        final_output = agents_dict["Merger Agent"].run_api(merging_prompt)
+        merged_output = self.agents_dict["Merger Agent"].run_api(merging_prompt)
+        logger.info(f"*****Merger Agent*****\n{merged_output}")
+        
+        final_output = ""
+        for (subtask, subtask_output) in subtask_outputs:
+            final_output = final_output + f"{subtask}:\n{subtask_output}\n\n\n"
+        logger.info(f"*****Hard Concatenation of Subtask Outputs*****\n{final_output}")
 
         return final_output
 

@@ -230,6 +230,7 @@ overall_task_agent_definitions = {
             "Based on the input task from the prompt, look through the instructional files and the supplementary file summaries. Then examined the formatted task execution plan where each item in it is a subtask that goes into the bigger picture. Then, locate your subtask and steps: identify where it is in the bigger picture of the overall task, what your subtask is about, and determine what task executor agent is best for completing each step that subtask. Only pick names from the specified executor agents.\n"
             f"The format specifications are as follows:\n{subtask_delegation_plan_format}\n"
             "Return exactly in the specified format and structure as defined for the subtask delegation plan."
+            "Do not return anything else."
         )
     },
 ##### agents to make sure the work is legit (save these for later :monkey:)#####
@@ -238,7 +239,7 @@ overall_task_agent_definitions = {
         "role": "Combine the outputs from the subtasks together in a coherent and organzied way to create the final output for the task execution.",
         "function": (
             "Examine the prompt which includes the prompt for the entire task, the instructional files, and the task execution which shows the subtasks that the task has been broken down into. Each subtask is a part of the overall task to be completed and all its contents must be merged in in a way that makes sense and is coherent."
-            f"The task execution plan is formatted as follows:\n{task_execution_plan}"
+            f"The task execution plan is formatted as follows:\n{task_execution_plan_format}"
             "You will be given the specific task execution plan for the task being executed, the list of the subtasks in order, and the outputs for each subtask. You are to combine the outputs from the subtasks into one large output that will be the final product of the task execution. Do not remove or modify any information, you are only to merge them in a coherent manner. You may add minimal transitions between subtask sections if absolutely necessary. Do not return anything other than the final product which consists of the subtasks section merge together."
         )
     },
