@@ -60,8 +60,8 @@ class multiagentTaskExecutionSystem:
        
         return completed_steps_outputs[-1][1]
 
-    def run(self, task, context, refined_prompt, max_rounds=3):
-        logger = setup_logger()
+    def run_full_task(self, task, context, refined_prompt, logger):
+        # logger = setup_logger()
 
         initial_prompt = f"Task: {task}\nContext:{context}\n{refined_prompt}"
 
@@ -93,9 +93,6 @@ class multiagentTaskExecutionSystem:
             subtask_output = self.run_subtask(subtask, task_execution_plan_formatted, prompt, logger)
             subtask_outputs.append((subtask, subtask_output))
         
-
-
-
         # ***********VERY IMPORTANT NOTICE***********
         # So the Merger Agent has a tendency to remove over half the content from each subtask output during the merging process which is not good, so we are going to both the merger agent result, and just hard concatenating everything together
         # Both will go into the logs, but the hard concatenated one will be the return value
@@ -117,7 +114,18 @@ class multiagentTaskExecutionSystem:
 
         return final_output
 
-        # Do standards and verification work here
-        # INSERT STANDARDS AGENTS AND VERIFICATION AGENT HERE (Which also means everything above probably has to be put in a loop)
+    # Do standards and verification work here
+    # INSERT STANDARDS AGENTS AND VERIFICATION AGENT HERE (Which also means everything above probably has to be put in a loop)
+    def run(self, task, context, refined_prompt, max_rounds=3):
+        logger = setup_logger()
+        
+        for i in range(1, max_rounds+1):
+            logger.info(f"###############################")
+            logger.info(f"########## Round {i} ##########")
+            logger.info(f"###############################\n\n")
+        return
 
-        return "WORK IN PROGRESS"
+
+        monke = run_full_task(task, context, refined_prompt, logger)
+        return monke
+
