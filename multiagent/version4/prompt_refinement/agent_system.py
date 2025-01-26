@@ -64,10 +64,6 @@ class multiagentSystem:
             combined_searches_prompt = f"Original prompt: " + prompt + " |||||| " + " |||||| ".join(combined_searches)
             prompt = combined_searches_prompt
 
-            logger.info("MONKE BRUGA BEGIN MONKE BRUGA BEGIN MONKE BRUGA BEGIN MONKE BRUGA BEGIN")
-            logger.info(combined_searches_prompt)
-            logger.info("MONKE BRUGA END MONKE BRUGA END MONKE BRUGA END MONKE BRUGA END ")
-
             prompt = self.agents_dict["Search Consolidator Agent"].run_api(prompt)
             logger.info(f"*****Search Consolidator Agent*****\n{prompt}")
 

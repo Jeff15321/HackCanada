@@ -1,4 +1,6 @@
 documents/
 *.log
+mylog.txt
+log.txt
 monke.py
 bruga.py

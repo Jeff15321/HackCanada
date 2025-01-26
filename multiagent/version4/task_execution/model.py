@@ -10,16 +10,36 @@ from typing import List, TypedDict
 import asyncio
 import json
 from os.path import basename
-import logging
+from task_execution.logger import setup_logger
 
-# Setup logging
-logger = logging.getLogger("ModelLogger")
-logger.setLevel(logging.INFO)
-if not logger.handlers:
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+# Setup logging -> Yeah no we are redoing model.py logging -> putting it in its own log files
+# logger = logging.getLogger("ModelLogger")
+# logger.setLevel(logging.INFO)
+# if not logger.handlers:
+#     handler = logging.StreamHandler()
+#     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+#     handler.setFormatter(formatter)
+#     logger.addHandler(handler)
+
+logger = setup_logger("model_input_output")
+def do_logging(func, prompt, output):
+    logger.info("\n"*6)
+
+    logger.info(func.__name__)
+    logger.info("="*90)
+    logger.info("PROMPT" + "="*84)
+    logger.info("="*90)
+
+    logger.info(prompt)
+    
+    logger.info("="*90)
+    logger.info("OUTPUT" + "="*84)
+    logger.info("="*90)
+
+    logger.info(output)
+
+    logger.info("\n"*6)
+    
 
 load_dotenv()
 if not os.environ.get("OPENAI_API_KEY"):
@@ -43,7 +63,8 @@ def run_gpt(system_prompt: str, user_prompt: str, model="gpt-4o-mini", temperatu
     llm = ChatOpenAI(model_name=model, temperature=temperature, openai_api_key=open_ai_key)
     messages = [SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)]
     response = llm.invoke(messages)
-    logger.info("run_gpt response obtained.")
+
+    do_logging(run_gpt, messages, response)
     return response.content
 
 # consumes the the files listed in its entirety and adds it to the prompt
@@ -63,7 +84,8 @@ def run_gpt_with_file(system_prompt: str, user_prompt: str, file_paths: List[str
     combined_prompt = user_prompt + "\n\n" + file_contents
     messages = [SystemMessage(content=system_prompt), HumanMessage(content=combined_prompt)]
     response = llm.invoke(messages)
-    logger.info("run_gpt_with_file response obtained.")
+    
+    do_logging(run_gpt_with_file, messages, response)
     return response.content
 
 # puts the files through rag and adds the result of that to the prompt
@@ -103,7 +125,8 @@ def run_gpt_with_rag(system_prompt: str, user_prompt: str,
     )
     messages = [SystemMessage(content=system_prompt), HumanMessage(content=combined_prompt)]
     response = llm.invoke(messages)
-    logger.info("run_gpt_with_rag response obtained.")
+
+    do_logging(run_gpt_with_rag, messages, response)
     return response.content
 
 if __name__ == '__main__':

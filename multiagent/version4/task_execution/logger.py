@@ -2,17 +2,17 @@ import logging
 import os
 from datetime import datetime
 
-def setup_logger():
+def setup_logger(log_filename_prefix):
     # Ensure the 'log' directory exists
     log_directory = "log"
     os.makedirs(log_directory, exist_ok=True)
 
     # Create a file name based on the current time
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    log_filename = os.path.join(log_directory, f"multiagent_task_execution_{timestamp}.log")
+    log_filename = os.path.join(log_directory, f"{log_filename_prefix}_{timestamp}.log")
 
     # Set up the logger
-    logger = logging.getLogger("CustomLogger")
+    logger = logging.getLogger(log_filename_prefix)
     logger.setLevel(logging.INFO)
 
     # Create a file handler
@@ -30,7 +30,7 @@ def setup_logger():
 
 # Example usage
 if __name__ == "__main__":
-    logger = setup_logger()
+    logger = setup_logger("monkeylog")
     logger.info("This is an informational message.")
     logger.warning("This is a warning message.")
     logger.error("This is an error message.")

@@ -113,19 +113,122 @@ class multiagentTaskExecutionSystem:
         logger.info(f"*****Hard Concatenation of Subtask Outputs*****\n{final_output}")
 
         return final_output
+    
+    def create_list_of_metrics(self, task, context, refined_prompt, logger):
+        metrics = ""
+        metrics_formatted = []
+        while metrics == "":
+            try:
+                metrics = self.agents_dict["Standards Agent"].run_api(f"Task: {task}\nContext:{context}\n{refined_prompt}")
+                metrics = metrics.replace("""```json""", '').replace("""```""", '') # this one's more of a just in case whereas for task_execution_plan you needed to do it
+                metrics_formatted = ast.literal_eval(metrics)
+                assert isinstance(metrics_formatted, list) # should probably replace these with a more comprehensive check for formatting
+                assert isinstance(metrics_formatted[0], dict)
+                logger.info(f"*****Standards Agent*****\n{metrics}")
+            except Exception as e:
+                logger.warning(f"FILE PARSING FAILED (Standards Agent)) on:\n{metrics}")
+                logger.error(f"Error details: {str(e)}", exc_info=True)
+                metrics = ""
+        return metrics_formatted
+    
+    def do_verification(self, task, context, refined_prompt, task_output, metrics_formatted, logger):
+        prompt_component = (
+            "*****This is the task description and prompt for the task:*****\n"
+            f"Task: {task}\n"
+            f"Context: {context}\n"
+            f"Prompt: {refined_prompt}\n"
+        )
+        output_component = (
+            "*****This the output that you are to evaluate based on the metric you are given:*****\n"
+            f"{task_output}\n"
+        )
+       
+        all_verification_results = {}
 
-    # Do standards and verification work here
-    # INSERT STANDARDS AGENTS AND VERIFICATION AGENT HERE (Which also means everything above probably has to be put in a loop)
-    def run(self, task, context, refined_prompt, max_rounds=3):
-        logger = setup_logger()
+        for metric in metrics_formatted:
+            metric_verification_prompt = (
+                f"{prompt_component}"
+                "*****This is the metric you are judge based on:*****\n"
+                f"Metric: {metric['metric']}\n"
+                f"Description of Metric: {metric['description']}"
+                f"{output_component}"
+            )
+            metric_result = ""
+            metric_result_formatted = {}
+            while metric_result == "":
+                try:
+                    metric_result = self.agents_dict["Verification Agent"].run_api(metric_verification_prompt)
+                    metric_result = metric_result.replace("""```json""", '').replace("""```""", '')
+                    metric_result_formatted = ast.literal_eval(metric_result)
+                    assert isinstance(metric_result_formatted, dict)
+                    logger.info(f"*****Verification Agent - metric result\nMetric:\n{metric['metric']}\nVerification Result:\n{metric_result}")
+                except Exception as e:
+                    logger.warning(f"FILE PARSING FAILED (Verfication Agent) on:\n{metric_result}")
+                    logger.error(f"Error details: {str(e)}", exc_info=True)
+                    metric_result = ""
+            all_verification_results[metric['metric']] = metric_result_formatted
+
+        return all_verification_results
+    
+    def log_round_results(self, round_number, task_output, verification_results, logger):
+        logger.info(f"*****ROUND {round_number}*****")
+        for metric_name, metric_outcome in verification_results.items():
+            logger.info(f"{metric_name}: {metric_outcome['pass']}")
+        logger.info(f"TASK OUTPUT:\n{task_output}")
+
+    # if this returns "NULL" that means there were no problems -> break the loop
+    def generate_feedback(self, round_number, task_output, verification_results, logger):
+        feedback_result = "In a previous attempt, you completed the task, but there are areas that need improvement. Below, I will provide a list of specific issues along with comments on what was not done well. Additionally, I will include the full output from your previous attempt for reference.\nCarefully review your prior output and examine how the identified issues occurred. Use this feedback to ensure that these problems are addressed and avoided in your next attempt.\n\n"
+
+        have_problems = False
+        for metric_name, metric_outcome in verification_results.items():
+            if metric_outcome['pass'] == False:
+                have_problems = True
+                to_add = f"Issue: {metric_name}\nSpecific Problems: {metric_outcome['comments']}\n"
+                feedback_result = feedback_result + to_add
         
+        if have_problems == False:
+            logger.info(F"*****NO PROBLEMS FOR ROUND {round_number}*****")
+            return "NULL"
+        else:
+            logger.info(f"*****PROBLEMS FOR ROUND {round_number}*****\n{feedback_result}")
+            feedback_result = feedback_result + "This is the entirety of the previous output for this task which had the problems:\n" + task_output + "\n" # add it AFTER the logging (rather not flood problem logging with repeat of the whole output)
+        return feedback_result
+
+
+    ##### THIS ENCOMPASSES EVERYTHING THAT IS HAPPENING #####
+    def run(self, task, context, refined_prompt, max_rounds=3):
+        logger = setup_logger("multiagent_task_execution")
+        result_logger = setup_logger("task_output_result")
+
+        final_result = ""
+        metrics_formatted = self.create_list_of_metrics(task, context, refined_prompt, logger) # Come with with a list of metrics       
+        feedback = ""
+
         for i in range(1, max_rounds+1):
+            refined_prompt_with_feedback  = refined_prompt + feedback
             logger.info(f"###############################")
-            logger.info(f"########## Round {i} ##########")
+            logger.info(f"########### Round {i} ###########")
             logger.info(f"###############################\n\n")
-        return
+
+            # Get a final output of the entire task execution
+            final_result = self.run_full_task(task, context, refined_prompt_with_feedback, logger)
+
+            # Verify the final output using the list of metrics
+            verification_results = self.do_verification(task, context, refined_prompt_with_feedback, final_result, metrics_formatted, logger)
+
+            # Log the output and verfication result in a separate log
+            self.log_round_results(i, final_result, verification_results, result_logger)
+
+            # Generate the feedback (var feedback should equal "NULL" if all the metrics passed)
+            feedback = self.generate_feedback(i, final_result, verification_results, logger)
+
+            # If the loop didn't break then it'll keep going with the feedback appended to the prompt
+            if feedback == "NULL":
+                break
+
+        return final_result
 
 
-        monke = run_full_task(task, context, refined_prompt, logger)
-        return monke
+
 

@@ -174,18 +174,23 @@ For example, for a task of writing a report on climate change, the plan could be
 subtask_delegation_plan_format = f"""
 The subtask delegation plan takes a subtask from the overall task execution plan and determines which agent to delegate each step of the subtask to. The task execution plan format is as follows:
 {task_execution_plan_format}
-The subtask delegation plan takes one of the items (which is a subtask from the task execution plan) and for the list of strings (which are the steps of the subtask), it replaces each string with a tuple of two strings, where the first is the original string that is the step in the subtask, and the second string specifies which task execution agent to use. Only choose from the existing task execution agents and make sure to keep the exact spelling and capitalization as the agents are specified here:
+THE SUBTASK DELEGATION PLAN FORMAT IS A LIST, NOT A DICTIONARY!! The subtask delegation plan is a list of tuples, where each tuple has two strings.
+The content of the subtask delegation plan is arrived by taking one of the items (which is a subtask) from the task execution plan and for the list of strings (which are the steps of the subtask), it replaces each string with a tuple of two strings, where the first is the original string that is the step in the subtask, and the second string specifies which task execution agent to use. Only choose from the existing task execution agents and make sure to keep the exact spelling and capitalization as the agents are specified here:
 {subtask_executor_agent_definitions}
 
 For example, in the task execution plan example mentionned above, the input prompt for a body subtask would look like:
 {subtask_delegation_plan_input_example_body}
 And its subtask delegation output could be:
 {subtask_delegation_plan_output_example_body}
+NOTICE HOW IT IS A LIST OF TUPLES OF STRINGS. THE SUBTASK DELEGATION PLAN FORMAT IS A LIST, NOT A DICTORAY!!
 
 For the same example, the conclusion subtask would look like:
 {subtask_delegation_plan_input_example_conclusion}
 And its subtask delegation output could be:
 {subtask_delegation_plan_output_example_conclusion}
+NOTICE HOW IT IS A LIST OF TUPLES OF STRINGS. THE SUBTASK DELEGATION PLAN FORMAT IS A LIST, NOT A DICTORAY!!
+
+RETURN IN THE EXACT FORMAT (list of tuples, each tuple has two strings: the first for the subtask step, the second for the agent) AS SPECIFIED AND SHOWN IN THE EXAMPLES.
 """
 
 list_of_metrics_format = f"""
@@ -219,7 +224,7 @@ overall_task_agent_definitions = {
     },
     "Task Planner Agent": {
         "name": "Task Planner Agent",
-        "role": "The Task planner Agent is responsible for creating a detailed plan to complete the given task. Break down the overall task into subtasks that are smaller, maneagable actions. Within each subtask, split it into steps of actions that build on top of each other to arrive at the best result for the subtask. The steps within each subtask build upon each other sequentially while the  subtasks are combined to form the final output for the overall task exeuction. Return a structured plan outlining the neessary subtasks and steps to complete the task effectively",
+        "role": "The Task planner Agent is responsible for creating a detailed plan to complete the given task. Break down the overall task into subtasks that are smaller, maneagable actions. Within each subtask, split it into steps of actions that build on top of each other to arrive at the best result for the subtask. The steps within each subtask build upon each other sequentially while the subtasks are combined to form the final output for the overall task exeuction. Return a structured plan outlining the neessary subtasks and steps to complete the task effectively",
         "function": f"Based on the input task from the prompt, look through the instructional files and the supplementary file summaries. Then generate the task execution plan only and follow EXACTLY the format and specifications outlined below:\n{task_execution_plan_format}"
     },
     # (this version of Task Delegator Agent is where there's one for each subtask in the overall task)
@@ -253,13 +258,14 @@ overall_task_agent_definitions = {
             "Only return the properly formatted list of metrics in the format specified above. Do not return anything else. Do not include anything about visuals or graphcial/display concerns"
         )
     },
-    "Verificiation Agent": {
+    "Verification Agent": {
         "name": "Verification Agent",
         "role": "Examine the original task prompt and the instructional files for said task. Then, go through the task output and evaluate it based on the given metric for evaluation.",
         "function": (
             "Examine the original task prompt and the instructional files for the task to understand what the task is about. Then, closely read the entirety of the task output and evaluate it based on a given metric of evaluation. Determine whether the task output fullfils the expectations and write in detail why or why not.\n"
             f"This is the exact format you are to follow:\n{verification_output_format}\n"
-            "Only return the properly formatted verification output as specified above. Do not return anything else. Make sure to be specific in your comments and reference exact parts of the task output, include as much relevant information as possible in the comments item."
+            "Only return the properly formatted verification output as specified above. Do not return anything else. Make sure to be specific in your comments and reference exact parts of the task output, include as much relevant information as possible in the comments item.\n"
+            "(FORMATING NOTE: when typing apostrophes in the content make sure to put a backslash \ in front of it, so for example: instead of putting that's do that\\'s - this is to prevent parsing errors since your output is to be in dictionary format at the end)"
         )
     },
 }
@@ -268,5 +274,4 @@ overall_task_agent_definitions = {
 
 
 if __name__ == '__main__':
-    # print(subtask_delegation_plan_format)
     print("nothingness")
