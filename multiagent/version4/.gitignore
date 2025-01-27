@@ -4,3 +4,7 @@ mylog.txt
 log.txt
 monke.py
 bruga.py
+log/
+prompt_refinement/__pycache__/
+__pycache__/
+.venv/

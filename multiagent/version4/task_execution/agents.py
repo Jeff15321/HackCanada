@@ -2,6 +2,7 @@ from task_execution.model import *
 from task_execution.agent_definitions import *
 
 import logging
+import asyncio
 
 # Setup logging
 logger = logging.getLogger("AgentsLogger")
@@ -29,23 +30,21 @@ class BaseAgent:
         user_prompt = input_content
         return system_prompt, user_prompt
     
-    def run_api(self, input_content: str) -> str:
-        """
-        Default agent uses run_gpt (no PDF).
-        """
+    async def run_api(self, input_content: str) -> str:
+        """Default agent uses run_gpt (no PDF)."""
         system_msg, user_msg = self.query_llm(input_content)
         logger.info(f"Running API for agent: {self.name}")
-        return run_gpt(system_msg, user_msg, self.model)
+        return await run_gpt(system_msg, user_msg, self.model)
 
 class InstructionalFileAgent(BaseAgent):
     def __init__(self, name, role, function, model, instructional_files):
         super().__init__(name, role, function, model)
         self.instructional_files = instructional_files
     
-    def run_api(self, input_content: str) -> str:
+    async def run_api(self, input_content: str) -> str:
         system_msg, user_msg = self.query_llm(input_content)
         logger.info(f"{self.name}: accessing full PDF.")
-        response = run_gpt_with_file(system_msg, user_msg, self.instructional_files, self.model)
+        response = await run_gpt_with_file(system_msg, user_msg, self.instructional_files, self.model)
         return response
 
 class TaskExecutorAgent(BaseAgent):
@@ -54,21 +53,23 @@ class TaskExecutorAgent(BaseAgent):
         self.instructional_files = instructional_files
         self.supplementary_files = supplementary_files
         self.uses_rag = uses_rag
+        self._semaphore = asyncio.Semaphore(5)
 
-    def run_api(self, input_content: str) -> str:        
+    async def run_api(self, input_content: str) -> str:
         system_msg, user_msg = self.query_llm(input_content)
-        if self.uses_rag == False:
-            return run_gpt(system_msg, user_msg, self.model)
-        logger.info(f"{self.name}: Performing semantic retrieval with prompt: '{user_msg}'")
-        rag_output = run_gpt_with_rag(
-            system_msg, 
-            user_msg, 
-            self.instructional_files, 
-            self.supplementary_files,
-            self.model
-        )
-        logger.info(f"{self.name}: Retrieved content:\n{rag_output}")
-        return rag_output
+        async with self._semaphore:
+            if not self.uses_rag:
+                return await run_gpt(system_msg, user_msg, self.model)
+            logger.info(f"{self.name}: Performing semantic retrieval with prompt: '{user_msg}'")
+            rag_output = await run_gpt_with_rag(
+                system_msg,
+                user_msg,
+                self.instructional_files,
+                self.supplementary_files,
+                self.model
+            )
+            logger.info(f"{self.name}: Retrieved content:\n{rag_output}")
+            return rag_output
 
 """
 returns:

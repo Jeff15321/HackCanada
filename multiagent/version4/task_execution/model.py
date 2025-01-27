@@ -1,16 +1,20 @@
 import os
 from dotenv import load_dotenv
 import getpass
+from openai import OpenAI
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain.vectorstores import FAISS
-from langchain.document_loaders import PyPDFLoader
-from langchain.schema import Document, SystemMessage, HumanMessage
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import FAISS
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.documents import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from typing import List, TypedDict
 import asyncio
 import json
 from os.path import basename
 from task_execution.logger import setup_logger
+from functools import lru_cache
+from concurrent.futures import ThreadPoolExecutor
 
 # Setup logging -> Yeah no we are redoing model.py logging -> putting it in its own log files
 # logger = logging.getLogger("ModelLogger")
@@ -50,46 +54,71 @@ class State(TypedDict):
     context: List[Document]
     answer: str
 
-async def load_pages(loader):
+# Cache the loaded pages to avoid reloading the same file multiple times
+@lru_cache(maxsize=32)
+async def load_cached_pages(file_path: str):
+    loader = PyPDFLoader(file_path)
     pages = []
     async for page in loader.alazy_load():
         pages.append(page)
-    logger.info(f"Loaded {len(pages)} pages from {loader.file_path}")
     return pages
 
 # runs just the prompt without any additional file information
-def run_gpt(system_prompt: str, user_prompt: str, model="gpt-4o-mini", temperature: float = 0.0) -> str:
+async def run_gpt(system_prompt: str, user_prompt: str, model="gpt-4o-mini", temperature: float = 0.0) -> str:
     open_ai_key = os.environ["OPENAI_API_KEY"]
-    llm = ChatOpenAI(model_name=model, temperature=temperature, openai_api_key=open_ai_key)
-    messages = [SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)]
-    response = llm.invoke(messages)
-
-    do_logging(run_gpt, messages, response)
-    return response.content
+    client = OpenAI(api_key=open_ai_key)
+    
+    response = await asyncio.to_thread(
+        client.chat.completions.create,
+        model=model,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        temperature=temperature,
+    )
+    
+    do_logging(run_gpt, [system_prompt, user_prompt], response)
+    return response.choices[0].message.content
 
 # consumes the the files listed in its entirety and adds it to the prompt
-def run_gpt_with_file(system_prompt: str, user_prompt: str, file_paths: List[str], model="gpt-4o-mini", temperature: float = 0.3) -> str:
+async def run_gpt_with_file(system_prompt: str, user_prompt: str, file_paths: List[str], model="gpt-4o-mini", temperature: float = 0.3) -> str:
     open_ai_key = os.environ["OPENAI_API_KEY"]
-    llm = ChatOpenAI(model_name=model, temperature=temperature, openai_api_key=open_ai_key)
+    client = OpenAI(api_key=open_ai_key)
 
-    file_contents = "Below are the FULL files for reference:\n"
-    for i, fp in enumerate(file_paths, 1):
-        file_name = basename(fp)
-        loader = PyPDFLoader(fp)
-        pages = asyncio.run(load_pages(loader))
-        file_contents += f"\n--- File {i}: {file_name} (Pages: {len(pages)}) ---\n"
-        for idx, page in enumerate(pages, 1):
-            file_contents += f"Page {idx}:\n{page.page_content}\n"
-
-    combined_prompt = user_prompt + "\n\n" + file_contents
-    messages = [SystemMessage(content=system_prompt), HumanMessage(content=combined_prompt)]
-    response = llm.invoke(messages)
+    file_contents = "Below are the files for reference:\n"
     
-    do_logging(run_gpt_with_file, messages, response)
-    return response.content
+    # Load all files in parallel
+    async with asyncio.TaskGroup() as tg:
+        file_tasks = [
+            tg.create_task(load_cached_pages(fp))
+            for fp in file_paths
+        ]
+    
+    # Process results
+    for i, task in enumerate(file_tasks):
+        pages = await task
+        file_name = basename(file_paths[i])
+        file_contents += f"*****File {i+1}: {file_name} (total pages: {len(pages)})*****\n"
+        for idx, page in enumerate(pages, 1):
+            file_contents += f"**page {idx}**\n{page.page_content}"
+
+    combined_prompt = user_prompt + "\n" + file_contents
+    
+    response = await asyncio.to_thread(
+        client.chat.completions.create,
+        model=model,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": combined_prompt},
+        ],
+        temperature=temperature,
+    )
+    
+    return response.choices[0].message.content
 
 # puts the files through rag and adds the result of that to the prompt
-def run_gpt_with_rag(system_prompt: str, user_prompt: str,
+async def run_gpt_with_rag(system_prompt: str, user_prompt: str,
                      instructional_files: List[str], supplementary_files: List[str],
                      model="gpt-4o-mini", temperature: float = 0.3) -> str:
     open_ai_key = os.environ["OPENAI_API_KEY"]
@@ -99,7 +128,7 @@ def run_gpt_with_rag(system_prompt: str, user_prompt: str,
     all_docs = []
     for fp in instructional_files + supplementary_files:
         loader = PyPDFLoader(fp)
-        pages = asyncio.run(load_pages(loader))
+        pages = await load_cached_pages(fp)
         all_docs.extend(pages)
     logger.info(f"Total documents loaded for RAG: {len(all_docs)}")
 
@@ -116,18 +145,16 @@ def run_gpt_with_rag(system_prompt: str, user_prompt: str,
     doc_text = "\n\n".join(doc.page_content for doc in retrieved_docs)
     logger.info(f"Retrieved {len(retrieved_docs)} docs for the prompt.")
 
-    llm = ChatOpenAI(model_name=model, temperature=temperature, openai_api_key=open_ai_key)
-    combined_prompt = (
-        f"QUESTION:\n{user_prompt}\n\n"
-        f"RETRIEVED CONTENT:\n{doc_text}\n\n"
-        "Answer strictly with relevant information from above, no extra. "
-        "Ensure the final answer is coherent and as detailed as possible."
+    client = OpenAI(api_key=open_ai_key)
+    response = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": f"{user_prompt}\n\nContext:\n{doc_text}"},
+        ],
+        temperature=temperature,
     )
-    messages = [SystemMessage(content=system_prompt), HumanMessage(content=combined_prompt)]
-    response = llm.invoke(messages)
-
-    do_logging(run_gpt_with_rag, messages, response)
-    return response.content
+    return response.choices[0].message.content
 
 if __name__ == '__main__':
     test_resp = run_gpt("System prompt here", "User says: Hello world!", "gpt-4o-mini")

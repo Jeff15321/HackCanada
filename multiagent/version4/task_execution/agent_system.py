@@ -1,6 +1,9 @@
 import os
 import json
 import ast
+import asyncio
+from typing import List, Tuple
+from concurrent.futures import ThreadPoolExecutor
 
 from task_execution.agents import * # this would include everything in agent_definitions.py as if they were part of this file
 from task_execution.logger import setup_logger
@@ -11,100 +14,125 @@ class multiagentTaskExecutionSystem:
         self.instructional_files = instructional_files
         self.supplementary_files = supplementary_files
         self.model = model
-        self.agents_dict = initialize_task_execution_agents(self.instructional_files, self.supplementary_files, self.model)
+        self.agents_dict = initialize_task_execution_agents(
+            self.instructional_files, 
+            self.supplementary_files, 
+            self.model
+        )
+        self.executor = ThreadPoolExecutor(max_workers=os.cpu_count() * 2)
     
     # should probably have some functions to verify for function formats
 
-    def run_subtask(self, subtask, task_execution_plan_formatted, overall_prompt, logger):
-        # Run the Task Delegator Agent to get the task delegation plan
-        delegation_prompt = (
-            f"{overall_prompt}\n"
-            f"Here is the overall task execution plan that you are to reference:\n{task_execution_plan_formatted}\n"
-            f"This is the specific subtask that you are to create the subtask delegation plan for:\n"
-            f"Subtask: {subtask}\n"
-            f"Subtask items as formatted from task execution plan:\n{task_execution_plan_formatted[subtask]}"
-        )
-        subtask_delegation_plan = ""
-        subtask_delegation_plan_formatted = [] # listof((subtask step, assigned agent))
-        while subtask_delegation_plan == "":
-            try:
-                subtask_delegation_plan = self.agents_dict["Task Delegator Agent"].run_api(delegation_prompt)
-                subtask_delegation_plan = subtask_delegation_plan.replace("""```json""", '').replace("""```""", '') # this one's more of a just in case whereas for task_execution_plan you needed to do it
-                subtask_delegation_plan_formatted = ast.literal_eval(subtask_delegation_plan)
-                assert isinstance(subtask_delegation_plan_formatted, list) # should probably replace these with a more comprehensive check for formatting
-                # assert isinstance(subtask_delegation_plan_formatted[0], tuple)
-                # ^oh and pretty sure this test is wrong
-                logger.info(f"*****Task Delegator Agent ({subtask})*****\n{subtask_delegation_plan}")
-            except Exception as e:
-                logger.warning(f"FILE PARSING FAILED (Task Delegator Agent subtask: {subtask}) on:\n{subtask_delegation_plan}")
-                logger.error(f"Error details: {str(e)}", exc_info=True)
-                subtask_delegation_plan = ""
-        
-        completed_steps_outputs = [] # listof((step, step output))
-        # Do each subtask
-        for step, agent in subtask_delegation_plan_formatted:
-            # add to the prompt: overall list of steps, your step to do, previous outputs,
-            step_prompt = (
-                f"{delegation_prompt}\n"
-                f"The specific step of the subtask that you are responsible for is: {step}"
-                "Your output is to draw from and build upon the steps that came before you in the subtask. Here are the steps in the subtask that came before you:\n"
-            )
-            for i, (prev_step, prev_output) in enumerate(completed_steps_outputs): # adding output from previous steps
-                step_prompt = step_prompt + f"Step {i+1}: {prev_step}\n{prev_output}\n"
-            if agent not in self.agents_dict.keys():  # default to writing agent :monkey:
+    async def run_subtask_step(self, step: str, agent: str, step_prompt: str, logger) -> tuple[str, str]:
+        try:
+            if agent not in self.agents_dict:
                 logger.warning(f"Wrong agent name: {agent}")
                 agent = "Writing Agent"
-            step_output = self.agents_dict[agent].run_api(step_prompt)
-            completed_steps_outputs.append((step, step_output))
-            logger.info(f"*****Subtask step: {step} (agent: {agent})*****\n{step_output}")
-       
-        return completed_steps_outputs[-1][1]
+            
+            step_output = await self.agents_dict[agent].run_api(step_prompt)
+            return step, step_output
+        except Exception as e:
+            logger.error(f"Error in step {step}: {str(e)}")
+            return step, f"Error: {str(e)}"
 
-    def run_full_task(self, task, context, refined_prompt, logger):
-        # logger = setup_logger()
+    async def run_subtask(self, subtask: str, task_execution_plan_formatted: dict, overall_prompt: str, logger) -> str:
+        try:
+            delegation_prompt = (
+                f"{overall_prompt}\n"
+                f"Task execution plan: {task_execution_plan_formatted}\n"
+                f"Current subtask: {subtask}\n"
+                f"Subtask details: {task_execution_plan_formatted[subtask]}"
+            )
 
+            steps = task_execution_plan_formatted[subtask]
+            if isinstance(steps, list):
+                steps = {f"Step {i+1}": step for i, step in enumerate(steps)}
+
+            results = {}
+            async with asyncio.TaskGroup() as tg:
+                tasks = {
+                    step: tg.create_task(
+                        self.run_subtask_step(
+                            step, 
+                            agent, 
+                            f"{delegation_prompt}\nCurrent step: {step}",
+                            logger
+                        )
+                    )
+                    for step, agent in steps.items()
+                }
+
+                for step, task in tasks.items():
+                    try:
+                        _, output = await task
+                        results[step] = output
+                    except Exception as e:
+                        results[step] = f"Error: {str(e)}"
+
+            return results[list(results.keys())[-1]]
+        except Exception as e:
+            logger.error(f"Error in subtask {subtask}: {str(e)}")
+            return f"Error in subtask: {str(e)}"
+
+    async def run_parallel_subtasks(self, task_execution_plan_formatted: dict, prompt: str, logger) -> list:
+        results = []
+        async with asyncio.TaskGroup() as tg:
+            tasks = {
+                subtask: tg.create_task(
+                    self.run_subtask(subtask, task_execution_plan_formatted, prompt, logger)
+                )
+                for subtask in task_execution_plan_formatted.keys()
+            }
+
+            for subtask, task in tasks.items():
+                try:
+                    output = await task
+                    results.append((subtask, output))
+                except Exception as e:
+                    results.append((subtask, f"Error: {str(e)}"))
+
+        return results
+
+    async def run_full_task_async(self, task, context, refined_prompt, logger):
         initial_prompt = f"Task: {task}\nContext:{context}\n{refined_prompt}"
-
-        # Starts off with the refined prompt from the multiagent prompt refinement
         prompt = initial_prompt
         logger.info(f"*****Initial Prompt*****\n{prompt}")
 
-        # Put it through Task Planner Agent, output: formatted task execution plan: {subtask: [step1, step2, ..., step n], ...}
         task_execution_plan = ""
         task_execution_plan_formatted = {}
-        while task_execution_plan == "":
+        
+        # Get task execution plan with retry logic
+        for _ in range(3):
             try:
-                task_execution_plan = self.agents_dict["Task Planner Agent"].run_api(prompt)
-                task_execution_plan = task_execution_plan.replace("""```json""", '').replace("""```""", '')
+                task_execution_plan = await self.agents_dict["Task Planner Agent"].run_api(prompt)
+                task_execution_plan = task_execution_plan.replace("```json", '').replace("```", '')
                 task_execution_plan_formatted = json.loads(task_execution_plan)
-                assert isinstance(task_execution_plan_formatted, dict) # should probably replace these with a more comprehensive check for formatting
-                # assert isinstance(list(task_execution_plan_formatted.items())[0], list) 
-                # ^smtg wrong about the code for this one
+                
+                if isinstance(task_execution_plan_formatted, list):
+                    task_execution_plan_formatted = {
+                        f"Task {i+1}": steps for i, steps in enumerate(task_execution_plan_formatted)
+                    }
+                
                 logger.info(f"*****Task Planner Agent*****\n{task_execution_plan_formatted}")
-            except Exception as e: # most likely errors: format issues, duplicate keys
+                break
+            except Exception as e:
                 logger.warning(f"FILE PARSING FAILED (Task Planner Agent) on:\n{task_execution_plan}")
                 logger.error(f"Error details: {str(e)}", exc_info=True)
-                task_execution_plan = ""
-        
-        # Now do the task delegation into subtasks and task executon for each subtask
-        subtask_outputs = [] # listof((subtask name, subtask output))
-        for subtask in task_execution_plan_formatted.keys():
-            # Run each subtask through the Task Delegator Agent, and then the execution agents for each step of the subtask
-            subtask_output = self.run_subtask(subtask, task_execution_plan_formatted, prompt, logger)
-            subtask_outputs.append((subtask, subtask_output))
-        
-        # ***********VERY IMPORTANT NOTICE***********
-        # So the Merger Agent has a tendency to remove over half the content from each subtask output during the merging process which is not good, so we are going to both the merger agent result, and just hard concatenating everything together
-        # Both will go into the logs, but the hard concatenated one will be the return value
+                await asyncio.sleep(1)
 
-        # Now merge the work from the subtasks together with the merger agent
+        if not task_execution_plan_formatted:
+            raise Exception("Failed to get valid task execution plan after retries")
+
+        subtask_outputs = await self.run_parallel_subtasks(task_execution_plan_formatted, prompt, logger)
+
         merging_prompt = (
             f"Here is the task execution file for the overall task: {task_execution_plan}\n"
             f"Below are the outputs for each subtask for the overall task (the subtasks: {task_execution_plan_formatted.keys()}):\n"
         )
-        for i, (subtask, subtask_output) in enumerate(subtask_outputs): # feed it all the subtask outputs
+        for i, (subtask, subtask_output) in enumerate(subtask_outputs):
             merging_prompt = merging_prompt + f"Subtask {i+1}: {subtask}\n{subtask_output}\n"
-        merged_output = self.agents_dict["Merger Agent"].run_api(merging_prompt)
+        
+        merged_output = await self.agents_dict["Merger Agent"].run_api(merging_prompt)
         logger.info(f"*****Merger Agent*****\n{merged_output}")
         
         final_output = ""
@@ -113,7 +141,11 @@ class multiagentTaskExecutionSystem:
         logger.info(f"*****Hard Concatenation of Subtask Outputs*****\n{final_output}")
 
         return final_output
-    
+
+    def run(self, task: str, context: str, refined_prompt: str, max_rounds: int = 3) -> str:
+        logger = setup_logger("multiagent_task_execution")
+        return asyncio.run(self.run_full_task_async(task, context, refined_prompt, logger))
+
     def create_list_of_metrics(self, task, context, refined_prompt, logger):
         metrics = ""
         metrics_formatted = []
@@ -194,40 +226,6 @@ class multiagentTaskExecutionSystem:
             logger.info(f"*****PROBLEMS FOR ROUND {round_number}*****\n{feedback_result}")
             feedback_result = feedback_result + "This is the entirety of the previous output for this task which had the problems:\n" + task_output + "\n" # add it AFTER the logging (rather not flood problem logging with repeat of the whole output)
         return feedback_result
-
-
-    ##### THIS ENCOMPASSES EVERYTHING THAT IS HAPPENING #####
-    def run(self, task, context, refined_prompt, max_rounds=3):
-        logger = setup_logger("multiagent_task_execution")
-        result_logger = setup_logger("task_output_result")
-
-        final_result = ""
-        metrics_formatted = self.create_list_of_metrics(task, context, refined_prompt, logger) # Come with with a list of metrics       
-        feedback = ""
-
-        for i in range(1, max_rounds+1):
-            refined_prompt_with_feedback  = refined_prompt + feedback
-            logger.info(f"###############################")
-            logger.info(f"########### Round {i} ###########")
-            logger.info(f"###############################\n\n")
-
-            # Get a final output of the entire task execution
-            final_result = self.run_full_task(task, context, refined_prompt_with_feedback, logger)
-
-            # Verify the final output using the list of metrics
-            verification_results = self.do_verification(task, context, refined_prompt_with_feedback, final_result, metrics_formatted, logger)
-
-            # Log the output and verfication result in a separate log
-            self.log_round_results(i, final_result, verification_results, result_logger)
-
-            # Generate the feedback (var feedback should equal "NULL" if all the metrics passed)
-            feedback = self.generate_feedback(i, final_result, verification_results, logger)
-
-            # If the loop didn't break then it'll keep going with the feedback appended to the prompt
-            if feedback == "NULL":
-                break
-
-        return final_result
 
 
 
