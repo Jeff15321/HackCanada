@@ -4,8 +4,11 @@ import ast
 import asyncio
 from typing import List, Tuple
 from concurrent.futures import ThreadPoolExecutor
+import aiohttp
+from functools import lru_cache
+import hashlib
 
-from task_execution.agents import * # this would include everything in agent_definitions.py as if they were part of this file
+from task_execution.agents import * 
 from task_execution.logger import setup_logger
 
 
@@ -19,8 +22,36 @@ class multiagentTaskExecutionSystem:
             self.supplementary_files, 
             self.model
         )
-        self.executor = ThreadPoolExecutor(max_workers=os.cpu_count() * 2)
+        self.executor = ThreadPoolExecutor(max_workers=os.cpu_count() * 4)
+        self.session = None  # Initialize as None
+        self.task_plan_cache = {}
+        self._lock = asyncio.Lock()
     
+    @lru_cache(maxsize=100)
+    def _cache_key(self, prompt: str) -> str:
+        return hashlib.md5(prompt.encode()).hexdigest()
+
+    async def get_cached_task_plan(self, prompt: str):
+        key = self._cache_key(prompt)
+        if key in self.task_plan_cache:
+            return self.task_plan_cache[key]
+        return None
+
+    async def cache_task_plan(self, prompt: str, plan: dict):
+        key = self._cache_key(prompt)
+        async with self._lock:
+            self.task_plan_cache[key] = plan
+
+    async def get_session(self):
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
+        return self.session
+
+    async def cleanup(self):
+        if self.session:
+            await self.session.close()
+            self.session = None
+
     # should probably have some functions to verify for function formats
 
     async def run_subtask_step(self, step: str, agent: str, step_prompt: str, logger) -> tuple[str, str]:
@@ -74,23 +105,26 @@ class multiagentTaskExecutionSystem:
             logger.error(f"Error in subtask {subtask}: {str(e)}")
             return f"Error in subtask: {str(e)}"
 
-    async def run_parallel_subtasks(self, task_execution_plan_formatted: dict, prompt: str, logger) -> list:
+    async def run_subtasks_batch(self, batch, task_execution_plan_formatted, prompt, logger):
         results = []
         async with asyncio.TaskGroup() as tg:
             tasks = {
-                subtask: tg.create_task(
-                    self.run_subtask(subtask, task_execution_plan_formatted, prompt, logger)
-                )
-                for subtask in task_execution_plan_formatted.keys()
+                subtask: tg.create_task(self.run_subtask(
+                    subtask, 
+                    task_execution_plan_formatted, 
+                    prompt, 
+                    logger
+                ))
+                for subtask in batch
             }
-
+            
             for subtask, task in tasks.items():
                 try:
                     output = await task
                     results.append((subtask, output))
                 except Exception as e:
                     results.append((subtask, f"Error: {str(e)}"))
-
+        
         return results
 
     async def run_full_task_async(self, task, context, refined_prompt, logger):
@@ -98,53 +132,45 @@ class multiagentTaskExecutionSystem:
         prompt = initial_prompt
         logger.info(f"*****Initial Prompt*****\n{prompt}")
 
-        task_execution_plan = ""
-        task_execution_plan_formatted = {}
+        # Try to get cached task plan
+        task_execution_plan_formatted = await self.get_cached_task_plan(prompt)
         
-        # Get task execution plan with retry logic
-        for _ in range(3):
-            try:
-                task_execution_plan = await self.agents_dict["Task Planner Agent"].run_api(prompt)
-                task_execution_plan = task_execution_plan.replace("```json", '').replace("```", '')
-                task_execution_plan_formatted = json.loads(task_execution_plan)
-                
-                if isinstance(task_execution_plan_formatted, list):
-                    task_execution_plan_formatted = {
-                        f"Task {i+1}": steps for i, steps in enumerate(task_execution_plan_formatted)
-                    }
-                
-                logger.info(f"*****Task Planner Agent*****\n{task_execution_plan_formatted}")
-                break
-            except Exception as e:
-                logger.warning(f"FILE PARSING FAILED (Task Planner Agent) on:\n{task_execution_plan}")
-                logger.error(f"Error details: {str(e)}", exc_info=True)
-                await asyncio.sleep(1)
-
         if not task_execution_plan_formatted:
-            raise Exception("Failed to get valid task execution plan after retries")
+            # Get task execution plan with retry logic
+            for _ in range(3):
+                try:
+                    task_execution_plan = await self.agents_dict["Task Planner Agent"].run_api(prompt)
+                    task_execution_plan = task_execution_plan.replace("```json", '').replace("```", '')
+                    task_execution_plan_formatted = json.loads(task_execution_plan)
+                    
+                    if isinstance(task_execution_plan_formatted, list):
+                        task_execution_plan_formatted = {
+                            f"Task {i+1}": steps for i, steps in enumerate(task_execution_plan_formatted)
+                        }
+                    
+                    # Cache the plan
+                    await self.cache_task_plan(prompt, task_execution_plan_formatted)
+                    break
+                except Exception as e:
+                    logger.warning(f"FILE PARSING FAILED (Task Planner Agent) on:\n{task_execution_plan}")
+                    logger.error(f"Error details: {str(e)}", exc_info=True)
+                    await asyncio.sleep(1)
 
-        subtask_outputs = await self.run_parallel_subtasks(task_execution_plan_formatted, prompt, logger)
+        # Process subtasks in parallel batches
+        batch_size = 3
+        all_subtasks = list(task_execution_plan_formatted.keys())
+        results = await self.run_subtasks_batch(all_subtasks, task_execution_plan_formatted, prompt, logger)
 
-        merging_prompt = (
-            f"Here is the task execution file for the overall task: {task_execution_plan}\n"
-            f"Below are the outputs for each subtask for the overall task (the subtasks: {task_execution_plan_formatted.keys()}):\n"
-        )
-        for i, (subtask, subtask_output) in enumerate(subtask_outputs):
-            merging_prompt = merging_prompt + f"Subtask {i+1}: {subtask}\n{subtask_output}\n"
-        
-        merged_output = await self.agents_dict["Merger Agent"].run_api(merging_prompt)
-        logger.info(f"*****Merger Agent*****\n{merged_output}")
-        
-        final_output = ""
-        for (subtask, subtask_output) in subtask_outputs:
-            final_output = final_output + f"{subtask}:\n{subtask_output}\n\n\n"
-        logger.info(f"*****Hard Concatenation of Subtask Outputs*****\n{final_output}")
-
-        return final_output
+        return await self.merge_results(results, task_execution_plan_formatted, prompt, logger)
 
     def run(self, task: str, context: str, refined_prompt: str, max_rounds: int = 3) -> str:
         logger = setup_logger("multiagent_task_execution")
-        return asyncio.run(self.run_full_task_async(task, context, refined_prompt, logger))
+        async def _run():
+            try:
+                return await self.run_full_task_async(task, context, refined_prompt, logger)
+            finally:
+                await self.cleanup()
+        return asyncio.run(_run())
 
     def create_list_of_metrics(self, task, context, refined_prompt, logger):
         metrics = ""
@@ -226,6 +252,33 @@ class multiagentTaskExecutionSystem:
             logger.info(f"*****PROBLEMS FOR ROUND {round_number}*****\n{feedback_result}")
             feedback_result = feedback_result + "This is the entirety of the previous output for this task which had the problems:\n" + task_output + "\n" # add it AFTER the logging (rather not flood problem logging with repeat of the whole output)
         return feedback_result
+
+    async def merge_results(self, results: List[Tuple[str, str]], task_execution_plan: dict, prompt: str, logger) -> str:
+        try:
+            merging_prompt = (
+                f"Original task and context:\n{prompt}\n\n"
+                f"Task execution plan: {task_execution_plan}\n\n"
+                "Below are the outputs for each subtask:\n"
+            )
+            
+            for subtask, output in results:
+                merging_prompt += f"\nSubtask: {subtask}\nOutput: {output}\n"
+                logger.info(f"*****Subtask Result*****\nSubtask: {subtask}\nOutput: {output}")
+            
+            merged_output = await self.agents_dict["Merger Agent"].run_api(merging_prompt)
+            logger.info(f"*****Merger Agent*****\n{merged_output}")
+            
+            # Also provide raw outputs for reference
+            final_output = f"Merged Output:\n{merged_output}\n\nRaw Outputs:\n"
+            for subtask, output in results:
+                final_output += f"\n{subtask}:\n{output}\n"
+            
+            return final_output
+            
+        except Exception as e:
+            logger.error(f"Error in merging results: {str(e)}")
+            # Fallback: return concatenated results if merging fails
+            return "\n\n".join([f"{subtask}:\n{output}" for subtask, output in results])
 
 
 

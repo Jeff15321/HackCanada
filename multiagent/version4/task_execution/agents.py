@@ -54,22 +54,21 @@ class TaskExecutorAgent(BaseAgent):
         self.supplementary_files = supplementary_files
         self.uses_rag = uses_rag
         self._semaphore = asyncio.Semaphore(5)
+        self._response_cache = {}
 
     async def run_api(self, input_content: str) -> str:
         system_msg, user_msg = self.query_llm(input_content)
         async with self._semaphore:
             if not self.uses_rag:
-                return await run_gpt(system_msg, user_msg, self.model)
-            logger.info(f"{self.name}: Performing semantic retrieval with prompt: '{user_msg}'")
-            rag_output = await run_gpt_with_rag(
+                return await cached_run_gpt(system_msg, user_msg, self.model)
+            
+            return await cached_run_gpt_with_rag(
                 system_msg,
                 user_msg,
                 self.instructional_files,
                 self.supplementary_files,
                 self.model
             )
-            logger.info(f"{self.name}: Retrieved content:\n{rag_output}")
-            return rag_output
 
 """
 returns:

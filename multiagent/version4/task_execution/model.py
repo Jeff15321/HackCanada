@@ -15,6 +15,7 @@ from os.path import basename
 from task_execution.logger import setup_logger
 from functools import lru_cache
 from concurrent.futures import ThreadPoolExecutor
+import hashlib
 
 # Setup logging -> Yeah no we are redoing model.py logging -> putting it in its own log files
 # logger = logging.getLogger("ModelLogger")
@@ -155,6 +156,66 @@ async def run_gpt_with_rag(system_prompt: str, user_prompt: str,
         temperature=temperature,
     )
     return response.choices[0].message.content
+
+@lru_cache(maxsize=1000)
+def cache_key(prompt: str, model: str) -> str:
+    return hashlib.md5(f"{prompt}:{model}".encode()).hexdigest()
+
+@lru_cache(maxsize=100)
+async def cached_run_gpt(system_prompt: str, user_prompt: str, model="gpt-4o-mini", temperature: float = 0.0) -> str:
+    key = cache_key(f"{system_prompt}:{user_prompt}", model)
+    return await run_gpt(system_prompt, user_prompt, model, temperature)
+
+class FileCache:
+    def __init__(self):
+        self.cache = {}
+        self._lock = asyncio.Lock()
+
+    async def get_file_content(self, file_path: str) -> List[Document]:
+        if file_path not in self.cache:
+            async with self._lock:
+                if file_path not in self.cache:
+                    loader = PyPDFLoader(file_path)
+                    pages = await load_cached_pages(file_path)
+                    self.cache[file_path] = pages
+        return self.cache[file_path]
+
+file_cache = FileCache()
+
+class AgentResponseCache:
+    def __init__(self, max_size=1000):
+        self.cache = {}
+        self.max_size = max_size
+        self._lock = asyncio.Lock()
+
+    async def get(self, key: str):
+        return self.cache.get(key)
+
+    async def set(self, key: str, value: str):
+        async with self._lock:
+            if len(self.cache) >= self.max_size:
+                # Remove oldest entry
+                self.cache.pop(next(iter(self.cache)))
+            self.cache[key] = value
+
+response_cache = AgentResponseCache()
+
+async def cached_run_gpt_with_rag(system_prompt: str, user_prompt: str,
+                           instructional_files: List[str], supplementary_files: List[str],
+                           model="gpt-4o-mini", temperature: float = 0.3) -> str:
+    cache_key = hashlib.md5(f"{system_prompt}:{user_prompt}:{','.join(instructional_files + supplementary_files)}".encode()).hexdigest()
+    
+    # Check cache
+    cached_response = await response_cache.get(cache_key)
+    if cached_response:
+        return cached_response
+
+    # If not in cache, proceed with RAG
+    response = await run_gpt_with_rag(system_prompt, user_prompt, instructional_files, supplementary_files, model, temperature)
+    
+    # Cache the response
+    await response_cache.set(cache_key, response)
+    return response
 
 if __name__ == '__main__':
     test_resp = run_gpt("System prompt here", "User says: Hello world!", "gpt-4o-mini")
