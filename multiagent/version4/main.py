@@ -19,7 +19,7 @@ task_execution_rounds = 3
 ####################################################################################################################################################################
 
 pd_prompt = """
-Refine and enhance the language, structure, and clarity of Critical Essay 3 to align with the expectations outlined in the Critical Essay Rubric. Preserve the original content and main arguments of the essay, focusing only on improving its coherence, organization, grammar, and adherence to rubric criteria. Do not alter the essay’s key points or central message.
+Refine and enhance the language, structure, and clarity of Critical Essay 3 about Ensmenger's and Dhar's work to align with the expectations outlined in the Critical Essay Rubric. Preserve the original content and main arguments of the essay, focusing only on improving its coherence, organization, grammar, and adherence to rubric criteria. Do not alter the essay’s key points or central message.
 """
 
 
