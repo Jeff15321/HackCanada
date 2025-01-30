@@ -3,48 +3,50 @@ from dotenv import load_dotenv
 import getpass
 from openai import OpenAI
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_community.vectorstores import FAISS
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_core.documents import Document
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain.vectorstores import FAISS
+from langchain.document_loaders import PyPDFLoader
+from langchain.schema import Document, SystemMessage, HumanMessage
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from typing import List, TypedDict
 import asyncio
 import json
 from os.path import basename
 from task_execution.logger import setup_logger
+import warnings
 from functools import lru_cache
-from concurrent.futures import ThreadPoolExecutor
-import hashlib
 
-# Setup logging -> Yeah no we are redoing model.py logging -> putting it in its own log files
-# logger = logging.getLogger("ModelLogger")
-# logger.setLevel(logging.INFO)
-# if not logger.handlers:
-#     handler = logging.StreamHandler()
-#     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-#     handler.setFormatter(formatter)
-#     logger.addHandler(handler)
+# Suppress all UserWarnings (which includes LangSmith warnings)
+warnings.filterwarnings("ignore", category=UserWarning)
 
+# Setup logging
 logger = setup_logger("model_input_output")
+
 def do_logging(func, prompt, output):
-    logger.info("\n"*6)
-
-    logger.info(func.__name__)
-    logger.info("="*90)
-    logger.info("PROMPT" + "="*84)
-    logger.info("="*90)
-
-    logger.info(prompt)
+    logger.info("\n" + "="*100)
+    logger.info(f"FUNCTION CALL: {func.__name__}")
+    logger.info("="*100)
     
-    logger.info("="*90)
-    logger.info("OUTPUT" + "="*84)
-    logger.info("="*90)
-
-    logger.info(output)
-
-    logger.info("\n"*6)
+    # Log system and user messages separately for better readability
+    if isinstance(prompt, list):  # For message-style prompts
+        logger.info("SYSTEM PROMPT:")
+        logger.info("-"*50)
+        logger.info(prompt[0].content)
+        logger.info("\nUSER PROMPT:")
+        logger.info("-"*50)
+        logger.info(prompt[1].content)
+    else:  # For direct string prompts
+        logger.info("PROMPT:")
+        logger.info("-"*50)
+        logger.info(prompt)
     
+    logger.info("\nOUTPUT:")
+    logger.info("-"*50)
+    if hasattr(output, 'content'):  # For OpenAI/LangChain style responses
+        logger.info(output.content)
+    else:  # For direct string outputs
+        logger.info(output)
+    
+    logger.info("="*100 + "\n")
 
 load_dotenv()
 if not os.environ.get("OPENAI_API_KEY"):
@@ -216,6 +218,42 @@ async def cached_run_gpt_with_rag(system_prompt: str, user_prompt: str,
     # Cache the response
     await response_cache.set(cache_key, response)
     return response
+
+class PhiHandler:
+    def __init__(self):
+        self.tokenizer = AutoTokenizer.from_pretrained("microsoft/phi-1_5")
+        self.model = AutoModelForCausalLM.from_pretrained("microsoft/phi-1_5")
+        self.pipe = pipeline("text-generation", model="microsoft/phi-1_5", device_map="auto")
+
+    async def generate(self, system_prompt: str, user_prompt: str) -> str:
+        prompt = f"System: {system_prompt}\nUser: {user_prompt}\nAssistant:"
+        response = self.pipe(
+            prompt,
+            max_length=1000,
+            temperature=0.7,
+            do_sample=True,
+            top_p=0.9,
+            num_return_sequences=1
+        )
+        return response[0]['generated_text'].split("Assistant:")[-1].strip()
+
+try:
+    phi_handler = PhiHandler()
+except Exception as e:
+    print(f"Warning: Could not initialize Phi-1.5 model: {str(e)}")
+    print("Falling back to default model for delegator agents")
+    phi_handler = None
+
+async def run_phi(system_prompt: str, user_prompt: str) -> str:
+    return await phi_handler.generate(system_prompt, user_prompt)
+
+async def run_inference(system_prompt: str, user_prompt: str) -> str:
+    """Dedicated function for delegator agents using Phi-1.5"""
+    if phi_handler is not None:
+        return await run_phi(system_prompt, user_prompt)
+    else:
+        # Fallback to GPT if Phi-1.5 is not available
+        return await run_gpt(system_prompt, user_prompt, "gpt-4o-mini")
 
 if __name__ == '__main__':
     test_resp = run_gpt("System prompt here", "User says: Hello world!", "gpt-4o-mini")

@@ -16,6 +16,7 @@ from typing_extensions import List, TypedDict
 
 from langchain_community.document_loaders import PyPDFLoader
 import asyncio
+import aiohttp
 
 load_dotenv()
 if not os.environ.get("OPENAI_API_KEY"):
@@ -102,6 +103,24 @@ def run_gpt_with_rag(text_prompt, agent_role, file_path, model="gpt-4o-mini", te
     response = graph.invoke({"question": text_prompt})
     return response["answer"]
 
+class ConnectionPool:
+    def __init__(self):
+        self.session = None
+        self._lock = asyncio.Lock()
+        
+    async def get_session(self):
+        if not self.session:
+            async with self._lock:
+                if not self.session:
+                    self.session = aiohttp.ClientSession()
+        return self.session
+
+    async def close(self):
+        if self.session:
+            await self.session.close()
+            self.session = None
+
+pool = ConnectionPool()
 
 if __name__ == '__main__':
     monke = run_gpt("What is the velocity of an unladden swallow?", "")

@@ -1,5 +1,6 @@
 from task_execution.model import *
 from task_execution.agent_definitions import *
+from task_execution.model import run_inference
 
 import logging
 import asyncio
@@ -55,20 +56,24 @@ class TaskExecutorAgent(BaseAgent):
         self.uses_rag = uses_rag
         self._semaphore = asyncio.Semaphore(5)
         self._response_cache = {}
+        self.is_delegator = name in ["Task Planner Agent", "Merger Agent", "Review Agent", "Standards Agent"]
 
     async def run_api(self, input_content: str) -> str:
         system_msg, user_msg = self.query_llm(input_content)
         async with self._semaphore:
-            if not self.uses_rag:
+            if self.is_delegator:
+                # Use Inference API for delegator agents
+                return await run_inference(system_msg, user_msg)
+            elif not self.uses_rag:
                 return await cached_run_gpt(system_msg, user_msg, self.model)
-            
-            return await cached_run_gpt_with_rag(
-                system_msg,
-                user_msg,
-                self.instructional_files,
-                self.supplementary_files,
-                self.model
-            )
+            else:
+                return await cached_run_gpt_with_rag(
+                    system_msg,
+                    user_msg,
+                    self.instructional_files,
+                    self.supplementary_files,
+                    self.model
+                )
 
 """
 returns:

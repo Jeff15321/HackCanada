@@ -16,6 +16,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import pandas as pd
+from task_execution.logger import setup_logger
+import warnings
+
+# Just use a general warning filter instead of specific LangSmith warning
+warnings.filterwarnings("ignore", category=UserWarning)
 
 load_dotenv()
 
@@ -25,6 +30,25 @@ if not openai_api_key:
 
 lm = dspy.LM('gpt-4o-mini')
 dspy.configure(lm=lm)
+
+# Setup logging for DSPy prompt refinement
+logger = setup_logger("dspy_prompt_refinement")
+
+def do_logging(stage_name, details):
+    logger.info("\n" + "="*100)
+    logger.info(f"STAGE: {stage_name}")
+    logger.info("="*100)
+    
+    for key, value in details.items():
+        logger.info(f"\n{key}:")
+        logger.info("-"*50)
+        if isinstance(value, dict):
+            for k, v in value.items():
+                logger.info(f"{k}: {v}")
+        else:
+            logger.info(value)
+    
+    logger.info("="*100 + "\n")
 
 class EnhancedPromptRefiner(dspy.Signature):
     """Refine a prompt for a given task with enhanced context."""
@@ -153,8 +177,63 @@ compiled_generator = optimizer_manager.compile(PromptGenerator(), trainset=train
 ############### THIS IS THE IMPORTANT FUNCTION THAT GETS CALLED IN OTHER FILES ###############
 ##############################################################################################
 def get_refined_prompt(task, job_context, audience, tone, output_format, compiled_generator):
-    print(f"Generating refined prompt for '{task}' in '{job_context}' with audience '{audience}'...")
+    # Log initial inputs
+    input_details = {
+        "Input Parameters": {
+            "Task": task,
+            "Job Context": job_context,
+            "Audience": audience,
+            "Tone": tone,
+            "Output Format": output_format
+        }
+    }
+    do_logging("Initial Parameters", input_details)
+
+    # Log DSPy configuration
+    config_details = {
+        "DSPy Configuration": {
+            "Model": lm.model_name if hasattr(lm, 'model_name') else str(lm),
+            "Optimizer Type": optimizer_type,
+            "Config": str(config)
+        }
+    }
+    do_logging("DSPy Configuration", config_details)
+
+    # Log compilation process
+    logger.info("Starting prompt generation with compiled DSPy model...")
     result = compiled_generator(task=task, job_context=job_context, audience=audience, tone=tone, output_format=output_format)
+    
+    # Log generation results
+    generation_details = {
+        "Generated Prompt": result.refined_prompt,
+        "Generation Metadata": {
+            "Input Fields Used": str(result._input_fields if hasattr(result, '_input_fields') else "N/A"),
+            "Output Fields": str(result._output_fields if hasattr(result, '_output_fields') else "N/A")
+        }
+    }
+    do_logging("Prompt Generation Results", generation_details)
+
+    # Evaluate the result
+    metric_score = comprehensive_prompt_metric(
+        dspy.Example(
+            task=task,
+            job_context=job_context,
+            audience=audience,
+            tone=tone,
+            output_format=output_format
+        ),
+        result
+    )
+    
+    # Log evaluation results
+    evaluation_details = {
+        "Evaluation Results": {
+            "Comprehensive Metric Score": f"{metric_score:.4f}",
+            "Evaluation Criteria": "Based on readability, relevance, and structural completeness"
+        }
+    }
+    do_logging("Prompt Evaluation", evaluation_details)
+
     return result.refined_prompt
 
 if __name__ == "__main__":

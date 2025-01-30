@@ -1,4 +1,5 @@
 import os
+import asyncio
 
 from prompt_refinement.agents import *
 from prompt_refinement.logger import setup_logger
@@ -10,8 +11,19 @@ class multiagentSystem:
         self.instructional_files = instructional_files
         self.supplementary_files = supplementary_files
         self.model = model
+        self.batch_size = 5  # Process agents in batches
         self.agents_dict = initialize_prompt_agents(self.list_of_agents, self.instructional_files, self.supplementary_files, self.model)
     
+    async def process_agent_batch(self, batch, prompt, logger):
+        tasks = []
+        async with asyncio.TaskGroup() as tg:
+            for agent_name in batch:
+                if agent_name in self.agents_dict:
+                    tasks.append(tg.create_task(
+                        self.agents_dict[agent_name].run_api(prompt)
+                    ))
+        return await asyncio.gather(*tasks)
+
     def run(self, task, context, dspy_prompt, refinement_rounds, search_rounds):
         logger = setup_logger()
 
