@@ -31,10 +31,17 @@ def do_logging(func, prompt, output):
     if isinstance(prompt, list):  # For message-style prompts
         logger.info("SYSTEM PROMPT:")
         logger.info("-"*50)
-        logger.info(prompt[0].content)
+        if isinstance(prompt[0], dict):
+            logger.info(prompt[0].get('content', str(prompt[0])))
+        else:
+            logger.info(prompt[0])
+            
         logger.info("\nUSER PROMPT:")
         logger.info("-"*50)
-        logger.info(prompt[1].content)
+        if isinstance(prompt[1], dict):
+            logger.info(prompt[1].get('content', str(prompt[1])))
+        else:
+            logger.info(prompt[1])
     else:  # For direct string prompts
         logger.info("PROMPT:")
         logger.info("-"*50)
@@ -42,10 +49,16 @@ def do_logging(func, prompt, output):
     
     logger.info("\nOUTPUT:")
     logger.info("-"*50)
-    if hasattr(output, 'content'):  # For OpenAI/LangChain style responses
+    
+    # Handle different output types
+    if isinstance(output, dict):
+        logger.info(output.get('content', str(output)))
+    elif hasattr(output, 'choices') and output.choices:  # OpenAI API response
+        logger.info(output.choices[0].message.content)
+    elif hasattr(output, 'content'):  # Message-like object
         logger.info(output.content)
-    else:  # For direct string outputs
-        logger.info(output)
+    else:  # String or other type
+        logger.info(str(output))
     
     logger.info("="*100 + "\n")
 
