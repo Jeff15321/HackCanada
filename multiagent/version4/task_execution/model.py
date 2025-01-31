@@ -14,6 +14,7 @@ from os.path import basename
 from task_execution.logger import setup_logger
 import warnings
 from functools import lru_cache
+import hashlib
 
 # Suppress all UserWarnings (which includes LangSmith warnings)
 warnings.filterwarnings("ignore", category=UserWarning)
