@@ -44,9 +44,9 @@ class TaskState(TypedDict):
 # ---------------------------
 # Initialize LLM models
 # ---------------------------
-planner = ChatOpenAI(model="gpt-4", temperature=0)
-executor = ChatOpenAI(model="gpt-4", temperature=0)
-merger = ChatOpenAI(model="gpt-4", temperature=0)
+planner = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+executor = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+merger = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
 # ---------------------------
 # Define the task planning node
