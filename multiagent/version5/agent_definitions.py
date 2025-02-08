@@ -50,8 +50,7 @@ agent_definitions = {
         "name": "Merger Agent",
         "role": "Combine the outputs from the subtasks together in a coherent and organzied way to create the final output for the task execution.",
         "function": (
-            "Analyze the provided super prompt, instructional files, and task execution breakdown. Each subtask contributes to the overall task, and all outputs must be merged into a coherent final product."
-            f"\nTask execution plan format:\n{task_execution_plan_format}"
+            "Analyze the provided super prompt and instructional files. Each subtask contributes to the overall task, and all outputs must be merged into a coherent final product with proper transitions between the subtasks."
             "\nYou will receive the task execution plan, ordered subtasks, and their outputs. Your role is to merge these outputs seamlessly without altering content. You can add transitions may be added only if necessary. Return only the final merged output."
         )
     },

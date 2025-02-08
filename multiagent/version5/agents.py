@@ -254,32 +254,29 @@ def merger_with_agent(state: TaskState) -> TaskState:
 ################################################################################################################################################
 
 def create_parallel_workflow(task_execution_plan) -> Graph:
-    # Our typed state is TaskState
     workflow = StateGraph(TaskState)
 
-    # Add nodes
+    # Add planner & router & merger nodes
     workflow.add_node("planner", task_planner)
     workflow.add_node("router", router)
-    # workflow.add_node("merger", merger)
     workflow.add_node("merger_with_agent", merger_with_agent)
 
+    # Build the list of executor nodes
     possible_subtasks = [key for key in task_execution_plan.keys()]
+    exec_nodes = []
     for st in possible_subtasks:
         node_name = f"exec_{st}"
         workflow.add_node(node_name, make_executor(st))
-        # after the router, we can go to this executor
+        # Fan out from "router" to each executor in parallel
         workflow.add_edge("router", node_name)
-        # each executor eventually leads to "merger"
-        # workflow.add_edge(node_name, "merger")
-        workflow.add_edge(node_name, "merger_with_agent")
+        exec_nodes.append(node_name)
 
-
-    # Edges: planner -> router, router -> ... -> merger -> END
+    # Edges: planner -> router, then fan-in after executors -> merger_with_agent -> END
     workflow.add_edge("planner", "router")
-    # workflow.add_edge("merger", END)
+    workflow.add_edge(exec_nodes, "merger_with_agent")
     workflow.add_edge("merger_with_agent", END)
 
-
+    # Planner is the entry point
     workflow.set_entry_point("planner")
     return workflow.compile()
 
