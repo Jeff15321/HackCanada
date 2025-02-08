@@ -9,6 +9,9 @@ if __name__ == "__main__":
     print("\n=== FINAL STATE ===")
     print(json.dumps(final, indent=2))
 
+    print("\n=== MERGED RESULT WITH AGENT ===")
+    print(final["merged_result_with_agent"])
+
     # print("\n=== PARTIAL RESULTS ===")
     # for sub, text in final["partial_results"].items():
     #     print(f"Subtask {sub} =>", text)

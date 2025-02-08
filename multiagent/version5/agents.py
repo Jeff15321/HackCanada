@@ -48,11 +48,13 @@ class TaskState(TypedDict):
     - partial_results: dictionary of subtask => string output
     - input_prompt: overall prompt
     - merged_result: final merged essay
+    - merged_result_with_agent: final merged essay from the agent
     """
     task_plan: TaskPlan
     partial_results: Annotated[Dict[str, str], dict_merge]  # parallel merges
     input_prompt: str
     merged_result: str
+    merged_result_with_agent: str
 
 planner_llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 executor_llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
@@ -233,13 +235,18 @@ def merger_with_agent(state: TaskState) -> TaskState:
         HumanMessage(content=user_prompt)
     ]
 
-    llm_response = merger_llm(messages)
-    merged_text = llm_response.content.strip()
+    try:
+        llm_response = merger_llm(messages)
+        merged_text = llm_response.content.strip()
+    except Exception as e:
+        print(f"ERROR - Merger Agent error: {e}")
+        merged_text = "Error occurred in merger agent."
 
     print("\n=== MERGER WITH AGENT ===\nMerged output:\n", merged_text)
     return {
         **state,
-        "merged_result_with_agent": merged_text
+        "merged_result_with_agent": merged_text,
+        "merged_result": merged_text  # Update both fields
     }
 
 ################################################################################################################################################
