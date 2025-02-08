@@ -1,6 +1,6 @@
 from typing import Dict, TypedDict, Annotated, List, Any
 import json
-from dotenv import load_dotenv, find_dotenv
+from dotenv import load_dotenv
 import os
 import getpass
 
@@ -11,7 +11,6 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.utils.function_calling import convert_to_openai_function
 
-
 def dict_merge(old_dict: Dict[str, Any], new_dict: Dict[str, Any]) -> Dict[str, Any]:
     """Merge two dictionaries by updating the old one with new values."""
     return {**old_dict, **new_dict}
@@ -20,11 +19,10 @@ def list_merge(old_list: List[Any], new_list: List[Any]) -> List[Any]:
     """Merge two lists by concatenation."""
     return old_list + new_list
 
+
 load_dotenv()
 if not os.environ.get("OPENAI_API_KEY"):
     os.environ["OPENAI_API_KEY"] = getpass.getpass("Enter your OpenAI API key: ")
-
-
 
 class SubTask(TypedDict):
     name: str
@@ -35,22 +33,15 @@ class TaskPlan(TypedDict):
 
 class TaskState(TypedDict):
     task_plan: TaskPlan
-    # Instead of updating a single dict concurrently,
-    # each executor appends its result to this list.
     partial_results: Annotated[List[Dict[str, str]], list_merge]
     input_prompt: str
     merged_result: str
 
-# ---------------------------
-# Initialize LLM models
-# ---------------------------
+
 planner = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 executor = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 merger = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
-# ---------------------------
-# Define the task planning node
-# ---------------------------
 def task_planner(state: TaskState) -> TaskState:
     planning_prompt = ChatPromptTemplate.from_messages([
         ("system", 
@@ -63,7 +54,7 @@ For an essay, you should create these subtasks:
 3. Conclusion – Summarize and reinforce key points
 
 Each subtask must have:
-1. A descriptive name (like "introduction", "body_1", etc.)
+1. A descriptive name (e.g., "introduction", "body_1", etc.)
 2. Clear instructions for what that section should cover
 
 Format your response as a JSON object with a key "subtasks" whose value is an object mapping subtask keys to objects with "name" and "instructions"."""),
@@ -104,43 +95,47 @@ Format your response as a JSON object with a key "subtasks" whose value is an ob
             function_call={"name": "create_task_plan"}
         )
         plan_data = json.loads(response.additional_kwargs["function_call"]["arguments"])
-        if not plan_data.get("subtasks"):
-            # Create a default task plan if none was generated
+        
+        # Ensure the plan has all expected subtasks
+        expected_subtasks = {"introduction", "body_1", "body_2", "conclusion"}
+        plan_subtasks = plan_data.get("subtasks", {})
+        if not plan_subtasks or not expected_subtasks.issubset(set(plan_subtasks.keys())):
+            print("Plan missing expected subtasks. Using default plan.")
             plan_data = {
                 "subtasks": {
                     "introduction": {
                         "name": "Introduction",
                         "instructions": [
-                            "Write an engaging introduction to the topic", 
-                            "Present the main points that will be discussed"
+                            "Write an engaging introduction to the topic.",
+                            "Present the main points that will be discussed."
                         ]
                     },
                     "body_1": {
-                        "name": "First Main Point",
+                        "name": "Body Paragraph 1",
                         "instructions": [
-                            "Discuss the first major aspect of the topic",
-                            "Provide specific examples and evidence"
+                            "Write the first body paragraph detailing a major aspect of the topic.",
+                            "Include supporting evidence and examples."
                         ]
                     },
                     "body_2": {
-                        "name": "Second Main Point",
+                        "name": "Body Paragraph 2",
                         "instructions": [
-                            "Discuss the second major aspect of the topic",
-                            "Provide specific examples and evidence"
+                            "Write the second body paragraph detailing another major aspect of the topic.",
+                            "Include supporting evidence and examples."
                         ]
                     },
                     "conclusion": {
                         "name": "Conclusion",
                         "instructions": [
-                            "Summarize the main points discussed",
-                            "Provide final thoughts and future implications"
+                            "Write a conclusion summarizing the essay.",
+                            "Reinforce the key points and provide final thoughts."
                         ]
                     }
                 }
             }
+        else:
+            print("Debug - Task Plan:", plan_data)
             
-        print("Debug - Task Plan:", plan_data)
-        
         return {
             **state,
             "task_plan": plan_data
@@ -148,25 +143,53 @@ Format your response as a JSON object with a key "subtasks" whose value is an ob
     except Exception as e:
         print(f"Error in task planner: {e}")
         print("Response:", response)
-        return {
-            **state,
-            "task_plan": {
-                "subtasks": {
-                    "main_task": {
-                        "name": "Complete Task",
-                        "instructions": ["Complete the entire task: " + state["input_prompt"]]
-                    }
+        # Fallback default plan on error
+        default_plan = {
+            "subtasks": {
+                "introduction": {
+                    "name": "Introduction",
+                    "instructions": [
+                        "Write an engaging introduction to the topic.",
+                        "Present the main points that will be discussed."
+                    ]
+                },
+                "body_1": {
+                    "name": "Body Paragraph 1",
+                    "instructions": [
+                        "Write the first body paragraph detailing a major aspect of the topic.",
+                        "Include supporting evidence and examples."
+                    ]
+                },
+                "body_2": {
+                    "name": "Body Paragraph 2",
+                    "instructions": [
+                        "Write the second body paragraph detailing another major aspect of the topic.",
+                        "Include supporting evidence and examples."
+                    ]
+                },
+                "conclusion": {
+                    "name": "Conclusion",
+                    "instructions": [
+                        "Write a conclusion summarizing the essay.",
+                        "Reinforce the key points and provide final thoughts."
+                    ]
                 }
             }
         }
+        return {
+            **state,
+            "task_plan": default_plan
+        }
 
-# ---------------------------
-# Define the task executor node (one per subtask)
-# ---------------------------
 def create_subtask_executor(subtask_name: str):
     def executor_fn(state: TaskState) -> TaskState:
-        subtask = state["task_plan"]["subtasks"][subtask_name]
-        
+        try:
+            subtask = state["task_plan"]["subtasks"][subtask_name]
+        except KeyError:
+            # In case the expected subtask is missing, skip execution.
+            print(f"Subtask '{subtask_name}' not found in the plan. Skipping this executor.")
+            return state
+
         execution_prompt = ChatPromptTemplate.from_messages([
             ("system", 
              """You are a task execution AI. Execute the given subtask and provide a clear output.
@@ -199,8 +222,7 @@ You have the original task context and specific instructions for this subtask.""
                 function_call={"name": "execute_subtask"}
             )
             result_data = json.loads(response.additional_kwargs["function_call"]["arguments"])
-            # Instead of writing to one dict (which causes concurrent-update issues),
-            # have each executor return its result as a one-item list.
+            # Each executor returns its result as a one-item list.
             return {"partial_results": [{subtask_name: result_data["result"]}]}
         except Exception as e:
             print(f"Error executing subtask {subtask_name}: {e}")
@@ -208,15 +230,11 @@ You have the original task context and specific instructions for this subtask.""
     
     return executor_fn
 
-# ---------------------------
-# Define the merger node
-# ---------------------------
 def result_merger(state: TaskState) -> TaskState:
     # Combine all partial results into one dictionary.
     if not state["partial_results"]:
         return {"merged_result": "No results to merge"}
 
-    # Merge the list of dictionaries into one dict.
     execution_results = {}
     for part in state["partial_results"]:
         execution_results.update(part)
@@ -260,13 +278,10 @@ Please merge these results into a coherent output.""")
         functions=[merger_function],
         function_call={"name": "merge_results"}
     )
-    # Use strict=False to allow unescaped control characters (or alternatively clean the string)
+    # Allow unescaped control characters (or adjust as needed)
     result_data = json.loads(response.additional_kwargs["function_call"]["arguments"], strict=False)
     return {"merged_result": result_data["merged_result"]}
 
-# ---------------------------
-# Create the parallel workflow graph
-# ---------------------------
 def create_parallel_workflow() -> Graph:
     workflow = StateGraph(TaskState)
     
@@ -276,10 +291,9 @@ def create_parallel_workflow() -> Graph:
     # Add the merger node.
     workflow.add_node("merger", result_merger)
     
-    # Pre-create executor nodes for all possible subtasks.
-    # (This ensures the nodes exist before compilation.)
-    possible_subtasks = ["introduction", "body_1", "body_2", "conclusion"]
-    for name in possible_subtasks:
+    # Pre-create executor nodes for all expected subtasks.
+    expected_subtasks = ["introduction", "body_1", "body_2", "conclusion"]
+    for name in expected_subtasks:
         node_name = f"executor_{name}"
         workflow.add_node(node_name, create_subtask_executor(name))
         # Each executor is triggered by the router.
@@ -289,7 +303,7 @@ def create_parallel_workflow() -> Graph:
     
     # Define a router node that sends control to each executor based on the task plan.
     def router(state: TaskState) -> Dict:
-        subtasks = state["task_plan"]["subtasks"]
+        subtasks = state["task_plan"].get("subtasks", {})
         next_nodes = [f"executor_{name}" for name in subtasks.keys()]
         # If there are no subtasks, send control to the merger.
         if not next_nodes:
@@ -300,15 +314,11 @@ def create_parallel_workflow() -> Graph:
     
     # Set up the main flow: planner -> router; (router -> executors) -> merger -> END.
     workflow.add_edge("planner", "router")
-    # (Remove any direct router-to-merger edge to avoid duplicate updates.)
     workflow.add_edge("merger", END)
     
     workflow.set_entry_point("planner")
     return workflow.compile()
 
-# ---------------------------
-# Function to run the workflow
-# ---------------------------
 def process_task(prompt: str) -> Dict:
     """
     Process a task through the planning and execution workflow.
@@ -337,9 +347,6 @@ def process_task(prompt: str) -> Dict:
         print("Current state:", initial_state)
         raise
 
-# ---------------------------
-# Example usage
-# ---------------------------
 if __name__ == "__main__":
     sample_prompt = "Write an essay about the benefits of artificial intelligence in healthcare."
     result = process_task(sample_prompt)
@@ -349,7 +356,7 @@ if __name__ == "__main__":
         print(f"\n{name}:")
         print(f"Instructions: {subtask['instructions']}")
     
-    # Since we now collect executor outputs in a merged dictionary:
+    # Merge executor outputs
     execution_results = {}
     for partial in result.get("partial_results", []):
         execution_results.update(partial)
