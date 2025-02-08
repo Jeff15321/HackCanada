@@ -289,7 +289,8 @@ def process_task(prompt: str) -> TaskState:
         "input_prompt": prompt,
         "task_plan": {"plan": task_execution_plan_reformatted},
         "partial_results": {},
-        "merged_result": ""
+        "merged_result": "",
+        "merged_result_with_agent": ""
     }
 
     final_state = graph.invoke(init_state)
