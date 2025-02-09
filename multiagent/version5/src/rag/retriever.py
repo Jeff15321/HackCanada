@@ -33,7 +33,6 @@ def compute_files_hash(file_paths: List[str]) -> str:
                     hasher.update(chunk)
         except Exception as e:
             # print(f"Warning: Error reading {file_path} for hash: {e}")
-            # Include error in hash to avoid cache hits on failed reads
             hasher.update(str(e).encode())
     return hasher.hexdigest()
 
@@ -43,18 +42,14 @@ def save_rag_cache(file_paths: List[str], vector_store, doc_store):
         cache_dir = get_cache_dir()
         files_hash = compute_files_hash(file_paths)
         
-        # Save FAISS vector store
         vector_store.save_local(str(cache_dir / f"{files_hash}_vectors"))
         
-        # Save document store
         with open(cache_dir / f"{files_hash}_docstore.pkl", 'wb') as f:
             pickle.dump(doc_store, f)
             
-        # Save file paths for validation
         with open(cache_dir / f"{files_hash}_files.txt", 'w') as f:
             f.write("\n".join(file_paths))
             
-        # print("RAG cache saved successfully")
     except Exception as e:
         print(f"Error saving RAG cache: {e}")
 
@@ -114,7 +109,7 @@ def setup_rag_for_supplementary_files(file_paths: List[str]):
                 chunk_overlap=200,
                 separators=["\n\n", "\n", ".", "!", "?", ";"],
             ),
-            search_kwargs={"k": 3},
+            search_kwargs={"k": 4},
         )
         return retriever
     
@@ -140,7 +135,7 @@ def setup_rag_for_supplementary_files(file_paths: List[str]):
         docstore=doc_store,
         child_splitter=child_splitter,
         parent_splitter=parent_splitter,
-        search_kwargs={"k": 3},
+        search_kwargs={"k": 4},
     )
     
     # Load and add documents
@@ -195,14 +190,13 @@ def set_rag_retriever(retriever):
     global _global_retriever
     _global_retriever = retriever
 
-def get_relevant_context(query: str, k: int = 3) -> str:
+def get_relevant_context(query: str, k: int = 4) -> str:
     """Get relevant context from supplementary files using RAG."""
     global _global_retriever
     try:
         if not _global_retriever:
             return ""
             
-        # Use invoke instead of get_relevant_documents
         relevant_docs = _global_retriever.invoke(
             query,
             config={"search_kwargs": {"k": k, "score_threshold": 0.7}}  # Only return highly relevant results
@@ -210,10 +204,8 @@ def get_relevant_context(query: str, k: int = 3) -> str:
         # Take top k most relevant results
         relevant_docs = relevant_docs[:k]
         
-        # Format the context more cleanly
         contexts = []
         for i, doc in enumerate(relevant_docs, 1):
-            # Clean up the text and format it
             clean_text = " ".join(doc.page_content.split())
             contexts.append(f"[{i}] {clean_text}")
         

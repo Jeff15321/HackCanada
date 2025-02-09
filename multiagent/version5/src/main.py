@@ -33,7 +33,6 @@ def process_task(
     
     # 3) Generate the plan and convert to expected format
     generated_plan = generate_task_execution_plan(prompt, instructional_content)
-    # Reformat into a dict with the new structure
     plan_dict = {}
     for st in generated_plan:
         if isinstance(st, dict):
