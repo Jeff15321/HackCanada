@@ -32,7 +32,7 @@ def compute_files_hash(file_paths: List[str]) -> str:
                 for chunk in iter(lambda: f.read(4096), b''):
                     hasher.update(chunk)
         except Exception as e:
-            print(f"Warning: Error reading {file_path} for hash: {e}")
+            # print(f"Warning: Error reading {file_path} for hash: {e}")
             # Include error in hash to avoid cache hits on failed reads
             hasher.update(str(e).encode())
     return hasher.hexdigest()
@@ -82,9 +82,9 @@ def load_rag_cache(file_paths: List[str]) -> tuple:
         embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
         vector_store = FAISS.load_local(str(vector_path), embeddings)
         
-        # Load document store
+        # Load document store with safety flag
         with open(docstore_path, 'rb') as f:
-            doc_store = pickle.load(f)
+            doc_store = pickle.load(f, fix_imports=True, encoding='latin1', allow_dangerous_deserialization=True)
             
         # print("RAG cache loaded successfully")
         return vector_store, doc_store
@@ -105,13 +105,13 @@ def setup_rag_for_supplementary_files(file_paths: List[str]):
             vectorstore=vector_store,
             docstore=doc_store,
             child_splitter=RecursiveCharacterTextSplitter(
-                chunk_size=200,
-                chunk_overlap=20,
-                separators=["\n", ".", "!", "?", ";"],
+                chunk_size=1000,
+                chunk_overlap=100,
+                separators=["\n\n", "\n", ".", "!", "?", ";"],
             ),
             parent_splitter=RecursiveCharacterTextSplitter(
-                chunk_size=500,
-                chunk_overlap=50,
+                chunk_size=2000,
+                chunk_overlap=200,
                 separators=["\n\n", "\n", ".", "!", "?", ";"],
             ),
             search_kwargs={"k": 3},
@@ -120,15 +120,15 @@ def setup_rag_for_supplementary_files(file_paths: List[str]):
     
     # If no cache, proceed with normal setup
     parent_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=50,
+        chunk_size=2000,
+        chunk_overlap=200,
         separators=["\n\n", "\n", ".", "!", "?", ";"],
     )
     
     child_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=200,
-        chunk_overlap=20,
-        separators=["\n", ".", "!", "?", ";"],
+        chunk_size=1000,
+        chunk_overlap=100,
+        separators=["\n\n", "\n", ".", "!", "?", ";"],
     )
     
     embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
@@ -200,14 +200,12 @@ def get_relevant_context(query: str, k: int = 3) -> str:
     global _global_retriever
     try:
         if not _global_retriever:
-            # print("No RAG retriever available")
             return ""
             
-        # print(f"\n=== Retrieving context for query: {query} ===")
-        # Get relevant documents with stricter relevance
-        relevant_docs = _global_retriever.get_relevant_documents(
+        # Use invoke instead of get_relevant_documents
+        relevant_docs = _global_retriever.invoke(
             query,
-            search_kwargs={"k": k, "score_threshold": 0.7}  # Only return highly relevant results
+            config={"search_kwargs": {"k": k, "score_threshold": 0.7}}  # Only return highly relevant results
         )
         # Take top k most relevant results
         relevant_docs = relevant_docs[:k]
@@ -220,9 +218,6 @@ def get_relevant_context(query: str, k: int = 3) -> str:
             contexts.append(f"[{i}] {clean_text}")
         
         context = "\n\n".join(contexts)
-        # print("\n=== Retrieved Context ===")
-        print(context)
-        # print("=== End Retrieved Context ===\n")
         return context
     except Exception as e:
         print(f"Error retrieving context: {e}")

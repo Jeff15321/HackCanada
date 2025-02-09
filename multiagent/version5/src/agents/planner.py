@@ -51,10 +51,20 @@ def task_planner(state: TaskState) -> TaskState:
             state["input_prompt"],
             state["instructional_content"]
         )
-        # Convert the structured list to dictionary
+        # Convert the structured list to dictionary with the new format
         plan_dict = {}
         for subtask in plan_data_list:
-            plan_dict[subtask.subtask_name] = subtask.subtask_steps
+            # Handle both object and dict formats
+            if isinstance(subtask, dict):
+                plan_dict[subtask['subtask_name']] = {
+                    "subtask_steps": subtask['subtask_steps'],
+                    "semantic_query": subtask['semantic_query']
+                }
+            else:
+                plan_dict[subtask.subtask_name] = {
+                    "subtask_steps": subtask.subtask_steps,
+                    "semantic_query": subtask.semantic_query
+                }
         
         return {
             **state,

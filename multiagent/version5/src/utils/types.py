@@ -4,11 +4,12 @@ from pydantic import BaseModel
 from .helpers import dict_merge
 
 class TaskPlan(TypedDict):
-    plan: Dict[str, List[str]]
+    plan: Dict[str, Dict[str, any]]  # subtask_name -> {subtask_steps: List[str], semantic_query: str}
 
 class SubtaskSteps(BaseModel):
     subtask_name: str
     subtask_steps: list[str]
+    semantic_query: str  # Query optimized for semantic search
 
 class TaskExecutionPlan(BaseModel):
     task_execution_plan: list[SubtaskSteps]

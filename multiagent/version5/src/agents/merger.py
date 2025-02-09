@@ -38,7 +38,8 @@ def merger_with_agent(state: TaskState) -> TaskState:
     ]
 
     try:
-        llm_response = merger_llm(messages)
+        # Use invoke instead of direct call
+        llm_response = merger_llm.invoke(messages)
         merged_text = llm_response.content.strip()
     except Exception as e:
         print(f"ERROR - Merger Agent error: {e}")

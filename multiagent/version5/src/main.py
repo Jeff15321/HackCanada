@@ -33,13 +33,19 @@ def process_task(
     
     # 3) Generate the plan and convert to expected format
     generated_plan = generate_task_execution_plan(prompt, instructional_content)
-    # Reformat into a dict - handle both object and dict formats
+    # Reformat into a dict with the new structure
     plan_dict = {}
     for st in generated_plan:
         if isinstance(st, dict):
-            plan_dict[st['subtask_name']] = st['subtask_steps']
+            plan_dict[st['subtask_name']] = {
+                "subtask_steps": st['subtask_steps'],
+                "semantic_query": st['semantic_query']
+            }
         else:
-            plan_dict[st.subtask_name] = st.subtask_steps
+            plan_dict[st.subtask_name] = {
+                "subtask_steps": st.subtask_steps,
+                "semantic_query": st.semantic_query
+            }
 
     # 4) Build and run the parallel workflow
     graph = create_parallel_workflow(plan_dict)

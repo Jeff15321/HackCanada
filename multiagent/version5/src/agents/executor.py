@@ -14,34 +14,36 @@ def make_executor(subtask_name: str):
     the global instructional content. Also fetches relevant RAG context.
     """
     def executor_fn(state: TaskState) -> TaskState:
-        instructions = state["task_plan"]["plan"][subtask_name]
+        # Get the subtask data from the plan
+        subtask_data = state["task_plan"]["plan"][subtask_name]
+        instructions = subtask_data["subtask_steps"]
+        semantic_query = subtask_data["semantic_query"]
+        
+        # Format instructions as a numbered list
+        formatted_instructions = "\n".join(f"{i+1}. {step}" for i, step in enumerate(instructions))
         
         # ONLY the executor uses RAG to fetch relevant context
         rag_context = ""
         if state["has_rag"]:
-            # Construct a retrieval query from the instructions
-            rag_query = (
-                f"Find relevant info about subtask: {subtask_name}\n"
-                f"For the overall user task: {state['input_prompt']}\n"
-                f"Instructions: {'. '.join(instructions)}"
-            )
-            rag_context = get_relevant_context(rag_query)
+            # Use the semantic query for RAG
+            rag_context = get_relevant_context(semantic_query, k=3)
 
         # Build final prompt for the subtask
-        full_prompt = f"""Subtask: {subtask_name}
-Overall Task: {state['input_prompt']}
+        full_prompt = f"""You are a grad student writing a critical essay on the environmental history of computing.
 
-Instructions for this subtask:
-{instructions}
+For the subtask "{subtask_name}", follow these instructions in order:
 
-Instructional Guidelines (always visible to you):
-{state['instructional_content']}
+{formatted_instructions}
 
-Relevant Context from Supplementary Files (only for this subtask):
+Use the following relevant context from source materials to support your response:
 {rag_context}
+
+Your response should:
+- Address each instruction point thoroughly
+- Use specific examples and evidence from the provided context
+- Maintain an academic writing style
+- Be detailed and well-structured
 """
-        # print(f"\n=== Executor {subtask_name} running ===")
-        # print("Prompt:\n", full_prompt)
 
         system_text = create_system_prompt(agent_definitions['Task Executor Agent'])
         msgs = [
@@ -50,13 +52,13 @@ Relevant Context from Supplementary Files (only for this subtask):
         ]
         
         try:
-            response = executor_llm(msgs)
+            # Use invoke instead of direct call
+            response = executor_llm.invoke(msgs)
             output_text = response.content.strip()
         except Exception as e:
             print(f"ERROR - Executor {subtask_name} error: {e}")
             output_text = f"Error occurred in {subtask_name}."
 
-        # Write the executor output to partial_results
         return {
             "partial_results": {subtask_name: output_text}
         }

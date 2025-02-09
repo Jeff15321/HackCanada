@@ -3,15 +3,27 @@ The task execution plan organizes subtasks and their steps to complete the overa
 
 For example, if the task is writing an essay about the benefits of AI in health:
 [
-    {"subtask_name": "introduction", "subtask_steps": ["Define AI...", "Explain context..."]},
-    {"subtask_name": "background", "subtask_steps": ["Research the current state...", "Collect stats..."]},
+    {
+        "subtask_name": "introduction",
+        "subtask_steps": ["Define AI...", "Explain context..."],
+        "semantic_query": "artificial intelligence definition healthcare context benefits introduction overview fundamentals"
+    },
+    {
+        "subtask_name": "background",
+        "subtask_steps": ["Research the current state...", "Collect stats..."],
+        "semantic_query": "healthcare AI current state statistics research data implementation adoption trends"
+    },
     {"subtask_name": "benefit_1", "subtask_steps": ["Describe first benefit...", "Give example..."]},
     {"subtask_name": "benefit_2", "subtask_steps": ["Describe second benefit...", "Give example..."]},
     {"subtask_name": "benefit_3", "subtask_steps": ["Describe third benefit...", "Give example..."]},
     {"subtask_name": "conclusion", "subtask_steps": ["Summarize points...", "Give final thoughts..."]}
 ]
 
-When structuring subtasks and steps, ensure coherence in the final merged result. Each step in the subtask should be as detailed as possible to provide maximum clarity and completeness.
+When structuring subtasks and steps:
+1. Ensure coherence in the final merged result
+2. Make each step as detailed as possible
+3. Include a semantic query with relevant keywords and concepts for effective document search
+4. The semantic query should include synonyms and related terms to improve search results
 
 Subtasks are completed IN PARALLEL, bad subtasks would be something like: [do research, write outline, do draft] since those tasks are dependent on the previous task. Good subtasks would be say splitting an essay into the different paragraphs, and then within the steps for each subtask then you have the steps (like do research, write outline, do draft, review, etc) that build upon the previous steps.
 
@@ -36,7 +48,7 @@ agent_definitions = {
     "Task Executor Agent": {
         "name": "Task Executor Agent",
         "role": "Responsible for executing a specific subtask by leveraging the provided super prompt, instructional files, and supplementary files information.",
-        "function": "Processes the assigned subtask by following a structured list of steps, extracting relevant information from the provided resources, and generating a well-formed output that aligns with the task requirements."
+        "function": "Processes the assigned subtask by following a structured list of steps, extracting relevant information from the provided resources, and generating a well-formed output that aligns with the task requirements. Unless explicitly stated, do NOT write a conclusion.",
     },
     "Merger Agent": {
         "name": "Merger Agent",
