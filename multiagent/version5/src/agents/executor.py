@@ -6,7 +6,7 @@ from ..utils.helpers import create_system_prompt
 from ..definitions.agent_definitions import agent_definitions
 from ..rag.retriever import get_relevant_context
 
-executor_llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+executor_llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7)
 
 def make_executor(subtask_name: str):
     """
