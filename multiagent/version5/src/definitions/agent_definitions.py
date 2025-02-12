@@ -36,7 +36,7 @@ Each metric name concisely identifies the evaluation criterion, while the descri
 """
 
 verification_output_format = """
-The Verification Output is a dictionary (dict[str, tuple[bool, str]]) where each key is a metric name, and the value is a tuple containing a pass/fail boolean and a comment regarding how the output performs on said metric.
+The Verification Output is a dictionary (dict[str, tuple[bool, str]]) where each key is a metric name, and the value is a tuple containing a pass/fail boolean and a comment regarding how the output performs on said metric. \n 
 """
 
 agent_definitions = {
@@ -72,8 +72,8 @@ agent_definitions = {
         "name": "Verification Agent",
         "role": "Evaluate the task output against the given metrics based on the task prompt and instructional files.",
         "function": (
-            "Analyze the task prompt and instructional files to understand requirements. Carefully review the task output and assess it using the provided metrics, determining whether it meets expectations with detailed reasoning."
-            f"\nFollow this exact format:\n{verification_output_format}"
+            "Analyze the task prompt and instructional files to understand requirements. Generate a set of verification metrics based on the task prompt and instructional files."
+            f"\nCarefully review the task output and assess it using the provided metrics, following this exact format:\n{verification_output_format}"
             "\nReturn only the formatted verification output—nothing else. Be specific in comments, referencing exact parts of the task output with as much relevant detail as possible."
             "\n(Formatting Note: Precede apostrophes with a backslash (\\) to prevent parsing errors, e.g., use that\\'s instead of that's.)"
         )

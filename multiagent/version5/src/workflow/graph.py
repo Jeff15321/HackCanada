@@ -4,6 +4,7 @@ from ..utils.types import TaskState
 from ..agents.planner import task_planner
 from ..agents.executor import make_executor
 from ..agents.merger import merger_with_agent
+from ..agents.verification import verification_agent
 
 def router(state: TaskState) -> dict:
     """
@@ -17,6 +18,21 @@ def router(state: TaskState) -> dict:
     next_nodes = [f"exec_{k}" for k in subtask_keys]
     return {"next": next_nodes}
 
+def verification_router(state: TaskState) -> str:
+    """
+    Routes to planner if any verification metrics failed, otherwise to END.
+    """
+    verification_report = state["verification_report"]
+    if not verification_report:
+        return "planner"  # Route to planner if verification failed
+        
+    # Check all pass/fail judgments
+    for metric in verification_report['metrics']: 
+        if metric['rating'] is False:  # Verification failed
+            return "planner"
+        
+    return "end"  # Verification successful
+
 def create_parallel_workflow(task_execution_plan) -> Graph:
     workflow = StateGraph(TaskState)
 
@@ -24,6 +40,7 @@ def create_parallel_workflow(task_execution_plan) -> Graph:
     workflow.add_node("planner", task_planner)
     workflow.add_node("router", router)
     workflow.add_node("merger_with_agent", merger_with_agent)
+    workflow.add_node("verification", verification_agent)
 
     # Create executor nodes for each subtask
     subtask_names = list(task_execution_plan.keys())
@@ -37,7 +54,15 @@ def create_parallel_workflow(task_execution_plan) -> Graph:
     # Wire up edges
     workflow.add_edge("planner", "router")
     workflow.add_edge(exec_nodes, "merger_with_agent")
-    workflow.add_edge("merger_with_agent", END)
+    workflow.add_edge("merger_with_agent", "verification")
+    workflow.add_conditional_edges("verification", 
+                                   verification_router, 
+                                   {
+                                       "planner": "planner", 
+                                       "end": END
+                                   })
+    
+    # TODO: Need to add input from the verification agent back to the planner (perhaps add False verification report feedback to the input_prompt?)
 
     # Planner is the entry point
     workflow.set_entry_point("planner")

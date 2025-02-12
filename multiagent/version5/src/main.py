@@ -55,7 +55,8 @@ def process_task(
         "merged_result": "",
         "merged_result_with_agent": "",
         "instructional_content": instructional_content,
-        "has_rag": has_rag
+        "has_rag": has_rag,
+        "verification_report": {}
     }
 
     final_state = graph.invoke(init_state)
