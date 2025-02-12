@@ -58,14 +58,6 @@ def verification_agent(state: TaskState) -> TaskState:
     
     # Build verification prompt focusing on basic requirements
     verification_prompt = f"""
-    Review the following essay based on these basic requirements:
-
-    1. Content Coverage: Does it address the main topics from the task?
-    2. Basic Structure: Does it have a clear flow and organization?
-    3. Length: Is it reasonably close to the target length?
-    4. Clarity: Is the writing clear and understandable?
-    5. Topic Relevance: Does it stay on topic?
-
     Note: Be generous in assessment. Minor issues should not cause failure.
     Citations are not required. Focus on whether the content is informative and well-organized.
 
