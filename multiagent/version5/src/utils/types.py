@@ -32,6 +32,7 @@ class TaskState(TypedDict):
     - instructional_content: content from instructional PDF files
     - has_rag: boolean indicating if RAG is available
     - verification_report: feedback based on initial prompt => criterion: [text_feedback, bool_feedback]
+    - retry_count: number of times the workflow has been retried due to verification failures
     """
     task_plan: TaskPlan
     partial_results: Annotated[Dict[str, str], dict_merge]
@@ -41,4 +42,5 @@ class TaskState(TypedDict):
     instructional_content: str
     has_rag: bool 
     verification_report: dict
+    retry_count: int
     

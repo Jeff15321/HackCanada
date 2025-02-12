@@ -56,7 +56,8 @@ def process_task(
         "merged_result_with_agent": "",
         "instructional_content": instructional_content,
         "has_rag": has_rag,
-        "verification_report": {}
+        "verification_report": {},
+        "retry_count": 0  # Initialize retry counter
     }
 
     final_state = graph.invoke(init_state)

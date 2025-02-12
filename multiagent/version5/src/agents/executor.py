@@ -2,7 +2,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import AIMessage, HumanMessage
 
 from ..utils.types import TaskState
-from ..utils.helpers import create_system_prompt
+from ..utils.helpers import create_system_prompt, extract_word_count_limit
 from ..definitions.agent_definitions import agent_definitions
 from ..rag.retriever import get_relevant_context
 
@@ -10,8 +10,9 @@ executor_llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7)
 
 def make_executor(subtask_name: str):
     """
-    Creates a node function that uses the subtask instructions + overall prompt +
-    the global instructional content. Also fetches relevant RAG context.
+    Creates a node function that executes a subtask in parallel with others.
+    Uses the subtask instructions + overall prompt + instructional content.
+    Fetches relevant RAG context for better response quality.
     """
     def executor_fn(state: TaskState) -> TaskState:
         # Get the subtask data from the plan
@@ -19,17 +20,21 @@ def make_executor(subtask_name: str):
         instructions = subtask_data["subtask_steps"]
         semantic_query = subtask_data["semantic_query"]
         
+        # Calculate target word count for guidance
+        total_word_limit = extract_word_count_limit(state["instructional_content"])
+        num_subtasks = len(state["task_plan"]["plan"])
+        target_words = total_word_limit // num_subtasks
+        
         # Format instructions as a numbered list
         formatted_instructions = "\n".join(f"{i+1}. {step}" for i, step in enumerate(instructions))
         
-        # ONLY the executor uses RAG to fetch relevant context
+        # Get relevant context using RAG
         rag_context = ""
         if state["has_rag"]:
-            # Use the semantic query for RAG
             rag_context = get_relevant_context(semantic_query, k=3)
 
-        # Build final prompt for the subtask
-        full_prompt = f"""You are a grad student writing a critical essay on the environmental history of computing.
+        # Build focused prompt for the subtask
+        full_prompt = f"""
 
 For the subtask "{subtask_name}", follow these instructions in order:
 
@@ -39,11 +44,10 @@ Use the following relevant context from source materials to support your respons
 {rag_context}
 
 Your response should:
+- Target approximately {target_words} words to fit within the overall essay
 - Address each instruction point thoroughly
 - Use specific examples and evidence from the provided context
-- Maintain an academic writing style
-- Be detailed and well-structured
-"""
+- Be detailed and well-structured"""
 
         system_text = create_system_prompt(agent_definitions['Task Executor Agent'])
         msgs = [
@@ -52,7 +56,6 @@ Your response should:
         ]
         
         try:
-            # Use invoke instead of direct call
             response = executor_llm.invoke(msgs)
             output_text = response.content.strip()
         except Exception as e:
