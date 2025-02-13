@@ -1,4 +1,14 @@
 /dspy/.env
 /.venv
 .env
-/
+version5/.env
+version5/__pycache__/
+version5/.cache/
+version5/.venv/
+version5/.gitignore
+version5/src/__pycache__/
+version5/src/agents/__pycache__/
+version5/src/definitions/__pycache__/
+version5/src/rag/__pycache__/
+version5/src/utils/__pycache__/
+version5/src/workflow/__pycache__/
