@@ -1,3 +1,0 @@
-Bootstrapped 0 full traces after 3 examples for up to 1 rounds, amounting to 4 attempts.
-Generating refined prompt for 'Gather Historical Financial Data' in 'Investment Research'...
-monke bruga activate EnhancedPromptRefiner
