@@ -4,13 +4,16 @@ import '@/styles/animations/ProffesionToggle.css';
 import FileAttachment from './FileAttachment';
 import { ChatMessageType } from '@/types/ChatMessageType';
 import { useUser } from '@/contexts/UserContext';
-import { useChat } from '@/contexts/ChatContext';
+import { useChat } from '@/contexts/chat/ChatContext';
+import { GetSuggestions } from '@/services/api';
+import { useSuggestions } from '@/contexts/chat/SuggestionsContext';
 
 const ButtonsChat: React.FC = () => {
     const [isProfessionOpen, setIsProfessionOpen] = useState(false);
+    const [profession, setProfession] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { selectedFiles, setSelectedFiles, handleChatSubmit } = useChat();
-
+    const { suggestions, setSuggestions } = useSuggestions();
     const { user, setUser } = useUser();
 
     const handleImageClick = () => {
@@ -21,6 +24,26 @@ const ButtonsChat: React.FC = () => {
         const files = Array.from(event.target.files || []);
         if (files.length > 0) {
             setSelectedFiles([...selectedFiles, ...files]);
+        }
+    };
+
+    const handleProfessionSubmit = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (profession.trim()) {
+            try {
+                const newSuggestions = await GetSuggestions(profession);
+                setSuggestions(newSuggestions);
+                setProfession('');
+            } catch (error) {
+                console.error('Error fetching suggestions:', error);
+            }
+        }
+    };
+
+    const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleProfessionSubmit(e as any);
         }
     };
 
@@ -68,6 +91,9 @@ const ButtonsChat: React.FC = () => {
                         <FaBriefcase className="w-5 h-5" />
                     </button>
                     <input 
+                        value={profession}
+                        onChange={(e) => setProfession(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         className="h-8 w-36 px-3 rounded-full bg-transparent border border-gray-300 
                                  text-sm placeholder:text-gray-500 focus:outline-none 
                                  focus:border-gray-400 focus:ring-1 focus:ring-gray-400
@@ -75,8 +101,9 @@ const ButtonsChat: React.FC = () => {
                         placeholder="Enter profession..."
                     />
                     <button 
-                        className="h-8 px-4 rounded-full bg-green-500 text-white text-sm font-medium
-                                 hover:bg-green-600 active:bg-green-700 
+                        onClick={handleProfessionSubmit}
+                        className="h-8 px-4 rounded-full bg-green-400 text-white text-sm font-medium
+                                 hover:bg-green-500 active:bg-green-700 
                                  transition-colors duration-200 shrink-0
                                  shadow-sm flex items-center justify-center"
                     >

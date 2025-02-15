@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState } from 'react';
 import { ChatMessageType } from '@/types/ChatMessageType';
-import { useUser } from './UserContext';
+import { useUser } from '../UserContext';
+import { PostChatMessage } from '@/services/api';
+import { useSuggestions } from './SuggestionsContext';
 
 interface ChatContextType {
     message: string;
@@ -10,6 +12,8 @@ interface ChatContextType {
     handleChatSubmit: () => void;
     resetInputs: boolean;
     setResetInputs: (resetInputs: boolean) => void;
+    selectedSuggestions: string[];
+    setSelectedSuggestions: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -18,6 +22,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [message, setMessage] = useState('');
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [resetInputs, setResetInputs] = useState(false);
+    const [selectedSuggestions, setSelectedSuggestions] = useState<string[]>([]);
     const { user } = useUser();
 
     const handleChatSubmit = () => {
@@ -27,9 +32,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             files: selectedFiles,
             message: message,
             date: new Date(),
-            user_id: Number(user?.id)
+            user_id: Number(user?.id),
+            suggestions: selectedSuggestions
         };
 
+        PostChatMessage(chatMessage);
         console.log(chatMessage);
         
         // Clear inputs
@@ -47,7 +54,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setSelectedFiles,
             handleChatSubmit,
             resetInputs,
-            setResetInputs
+            setResetInputs,
+            selectedSuggestions,
+            setSelectedSuggestions
         }}>
             {children}
         </ChatContext.Provider>

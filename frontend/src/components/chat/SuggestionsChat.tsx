@@ -1,31 +1,38 @@
-import React, {useState} from 'react';
-import { FaPlus, FaImage, FaBriefcase, FaMailBulk, FaPlane, FaPaperPlane } from 'react-icons/fa';
+import React, { useEffect } from 'react';
+import { useSuggestions } from '@/contexts/chat/SuggestionsContext';
+import { useChat } from '@/contexts/chat/ChatContext';
 
 const SuggestionsChat: React.FC = () => {
-    const [suggestions, useSuggestions] = useState([
-        "Suggestion 1",
-        "Suggestion 2222",
-        "Sugge 3",
-        "Suggestion 42",
-        "Suggestion 5",
-        "Suggestion 6",
-        "Suggestion 7",
-        "Suggestion 8",
-        "Suggestion 9",
-        "Suggestion 10"
-    ]);
+    const { suggestions } = useSuggestions();
+    const { selectedSuggestions, setSelectedSuggestions } = useChat();
+
+    const handleSuggestionClick = (suggestion: string) => {
+        setSelectedSuggestions((prev: string[]) => {
+            if (prev.includes(suggestion)) {
+                return prev.filter((s: string) => s !== suggestion);
+            }
+            return [...prev, suggestion];
+        });
+    };
+
     return (
         <div className="flex flex-wrap gap-x-2 gap-y-1.5">
-            {suggestions.map((suggestion, index) => (
+            {suggestions.slice(0, 10).map((suggestion, index) => (
                 <button
                     key={index}
-                    className="bg-white border border-gray-300 rounded-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    className={`px-4 py-2 rounded-full text-sm 
+                               transition-all duration-200 ease-in-out
+                               ${selectedSuggestions.includes(suggestion) 
+                                 ? 'bg-blue-400 border border-transparent text-white hover:bg-blue-500' 
+                                 : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
+                               }`}
                 >
                     {suggestion}
                 </button>
             ))}
         </div>
     );
-}
+};
 
 export default SuggestionsChat;

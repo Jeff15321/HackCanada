@@ -1,7 +1,8 @@
-import { useChat } from "@/contexts/ChatContext";
+import { useChat } from "@/contexts/chat/ChatContext";
 import { Project } from "../types/ProjectType";
 import { ChatMessageType } from "@/types/ChatMessageType"
 import { useUser } from "@/contexts/UserContext";
+import { useSuggestions } from "@/contexts/chat/SuggestionsContext";
 
 const API_BASE_URL = 'http://localhost:8000/api';
 
@@ -110,38 +111,54 @@ export const deleteProject = async (project_id: string) => {
 // };
 
 
-const handleChatSubmit = async () => {
-    const {user} = useUser();
-    const {message, selectedFiles, setSelectedFiles, setMessage, setResetInputs} = useChat();
-    if (!message && selectedFiles.length === 0) return;
-
-    const chatMessage: ChatMessageType = {
-        files: selectedFiles,
-        message: message,
-        date: new Date(),
-        user_id: Number(user?.id)
-    };
-
-    console.log(chatMessage);
-
+export const PostChatMessage = async (chatMessage: ChatMessageType) => {
     // const response = await fetch(`${API_BASE_URL}/add-rout-here`, {
     //     method: 'POST',
     //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify( 
-    //         chatMessage
-    //     ),
+    //     body: JSON.stringify(chatMessage),
     // });
 
     // if (!response.ok) {
     //     throw new Error('Failed to create new project');
     // }
     
-    // Clear inputs
-    setSelectedFiles([]);
-    setMessage('');
-    setResetInputs(true);
-    setTimeout(() => setResetInputs(false), 100);
-
     // return response.json();
-
+    console.log('Posting chat message:', chatMessage);
 };
+
+export const GetSuggestions = async (profession: string) => {
+    const tmp = [
+        "Suggestion 1",
+        "Suggestion 2222",
+        "Sugge 3",
+        "Suggestion 42",
+        "Suggestion 5",
+        "Suggestion 6",
+        "Suggestion 7",
+        "Suggestion 8",
+        "Suggestion 9",
+        "Suggestion 10"
+    ];
+    //     try {
+//         const response = await fetch(`${API_BASE_URL}/api-link-here`, {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' },
+//             body: JSON.stringify({ profession }),
+//         });
+//         if (response.status === 404) {
+//             return null;
+//         }
+//         if (!response.ok) {
+//             throw new Error('Failed to fetch project');
+//         }
+
+//         const data = await response.json();
+//         return data.project;
+//     } catch (error) {
+//         console.error('Error opening whiteboard:', error);
+//         return null;
+//     }
+// };
+
+    return tmp   
+}

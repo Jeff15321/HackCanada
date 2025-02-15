@@ -3,4 +3,5 @@ export interface ChatMessageType{
     message: string;
     date: Date;
     user_id: number;
+    suggestions: string[];
 }

@@ -1,11 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
 import FileAttachment from './FileAttachment';
-import { useChat } from '@/contexts/ChatContext';
+import { useChat } from '@/contexts/chat/ChatContext';
 
 const InputChat: React.FC = () => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [showScroll, setShowScroll] = useState(false);
-    const { message, setMessage, selectedFiles, setSelectedFiles, resetInputs } = useChat();
+    const { message, setMessage, selectedFiles, setSelectedFiles, resetInputs, handleChatSubmit } = useChat();
 
     const handleRemoveFile = (fileToRemove: File) => {
         setSelectedFiles(selectedFiles.filter(file => file !== fileToRemove));
@@ -28,6 +28,13 @@ const InputChat: React.FC = () => {
 
         // Send message to parent
         setMessage(textarea.value);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleChatSubmit();
+        }
     };
 
     useEffect(() => {
@@ -63,6 +70,7 @@ const InputChat: React.FC = () => {
                     setMessage(e.target.value);
                     adjustHeight();
                 }}
+                onKeyDown={handleKeyDown}
                 className={`mx-4 mt-4 w-[calc(100%-2rem)] resize-none
                             bg-transparent text-gray-700
                             text-base placeholder:text-gray-400
