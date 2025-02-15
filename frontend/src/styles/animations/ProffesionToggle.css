@@ -1,0 +1,51 @@
+.profession-popup {
+    max-width: 0;
+    opacity: 0;
+    transition: all 0.3s ease-in-out;
+    transform: translateX(-20px);
+    visibility: hidden;
+}
+
+.profession-popup.open {
+    max-width: 400px;
+    opacity: 1;
+    transform: translateX(0);
+    visibility: visible;
+}
+
+.profession-viewport {
+    width: 40px;
+    height: 40px;
+    border-radius: 9999px;
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
+    background-color: rgb(249 250 251); /* Even lighter gray */
+    position: relative;
+    padding: 0;
+    box-sizing: border-box;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.profession-viewport.open {
+    width: 320px;
+    border-radius: 10rem;
+    padding: 0.5rem;
+    height: 50px;
+    background-color: rgb(249 250 251);
+}
+
+.profession-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; /* Increased gap */
+    white-space: nowrap;
+    transition: all 0.3s ease-in-out;
+}
+
+.profession-viewport.open .profession-content {
+    padding: 0.5rem;
+}
