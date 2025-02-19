@@ -8,6 +8,7 @@ import Chat from './Chat'
 import NewProjectModal from '../popup/NewProjectModal';
 import { newProject } from '@/services/api';
 import { fetchAllProjects } from '@/services/api';
+import { testChatProcess } from '@/services/api';
 
 interface Collaborator {
     id: string;
@@ -77,6 +78,9 @@ const Main: React.FC<MainProps> = ({ CurrentView }) => {
                 ) : (
                     <Chat />
                 )}
+            </div>
+            <div>
+                <button onClick={() => testChatProcess('Hello')}>Test Chat Process</button>
             </div>
             
             {isModalOpen && (

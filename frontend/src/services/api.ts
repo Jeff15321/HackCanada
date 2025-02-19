@@ -161,3 +161,30 @@ export const GetSuggestions = async (profession: string) => {
 
     return tmp   
 }
+
+export const testChatProcess = async (message: string) => {
+    try {
+        console.log('Sending message:', message);
+        const response = await fetch('http://localhost:8000/api/v1/chat/process', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: message
+            }),
+        });
+
+        const data = await response.json();
+        console.log('Raw response:', data.response);
+
+        if (!response.ok) {
+            throw new Error(data.detail || 'Failed to process message');
+        }
+
+        return data.response;
+    } catch (error) {
+        console.error('Error in chat process:', error);
+        throw new Error(error instanceof Error ? error.message : 'Unknown error occurred');
+    }
+};

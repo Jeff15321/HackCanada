@@ -41,7 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isHome, onNewChat }) => {
         };
 
         loadProjects();
-    }, [user?.id, isLoading]);
+    }, [user?.id]);
 
     const handleProjectClick = (projectId: string) => {
         router.push(`/chat/${projectId}`);

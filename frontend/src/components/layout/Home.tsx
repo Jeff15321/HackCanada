@@ -33,7 +33,8 @@ const Home: React.FC = () => {
         const loadProjects = async () => {
             // If already loading or no user ID, don't proceed
             if (isLoading || !user?.id) return;
-            
+            console.log('user', user);
+
             setIsLoading(true);
             try {
                 const fetchedProjects = await fetchAllProjects(user.id);
@@ -49,7 +50,7 @@ const Home: React.FC = () => {
         };
 
         loadProjects();
-    }, [user?.id]); // Only depend on user.id instead of the entire user object
+    }, [user?.id]);
 
     const handleProjectClick = (projectId: string) => {
         router.push(`/chat/${projectId}`);
