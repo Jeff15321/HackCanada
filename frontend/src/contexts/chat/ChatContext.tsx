@@ -3,6 +3,7 @@ import { ChatMessageType } from '@/types/ChatMessageType';
 import { useUser } from '../UserContext';
 import { PostChatMessage } from '@/services/api';
 import { useSuggestions } from './SuggestionsContext';
+import { testChatProcess } from '@/services/api';
 
 interface ChatContextType {
     message: string;
@@ -28,7 +29,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [isInputCentered, setIsInputCentered] = useState(true);
     const { user } = useUser();
 
-    const handleChatSubmit = () => {
+    const handleChatSubmit = async () => {
         if (!message && selectedFiles.length === 0) return;
 
         const chatMessage: ChatMessageType = {
@@ -41,13 +42,16 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         PostChatMessage(chatMessage);
         console.log(chatMessage);
-        
+        const response = await testChatProcess(message);
+        console.log(response);
         // Clear inputs
         setSelectedFiles([]);
         setMessage('');
         setResetInputs(true);
         setIsInputCentered(false);
         setTimeout(() => setResetInputs(false), 100);
+
+        return response;
     };
 
     return (
