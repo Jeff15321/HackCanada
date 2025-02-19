@@ -1,0 +1,17 @@
+langchain-text-splitters
+langchain-openai
+langchain-core
+pypdf
+python-dotenv
+dspy
+nltk
+scikit-learn
+langchain
+langchain-community
+langgraph
+faiss-cpu
+aiohttp
+asyncio
+transformers
+torch
+accelerate>=0.26.0

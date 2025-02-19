@@ -1,0 +1,113 @@
+***** Original Prompt *****
+Examine documents to determine degree of risk from factors such as applicant health, financial standing and value, and condition of property
+
+
+***** Prompt Generator Agent *****
+Analyze the provided documents to assess the level of risk associated with the applicant by evaluating their health status, financial condition, property value, and overall property condition.
+
+
+
+
+---------------
+Intermediate Round 1
+---------------
+***** Clarity Agent *****
+Review the provided documents to determine the risk level of the applicant. Consider their health status, financial situation, property value, and the overall condition of the property.
+***** Relevance Agent *****
+Analyze the documents to evaluate the applicant's risk based on their health status, financial condition, property value, and property condition.
+***** Precision Agent *****
+Analyze the provided documents to assess the risk level of the applicant by specifically evaluating the following: 1) detailed health status including any pre-existing conditions, 2) financial condition with a focus on income, debt-to-income ratio, and credit score, 3) current market value of the property, and 4) specific aspects of the property's condition such as age, maintenance history, and any required repairs.
+***** Creativity Agent *****
+Imagine you are a detective in a world where every applicant is a character in a grand story. Your task is to uncover the hidden risks they carry by piecing together clues from their health status, financial condition, property value, and the overall condition of their property. How would you weave these elements into a narrative that reveals the true nature of the applicant's risk? What metaphors or imaginative scenarios could you use to illustrate your findings?
+***** Contextualization Agent *****
+Analyze the provided documents related to the applicant's health status, financial condition, property value, and overall property condition. Consider the implications of these factors in the context of risk assessment for loan approval, insurance underwriting, or investment evaluation. Your analysis should take into account industry standards and best practices for evaluating risk in these areas.
+***** Engagement Agent *****
+Imagine you are a detective piecing together a complex puzzle. How would you approach the task of analyzing the provided documents to uncover the true level of risk associated with the applicant? Consider the interplay between their health status, financial condition, property value, and overall property condition. What specific indicators would you look for in each area, and how might they influence your overall assessment? Share your insights and reasoning, and feel free to include any personal experiences or examples that might enrich your analysis!
+***** Brevity Agent *****
+Analyze the documents to assess the applicant's risk based on health, financial status, property value, and condition.
+***** Consolidator Agent *****
+Analyze the provided documents to evaluate the applicant's risk level by examining their health status, financial condition, property value, and the overall condition of the property. Please provide a detailed assessment for each category and summarize the overall risk.
+***** Completeness Agent *****
+Analyze the provided documents to assess the applicant's risk level. Evaluate the following categories: health status, financial condition, property value, and overall condition of the property. For each category, provide a detailed assessment and conclude with a summary of the overall risk level.
+
+
+
+
+---------------
+Intermediate Round 2
+---------------
+***** Clarity Agent *****
+Review the provided documents to determine the applicant's risk level. Assess the following areas: health status, financial condition, property value, and the overall condition of the property. For each area, give a detailed evaluation and finish with a summary of the overall risk level.
+***** Relevance Agent *****
+Analyze the provided documents to assess the applicant's risk level in the following categories: health status, financial condition, property value, and overall condition of the property. Provide a detailed assessment for each category and conclude with a summary of the overall risk level.
+***** Precision Agent *****
+Analyze the provided documents to assess the applicant's risk level. Specifically evaluate the following categories: 
+
+1. Health status (include specific health conditions and their potential impact on risk)
+2. Financial condition (detail income sources, debts, and credit score)
+3. Property value (provide current market value and any recent appraisals)
+4. Overall condition of the property (assess structural integrity, maintenance issues, and any necessary repairs)
+
+For each category, provide a detailed assessment with quantitative data where applicable, and conclude with a summary of the overall risk level, including any recommendations for mitigating identified risks.
+***** Creativity Agent *****
+Imagine you are a detective in a world where every applicant is a character in a grand story. Your task is to uncover the hidden truths behind their lives by examining four enchanted scrolls: one revealing their health status, another detailing their financial condition, a third showcasing the value of their property, and the last painting a vivid picture of the property's overall condition. As you delve into each scroll, weave a narrative that not only assesses the risk level of the applicant but also captures the essence of their journey. What tales do these scrolls tell, and how do they intertwine to form a final conclusion about the applicant's fate?
+***** Contextualization Agent *****
+Analyze the provided documents related to the applicant's background to assess their risk level in the context of a loan or insurance application. Evaluate the following categories: health status (considering any pre-existing conditions or medical history), financial condition (including income, debts, and credit score), property value (based on recent appraisals or market trends), and overall condition of the property (including maintenance issues or structural concerns). For each category, provide a detailed assessment, taking into account relevant industry standards and potential implications for risk. Conclude with a summary of the overall risk level, highlighting any significant factors that may influence the decision-making process.
+***** Engagement Agent *****
+Imagine you are a detective piecing together a puzzle that reveals the true story behind an applicant's situation. Dive deep into the provided documents and assess the applicant's risk level by evaluating four critical categories: health status, financial condition, property value, and the overall condition of the property. 
+
+As you analyze each category, consider these questions: What red flags or positive indicators stand out to you? How do these factors interconnect to paint a broader picture of the applicant's risk? 
+
+For each category, provide a thorough assessment, and don’t forget to weave in your insights and interpretations. Finally, wrap up your analysis with a compelling summary that encapsulates the overall risk level. What conclusions can you draw, and how might they impact the applicant's future?
+***** Brevity Agent *****
+Analyze the documents to assess the applicant's risk level in health status, financial condition, property value, and overall property condition. Provide detailed assessments for each category and conclude with an overall risk summary.
+***** Consolidator Agent *****
+Analyze the provided documents to evaluate the applicant's risk level across four key categories: health status, financial condition, property value, and overall condition of the property. For each category, deliver a comprehensive assessment and conclude with a summary that encapsulates the overall risk level.
+***** Completeness Agent *****
+Analyze the provided documents to assess the applicant's risk level in four key areas: health status, financial condition, property value, and overall condition of the property. For each category, provide a detailed evaluation and conclude with a summary that highlights the overall risk level.
+
+
+
+
+---------------
+Intermediate Round 3
+---------------
+***** Clarity Agent *****
+Examine the given documents to evaluate the applicant's risk in four main areas: health status, financial condition, property value, and the overall condition of the property. For each area, provide a thorough assessment and finish with a summary that indicates the overall risk level.
+***** Relevance Agent *****
+Analyze the documents to evaluate the applicant's risk level in health status, financial condition, property value, and overall property condition. Provide a detailed assessment for each category and conclude with a summary of the overall risk level.
+***** Precision Agent *****
+Analyze the provided documents to assess the applicant's risk level in the following specific areas: 
+
+1. **Health Status**: Evaluate any medical records or health-related information, noting any chronic conditions or recent health issues.
+2. **Financial Condition**: Review financial statements, credit reports, and income sources to determine the applicant's financial stability and any outstanding debts.
+3. **Property Value**: Analyze property appraisals, market trends, and comparable sales to assess the current market value of the property.
+4. **Overall Condition of the Property**: Inspect maintenance records, inspection reports, and any renovation history to evaluate the physical state of the property.
+
+For each category, provide a detailed evaluation with specific examples and data points, and conclude with a summary that highlights the overall risk level, including any potential red flags or areas of concern.
+***** Creativity Agent *****
+Imagine you are a detective in a world where every applicant is a character in a story. Your task is to unravel the mystery of their risk level by examining four intriguing chapters: the tale of their health status, the saga of their financial condition, the legend of their property value, and the narrative of the overall condition of their property. For each chapter, craft a vivid analysis that brings the character's story to life, and weave together a final summary that reveals the overarching theme of their risk level. What twists and turns will you uncover in this narrative journey?
+***** Contextualization Agent *****
+Analyze the provided documents related to the applicant's profile to assess their risk level in four key areas: health status, financial condition, property value, and overall condition of the property. Consider the implications of each area, such as how health issues might affect financial stability, the impact of financial conditions on property maintenance, and how property value can influence overall risk. For each category, provide a detailed evaluation that includes relevant metrics or indicators. Conclude with a summary that highlights the overall risk level, taking into account the interconnections between these areas.
+***** Engagement Agent *****
+Imagine you are a detective piecing together a complex case. Your mission is to analyze the provided documents to uncover the applicant's risk level across four critical dimensions: health status, financial condition, property value, and the overall condition of the property. 
+
+1. **Health Status**: What indicators stand out to you? Are there any red flags that could suggest potential risks?
+   
+2. **Financial Condition**: How does the applicant's financial history shape your perception of their reliability? What specific details would you look for to gauge their stability?
+
+3. **Property Value**: In what ways does the current market influence the property's worth? Are there any trends or data points that could sway your assessment?
+
+4. **Overall Condition of the Property**: What aspects of the property’s condition could impact its value and the applicant's risk? How would you prioritize these factors in your evaluation?
+
+After diving into each category, summarize your findings. What is the overall risk level you would assign to the applicant, and what factors most influenced your conclusion? Share your insights and reasoning as if you were presenting your case to a panel of experts!
+***** Brevity Agent *****
+Analyze the documents to assess the applicant's risk in health, financial condition, property value, and overall property condition. Provide detailed evaluations for each category and conclude with a summary of the overall risk level.
+***** Consolidator Agent *****
+Analyze the provided documents to evaluate the applicant's risk level across four key areas: health status, financial condition, property value, and overall condition of the property. For each category, deliver a comprehensive assessment and conclude with a summary that encapsulates the overall risk level.
+***** Completeness Agent *****
+Analyze the provided documents to assess the applicant's risk level in four key areas: health status, financial condition, property value, and overall condition of the property. For each category, provide a detailed evaluation and conclude with a summary that highlights the overall risk level.
+
+
+
+
