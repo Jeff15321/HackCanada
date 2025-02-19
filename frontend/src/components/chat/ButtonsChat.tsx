@@ -8,8 +8,12 @@ import { useChat } from '@/contexts/chat/ChatContext';
 import { GetSuggestions } from '@/services/api';
 import { useSuggestions } from '@/contexts/chat/SuggestionsContext';
 
-const ButtonsChat: React.FC = () => {
-    const [isProfessionOpen, setIsProfessionOpen] = useState(false);
+interface ButtonsChatProps{
+    isProfessionOpen: boolean;
+    setIsProfessionOpen: (isOpen: boolean) => void;
+}
+
+const ButtonsChat: React.FC<ButtonsChatProps> = ({ isProfessionOpen, setIsProfessionOpen }) => {
     const [profession, setProfession] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { selectedFiles, setSelectedFiles, handleChatSubmit } = useChat();

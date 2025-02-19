@@ -14,6 +14,8 @@ interface ChatContextType {
     setResetInputs: (resetInputs: boolean) => void;
     selectedSuggestions: string[];
     setSelectedSuggestions: React.Dispatch<React.SetStateAction<string[]>>;
+    isInputCentered: boolean;
+    setIsInputCentered: (isInputCentered: boolean) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -23,6 +25,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [resetInputs, setResetInputs] = useState(false);
     const [selectedSuggestions, setSelectedSuggestions] = useState<string[]>([]);
+    const [isInputCentered, setIsInputCentered] = useState(true);
     const { user } = useUser();
 
     const handleChatSubmit = () => {
@@ -43,6 +46,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSelectedFiles([]);
         setMessage('');
         setResetInputs(true);
+        setIsInputCentered(false);
         setTimeout(() => setResetInputs(false), 100);
     };
 
@@ -56,7 +60,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             resetInputs,
             setResetInputs,
             selectedSuggestions,
-            setSelectedSuggestions
+            setSelectedSuggestions,
+            isInputCentered,
+            setIsInputCentered
         }}>
             {children}
         </ChatContext.Provider>

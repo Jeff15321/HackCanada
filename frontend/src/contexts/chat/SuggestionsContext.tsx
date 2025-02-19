@@ -9,7 +9,7 @@ const SuggestionsContext = createContext<SuggestionsContextType | undefined>(und
 
 export const SuggestionsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [suggestions, setSuggestions] = useState<string[]>([]);
-
+    
     return (
         <SuggestionsContext.Provider value={{ suggestions, setSuggestions }}>
             {children}

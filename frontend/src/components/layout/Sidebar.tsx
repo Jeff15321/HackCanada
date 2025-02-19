@@ -1,21 +1,63 @@
-import React, { useState } from 'react';
-import { Menu, X, Settings, Code, Database, FileText, Home, User } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Menu, X, Settings, Code, Database, FileText, Home, User, MessageSquarePlus } from 'lucide-react';
 import { useProject } from '../../contexts/ProjectContext';
 import { useUser } from '../../contexts/UserContext';
 import { useRouter } from 'next/router';
+import { fetchAllProjects } from '@/services/api';
 
 interface SidebarProps {
     isHome: boolean;
+    onNewChat: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isHome }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isHome, onNewChat }) => {
     const { project, setProject } = useProject();
     const { user, setUser } = useUser();
     const router = useRouter();
+    const [homeProjects, setHomeProjects] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
     
     // Move state declarations inside the component
     const [isMenuMode, setIsMenuMode] = useState(true);
-    const [currentSection, setCurrentSection] = useState<'home' | 'settings' | 'code' | 'data' | 'docs' | 'account'>('home');
+    const [currentSection, setCurrentSection] = useState<'home' | 'settings' | 'docs' | 'account'>('home');
+    const [apiMessage, setApiMessage] = useState<string | null>(null);
+
+    useEffect(() => {
+        const loadProjects = async () => {
+            if (isLoading || !user?.id) return;
+            
+            setIsLoading(true);
+            try {
+                const fetchedProjects = await fetchAllProjects(user.id);
+                if (fetchedProjects) {
+                    console.log('Fetched projects:', fetchedProjects);
+                    setHomeProjects(fetchedProjects);
+                }
+            } catch (error) {
+                console.error('Error loading projects:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadProjects();
+    }, [user?.id, isLoading]);
+
+    const handleProjectClick = (projectId: string) => {
+        router.push(`/chat/${projectId}`);
+    };
+
+    const testApi = async () => {
+        try {
+            const response = await fetch('http://localhost:8000/api/test');
+            const data = await response.json();
+            setApiMessage(data.message);
+            setTimeout(() => setApiMessage(null), 3000);
+        } catch (error) {
+            setApiMessage('Failed to connect to API');
+            setTimeout(() => setApiMessage(null), 3000);
+        }
+    };
 
     const renderContent = () => {
         switch (currentSection) {
@@ -70,36 +112,40 @@ const Sidebar: React.FC<SidebarProps> = ({ isHome }) => {
                         </div>
                     </div>
                 );
-            case 'code':
-                return (
-                    <div className="space-y-4">
-                        <h3 className="font-medium">Generated Code</h3>
-                        <pre className="bg-gray-100 p-2 rounded text-sm">
-                            {`// Your code here\nfunction example() {\n  return true;\n}`}
-                        </pre>
-                    </div>
-                );
-            case 'data':
-                return (
-                    <div className="space-y-4">
-                        <h3 className="font-medium">Data Management</h3>
-                        <div className="space-y-2">
-                            <button className="w-full p-2 bg-green-500 text-white rounded">
-                                Import Data
-                            </button>
-                            <button className="w-full p-2 bg-blue-500 text-white rounded">
-                                Export Data
-                            </button>
-                        </div>
-                    </div>
-                );
+            
             case 'docs':
                 return (
                     <div className="space-y-4">
-                        <h3 className="font-medium">Documentation</h3>
-                        <div className="space-y-2 text-sm">
-                            <p>Learn how to use the node editor...</p>
-                            <a href="#" className="text-blue-500 hover:underline">View Full Docs</a>
+                        <button 
+                            onClick={onNewChat}
+                            className="w-full p-2 bg-blue-500 text-white rounded-lg
+                                     flex items-center justify-center gap-2
+                                     hover:bg-blue-600 transition-colors duration-200
+                                     shadow-sm"
+                        >
+                            <MessageSquarePlus size={20} />
+                            <span className="font-medium">New Chat</span>
+                        </button>
+                        
+                        <div className="flex flex-col gap-2 mt-4">
+                            {homeProjects.map((project, index) => (
+                                <button key={index}
+                                    onClick={() => handleProjectClick(project.id)}
+                                    className="w-full p-2.5 bg-white text-gray-700 rounded-lg
+                                            border border-gray-200
+                                            flex items-center gap-3
+                                            hover:bg-gray-50 hover:border-gray-300
+                                            transition-all duration-200
+                                            text-left group"
+                                >
+                                    <div className="flex-1 min-w-0">
+                                        <span className="font-medium truncate block">{project.name}</span>
+                                        <span className="text-xs text-gray-400 block">
+                                            {new Date(project.created_at).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                </button>
+                            ))}
                         </div>
                     </div>
                 );
@@ -139,18 +185,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isHome }) => {
                             <Settings size={18} /> Settings
                         </button>
                         <button 
-                            onClick={() => { setCurrentSection('code'); setIsMenuMode(false); }}
-                            className="w-full p-2 text-left hover:bg-gray-100 rounded flex items-center gap-2"
-                        >
-                            <Code size={18} /> Code
-                        </button>
-                        <button 
-                            onClick={() => { setCurrentSection('data'); setIsMenuMode(false); }}
-                            className="w-full p-2 text-left hover:bg-gray-100 rounded flex items-center gap-2"
-                        >
-                            <Database size={18} /> Data
-                        </button>
-                        <button 
                             onClick={() => { setCurrentSection('docs'); setIsMenuMode(false); }}
                             className="w-full p-2 text-left hover:bg-gray-100 rounded flex items-center gap-2"
                         >
@@ -166,6 +200,25 @@ const Sidebar: React.FC<SidebarProps> = ({ isHome }) => {
                 ) : (
                     <div className="p-4">
                         {renderContent()}
+                    </div>
+                )}
+            </div>
+
+            <div className="p-4 border-t mt-auto">
+                <button
+                    onClick={testApi}
+                    className="w-full p-2 text-sm bg-gray-100 hover:bg-gray-200 
+                             rounded-lg transition-colors duration-200 
+                             flex items-center justify-center gap-2"
+                >
+                    <Code size={16} />
+                    Test API Connection
+                </button>
+                
+                {apiMessage && (
+                    <div className="mt-2 text-sm text-center p-2 rounded-lg 
+                                  bg-green-100 text-green-700 border border-green-200">
+                        {apiMessage}
                     </div>
                 )}
             </div>
