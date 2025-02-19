@@ -6,7 +6,7 @@ from app.services.projects import ProjectService
 
 router = APIRouter()
 
-@router.get("/", response_model=List[ProjectResponse])
+@router.get("/")
 async def get_all_projects(user_id: str):
     """
     Get all projects for a user

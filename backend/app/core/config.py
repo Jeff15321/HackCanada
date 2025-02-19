@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     PROJECT_VERSION: str = "1.0.0"
     PROJECT_DESCRIPTION: str = "A FastAPI project with proper structure"
     
+    # Server settings
+    ALLOWED_HOSTS: str
+    CORS_ALLOWED_ORIGINS: str
+    
     # CORS
     ALLOWED_ORIGINS: List[str] = ["http://localhost:3000"]
     
@@ -25,5 +29,6 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        case_sensitive = True
 
 settings = Settings() 
