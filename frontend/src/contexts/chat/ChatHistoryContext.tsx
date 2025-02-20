@@ -3,6 +3,7 @@ import { HistoryChatType } from '@/types/ChatMessageType';
 
 interface ChatHistoryContextType {
     chatHistory: HistoryChatType[];
+    setChatHistory: (chatHistory: HistoryChatType[]) => void;
     addMessage: (message: HistoryChatType) => void;
     clearHistory: () => void;
 }
@@ -23,6 +24,7 @@ export const ChatHistoryProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return (
         <ChatHistoryContext.Provider value={{
             chatHistory,
+            setChatHistory,
             addMessage,
             clearHistory
         }}>

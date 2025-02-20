@@ -1,6 +1,6 @@
 import { useChat } from "@/contexts/chat/ChatContext";
 import { Project } from "../types/ProjectType";
-import { ChatMessageType, SubTask } from "@/types/ChatMessageType"
+import { ChatMessageType, HistoryChatType, SubTask } from "@/types/ChatMessageType"
 import { useUser } from "@/contexts/UserContext";
 import { useSuggestions } from "@/contexts/chat/SuggestionsContext";
 
@@ -193,3 +193,46 @@ export const LLMChatProcess = async (message: string) => {
         throw new Error(error instanceof Error ? error.message : 'Unknown error occurred');
     }
 };
+
+export const saveChat = async (project_id: string | undefined, chat_history: HistoryChatType[]) => {
+    if (!project_id) {
+        console.error("No project ID provided");
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/v1/projects/save_chat/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                project_id, 
+                chat_history 
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to save chat history');
+        }
+
+        const data = await response.json();
+        console.log("Chat history saved:", data);
+        return data;
+    } catch (error) {
+        console.error("Error saving chat history:", error);
+        throw error;
+    }
+};
+
+export const getProjectChat = async (project_id: string) => {
+    const response = await fetch(`${API_BASE_URL}/api/v1/projects/get_one/?project_id=${project_id}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) {
+        throw new Error('Failed to fetch chat history');
+    }
+    const data = await response.json();
+
+    return data;
+};
+

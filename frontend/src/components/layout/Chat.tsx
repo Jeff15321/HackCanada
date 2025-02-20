@@ -8,11 +8,13 @@ import HistoryChat from '../chat/HistoryChat';
 import { HistoryChatType, SubTask } from '@/types/ChatMessageType'
 import { ChatHistoryProvider, useChatHistory } from '@/contexts/chat/ChatHistoryContext';
 import SubTaskWindow from '../chat/SubTaskWindow';
-import { getSubTasks } from '@/services/api';
+import { getSubTasks, getProjectChat, saveChat } from '@/services/api';
 import { useUser } from '@/contexts/UserContext';
+import { FaSave } from 'react-icons/fa';
+import { ProjectProvider, useProject } from '@/contexts/ProjectContext';
 
 const ChatContent: React.FC = () => {
-    const { isChatInputCentered, isSubTaskWindowOpen, setIsSubTaskWindowOpen } = useChat();
+    const { isChatInputCentered, isSubTaskWindowOpen, setIsSubTaskWindowOpen, setIsChatInputCentered } = useChat();
     const { chatHistory } = useChatHistory();
     const [isProfessionOpen, setIsProfessionOpen] = useState(false);
     const [isChatInputOpen, setIsChatInputOpen] = useState(true);
@@ -20,6 +22,16 @@ const ChatContent: React.FC = () => {
     const [inputHeight, setInputHeight] = useState('0px');
     const { user } = useUser();
     const [subTasks, setSubTasks] = useState<SubTask[]>([]);
+    const { project } = useProject();
+
+    useEffect(() => {
+        if (chatHistory.length > 0) {
+            setIsChatInputOpen(true);
+            setIsSubTaskWindowOpen(false);
+            setIsProfessionOpen(false);
+            setIsChatInputCentered(false);
+        }
+    }, [chatHistory]);
 
     // Update height when input container changes
     useEffect(() => {
@@ -46,7 +58,21 @@ const ChatContent: React.FC = () => {
         };
     }, [isProfessionOpen]); // Re-run when suggestions are toggled
 
-
+    const handleSaveChat = async () => {
+        console.log(project);
+        if (!project?.id) {
+            console.error("No project ID available");
+            return;
+        }
+        
+        try {
+            await saveChat(project.id, chatHistory);
+            // Optional: Show success message to user
+        } catch (error) {
+            console.error("Failed to save chat:", error);
+            // Optional: Show error message to user
+        }
+    };
 
     return (
         <div className="relative w-full h-full bg-gray-100">
@@ -101,6 +127,7 @@ const ChatContent: React.FC = () => {
             >
                 <SubTaskWindow />
             </div>
+
             {/* Sub Task Window Toggle Button */}
             <div className={`absolute top-[5vh] left-[5vh] w-16 h-16 rounded-full 
                 bg-green-500 hover:bg-green-600 cursor-pointer 
@@ -142,6 +169,19 @@ const ChatContent: React.FC = () => {
                         />
                     </svg>
                 )}
+            </div>
+
+            
+            {/* Save Chat Button */}
+            <div className={`absolute bottom-[calc(5vh+4rem+2vh)] left-[5vh] w-16 h-16 rounded-full 
+                bg-gray-500 hover:bg-blue-600 cursor-pointer 
+                flex items-center justify-center 
+                transform transition-all duration-200 hover:scale-105 
+                shadow-lg hover:shadow-xl 
+                ${isChatInputCentered ? 'opacity-0' : 'opacity-100'}`}
+                onClick={handleSaveChat}
+            >
+                <FaSave className="h-8 w-8 text-white" />
             </div>
 
 
@@ -190,13 +230,11 @@ const ChatContent: React.FC = () => {
 
 const Chat: React.FC = () => {
     return (
-        <ChatHistoryProvider>
             <ChatProvider>
                 <SuggestionsProvider>
-                    <ChatContent />
-                </SuggestionsProvider>
+                <ChatContent />
+            </SuggestionsProvider>
             </ChatProvider>
-        </ChatHistoryProvider>
     );
 };
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { deleteProject, newProject } from '../../services/api';
+import { deleteProject, getProjectChat, newProject } from '../../services/api';
 import NewProjectModal from '../popup/NewProjectModal';
 import { useUser } from '../../contexts/UserContext';
 import { fetchAllProjects } from '../../services/api';
@@ -8,7 +8,8 @@ import { Globe, Lock, Users } from 'lucide-react';
 import { Project } from '../../types/ProjectType';
 import ProjectContextMenu from '../popup/ProjectContextMenu';
 import { Collaborator } from '../../types/CollaboratorType';
-
+import { useProject } from '@/contexts/ProjectContext';
+import { useChatHistory } from '@/contexts/chat/ChatHistoryContext';
 interface ContextMenu {
     show: boolean;
     x: number;
@@ -18,6 +19,8 @@ interface ContextMenu {
 
 const Home: React.FC = () => {
     const { user } = useUser();
+    const { project, setProject } = useProject();
+    const { chatHistory, setChatHistory } = useChatHistory();
     const router = useRouter();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [contextMenu, setContextMenu] = useState<ContextMenu>({
@@ -52,8 +55,16 @@ const Home: React.FC = () => {
         loadProjects();
     }, [user?.id]);
 
-    const handleProjectClick = (projectId: string) => {
-        router.push(`/chat/${projectId}`);
+    const handleProjectClick = async (projectId: string) => {
+        try {
+            const projectData = await getProjectChat(projectId);
+            setProject(projectData);
+            setChatHistory(projectData.chat_history);
+            console.log(projectData.chat_history);
+            router.push(`/chat/${projectId}`);
+        } catch (error) {
+            console.error("Error fetching project:", error);
+        }
     };
 
     //right click project panel to open context menu

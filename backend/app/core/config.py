@@ -28,11 +28,8 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str
     
     # MongoDB settings
-    MONGODB_URL: str = "mongodb+srv://jefflu234:Ljun1216@user.hnigv.mongodb.net/?retryWrites=true&w=majority&appName=User"
-    MONGODB_DB_NAME: str = "winter_project"
-    
-    # JWT
-    SECRET_KEY: str = "your-secret-key-for-testing"  # Change in production!
+    MONGODB_URL: str
+    MONGODB_DB_NAME: str
 
     class Config:
         env_file = ".env"
