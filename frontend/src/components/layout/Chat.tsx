@@ -46,27 +46,7 @@ const ChatContent: React.FC = () => {
         };
     }, [isProfessionOpen]); // Re-run when suggestions are toggled
 
-    // Fetch subtasks when window opens
-    useEffect(() => {
-        const fetchSubTasks = async () => {
-            if (isSubTaskWindowOpen && user) {
-                try {
-                    const tasks = await getSubTasks(user.id, "dummy_project_id", "");
-                    setSubTasks(tasks);
-                } catch (error) {
-                    console.error('Error fetching subtasks:', error);
-                }
-            }
-        };
 
-        fetchSubTasks();
-    }, [isSubTaskWindowOpen, user]);
-
-    const handleSubTaskUpdate = (index: number, updatedTask: SubTask) => {
-        const newSubTasks = [...subTasks];
-        newSubTasks[index] = updatedTask;
-        setSubTasks(newSubTasks);
-    };
 
     return (
         <div className="relative w-full h-full bg-gray-100">
@@ -119,10 +99,7 @@ const ChatContent: React.FC = () => {
                 bg-white shadow-lg
                 ${isChatInputCentered || !isSubTaskWindowOpen ? 'hidden' : 'visible'}`}
             >
-                <SubTaskWindow 
-                    subTasks={subTasks}
-                    onSubTaskUpdate={handleSubTaskUpdate}
-                />
+                <SubTaskWindow />
             </div>
             {/* Sub Task Window Toggle Button */}
             <div className={`absolute top-[5vh] left-[5vh] w-16 h-16 rounded-full 

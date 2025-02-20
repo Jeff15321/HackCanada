@@ -41,10 +41,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Fetch subtasks when window opens
     const fetchSubTasks = async () => {
-        if (isSubTaskWindowOpen && user) {
+        if (user) {
             try {
+                console.log("Fetching subtasks");
                 const tasks = await getSubTasks(user.id, "dummy_project_id", "");
                 setSubTasks(tasks);
+                console.log("Subtasks fetched:", tasks);
             } catch (error) {
                 console.error('Error fetching subtasks:', error);
             }

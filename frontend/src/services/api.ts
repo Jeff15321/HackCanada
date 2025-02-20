@@ -1,6 +1,6 @@
 import { useChat } from "@/contexts/chat/ChatContext";
 import { Project } from "../types/ProjectType";
-import { ChatMessageType } from "@/types/ChatMessageType"
+import { ChatMessageType, SubTask } from "@/types/ChatMessageType"
 import { useUser } from "@/contexts/UserContext";
 import { useSuggestions } from "@/contexts/chat/SuggestionsContext";
 
@@ -157,6 +157,15 @@ export const getSubTasks = async (
         }
     ]
 };
+
+//TODO: when Alvina is done with the subtask processing agent, make this call the agent
+export const sendSubTasksToLLM = async (subTasks: SubTask[]) => {
+    // const response = await fetch(`${API_BASE_URL}/api/v1/projects/subtasks/`, {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify({ subTasks }),
+    // });
+}
 
 export const LLMChatProcess = async (message: string) => {
     try {

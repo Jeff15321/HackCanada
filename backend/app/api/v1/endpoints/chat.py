@@ -51,7 +51,7 @@ def chat_endpoint(message: Dict[str, Any]):
                 status_code=500,
                 detail=f"Required file not found: {ENSMENGER_FILE}"
             )
-        #TODO: import files correctly, it is static right now
+        #TODO: import supporting pdf files correctly, it is static right now
         #TODO: currently, I use the hardcoded prompt_text. When the AI people finish the prompt engineering, make a API rout that sends to the prompt engineering to fetch for a better prompt and set that as the prompt_text
         #TODO: it also says RAG is not working, so we need to fix that
         #TODO: it always outputs environment related variables, can you try to change the documents and test it again?
