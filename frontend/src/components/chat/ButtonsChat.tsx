@@ -16,7 +16,7 @@ interface ButtonsChatProps{
 const ButtonsChat: React.FC<ButtonsChatProps> = ({ isProfessionOpen, setIsProfessionOpen }) => {
     const [profession, setProfession] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const { selectedFiles, setSelectedFiles, handleChatSubmit } = useChat();
+    const { selectedFiles, setSelectedFiles, handleChatSubmit, fetchSubTasks } = useChat();
     const { suggestions, setSuggestions } = useSuggestions();
     const { user, setUser } = useUser();
 
@@ -125,7 +125,10 @@ const ButtonsChat: React.FC<ButtonsChatProps> = ({ isProfessionOpen, setIsProfes
                                  ? 'text-green-500 hover:text-green-600' 
                                  : 'text-gray-500 hover:text-gray-700'
                                }`}
-                    onClick={() => handleChatSubmit()}
+                    onClick={() => {
+                        fetchSubTasks();
+                        handleChatSubmit();
+                    }}
                 >
                     <FaPaperPlane className="w-5 h-5" />
                 </button>

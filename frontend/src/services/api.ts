@@ -108,6 +108,56 @@ export const GetSuggestions = async (profession: string) => {
     return tmp   
 }
 
+//TODO: attach the subtask window with Alvin's LLM that she hasn't finished yet
+//TODO: make the endpoint in FASTAPI
+export const getSubTasks = async (
+    user_id: string, 
+    project_id: string,
+    message: string
+) => {
+    // const response = await fetch(`${API_BASE_URL}/api/v1/projects/subtasks/`, { 
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify({ 
+    //         user_id, 
+    //         project_id, 
+    //         message
+    //     }),
+    // });
+
+    // if (!response.ok) {
+    //     throw new Error('Failed to create new project');
+    // }
+
+    // return response.json();
+    return [
+        {
+            title: "Research Requirements",
+            description: "Gather and analyze project requirements through stakeholder interviews, market research, and competitive analysis. Document functional requirements like core features and user interactions, as well as non-functional requirements including performance metrics, security standards, and scalability needs. Create detailed requirement specifications with user stories, acceptance criteria, and technical constraints. Validate requirements with stakeholders and subject matter experts to ensure completeness and accuracy."
+        },
+        {
+            title: "Design Architecture", 
+            description: "Create system architecture diagrams and define technical components and their interactions"
+        },
+        {
+            title: "Implementation Plan",
+            description: "Break down development tasks and create a detailed implementation timeline"
+        },
+        {
+            title: "Testing Strategy",
+            description: "Define testing approach including unit tests, integration tests and acceptance criteria"
+        },
+        {
+            title: "Documentation",
+            description: "Prepare technical documentation, API specs and user guides for the project"
+        },
+        {
+            title: "Deployment Planning",
+            description: "Plan deployment steps, infrastructure requirements and rollout strategy"
+        }
+    ]
+};
+
 export const LLMChatProcess = async (message: string) => {
     try {
         console.log('Sending message:', message);

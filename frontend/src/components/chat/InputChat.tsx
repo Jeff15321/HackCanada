@@ -5,7 +5,7 @@ import { useChat } from '@/contexts/chat/ChatContext';
 const InputChat: React.FC = () => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [showScroll, setShowScroll] = useState(false);
-    const { message, setMessage, selectedFiles, setSelectedFiles, resetInputs, handleChatSubmit } = useChat();
+    const { message, setMessage, selectedFiles, setSelectedFiles, resetInputs, handleChatSubmit, fetchSubTasks } = useChat();
 
     const handleRemoveFile = (fileToRemove: File) => {
         setSelectedFiles(selectedFiles.filter(file => file !== fileToRemove));
@@ -28,6 +28,7 @@ const InputChat: React.FC = () => {
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
+            fetchSubTasks();
             handleChatSubmit();
         }
     };

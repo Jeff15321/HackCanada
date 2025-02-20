@@ -13,3 +13,8 @@ export interface HistoryChatType {
     date: Date;
     user_id: number;
 }
+
+export interface SubTask {
+    title: string;
+    description: string;
+}

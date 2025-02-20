@@ -17,7 +17,6 @@ const HistoryChat: React.FC<HistoryChatProps> = ({ historyChat }) => {
         scrollToBottom();
     }, [historyChat]);
 
-    // TODO: can you play around with the markdown style to reduce the gap between bolded points?
     return (
         <div className='w-full h-full overflow-y-auto'>
             <div className='flex flex-col'>

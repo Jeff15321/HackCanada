@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState } from 'react';
-import { ChatMessageType } from '@/types/ChatMessageType';
+import { ChatMessageType, SubTask } from '@/types/ChatMessageType';
 import { useUser } from '../UserContext';
 import { useSuggestions } from './SuggestionsContext';
-import { LLMChatProcess } from '@/services/api';
+import { LLMChatProcess, getSubTasks } from '@/services/api';
 import { useChatHistory } from './ChatHistoryContext';
 
 interface ChatContextType {
@@ -17,6 +17,11 @@ interface ChatContextType {
     setSelectedSuggestions: React.Dispatch<React.SetStateAction<string[]>>;
     isChatInputCentered: boolean;
     setIsChatInputCentered: (isChatInputCentered: boolean) => void;
+    isSubTaskWindowOpen: boolean;
+    setIsSubTaskWindowOpen: (isSubTaskWindowOpen: boolean) => void;
+    subTasks: SubTask[];
+    setSubTasks: (subTasks: SubTask[]) => void;
+    fetchSubTasks: () => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -27,8 +32,24 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [resetInputs, setResetInputs] = useState(false);
     const [selectedSuggestions, setSelectedSuggestions] = useState<string[]>([]);
     const [isChatInputCentered, setIsChatInputCentered] = useState(true);
+    const [subTasks, setSubTasks] = useState<SubTask[]>([]);
+    const [isSubTaskWindowOpen, setIsSubTaskWindowOpen] = useState(false);
+
     const { user } = useUser();
     const { addMessage } = useChatHistory();
+
+    
+    // Fetch subtasks when window opens
+    const fetchSubTasks = async () => {
+        if (isSubTaskWindowOpen && user) {
+            try {
+                const tasks = await getSubTasks(user.id, "dummy_project_id", "");
+                setSubTasks(tasks);
+            } catch (error) {
+                console.error('Error fetching subtasks:', error);
+            }
+        }
+    };
 
     const handleChatSubmit = async () => {
         if (!message && selectedFiles.length === 0) return;
@@ -41,6 +62,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setMessage('');
         setSelectedFiles([]);
         setResetInputs(true);
+        setIsSubTaskWindowOpen(true);
         
         // Add user message to history
         addMessage({
@@ -50,10 +72,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             date: new Date(),
             user_id: Number(user?.id)
         });
+        
 
         try {
             const response = await LLMChatProcess(messageToSend);
-            console.log("grr", response.merged_result_with_agent);
             // Add AI response to history
             addMessage({
                 message: response.merged_result_with_agent,
@@ -62,6 +84,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 date: new Date(),
                 user_id: Number(user?.id)
             });
+
+            const subTasksResponse = await getSubTasks(String(user?.id), response.project_id, messageToSend);
+            setSubTasks(subTasksResponse);
 
             // Reset the resetInputs flag after a short delay
             setTimeout(() => setResetInputs(false), 100);
@@ -84,7 +109,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             selectedSuggestions,
             setSelectedSuggestions,
             isChatInputCentered,
-            setIsChatInputCentered
+            setIsChatInputCentered,
+            isSubTaskWindowOpen,
+            setIsSubTaskWindowOpen,
+            subTasks,
+            setSubTasks,
+            fetchSubTasks
         }}>
             {children}
         </ChatContext.Provider>
