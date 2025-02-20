@@ -4,7 +4,7 @@ import { ChatMessageType } from "@/types/ChatMessageType"
 import { useUser } from "@/contexts/UserContext";
 import { useSuggestions } from "@/contexts/chat/SuggestionsContext";
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = 'http://localhost:8000';
 
 export const newProject = async (
     user_id: string, 
@@ -12,7 +12,7 @@ export const newProject = async (
     collaborators: any[],
     isPublic: boolean
 ) => {
-    const response = await fetch(`${API_BASE_URL}/projects/new/`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/projects/new/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -42,7 +42,7 @@ export const fetchAllUsers = async () => {
 
 export const fetchAllProjects = async (userId: string) => {
     try {
-        const response = await fetch(`http://localhost:8000/api/v1/projects/?user_id=${userId}`.replace(/\/$/, ''));
+        const response = await fetch(`${API_BASE_URL}/api/v1/projects/all/?user_id=${userId}`);
         if (!response.ok) {
             throw new Error('Failed to fetch projects');
         }
@@ -55,88 +55,34 @@ export const fetchAllProjects = async (userId: string) => {
 
 export const deleteProject = async (project_id: string) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/projects/delete/?project_id=${project_id}`, { method: 'DELETE' });
+        const response = await fetch(`${API_BASE_URL}/api/v1/projects/delete/?project_id=${project_id}`, { 
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        });
         if (!response.ok) {
             throw new Error('Failed to delete project');
         }
-        return response.status;
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error deleting project:', error);
-        return [];
+        throw error;
     }
 };
 
-// export const openWhiteBoard = async (user_id: string, project_id: string) => {
-//     try {
-//         const response = await fetch(`${API_BASE_URL}/whiteboard/${project_id}/`, {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify({ user_id, project_id }),
-//         });
-//         if (response.status === 404) {
-//             return null;
-//         }
-//         if (!response.ok) {
-//             throw new Error('Failed to fetch project');
-//         }
-
-//         const data = await response.json();
-//         return data.project;
-//     } catch (error) {
-//         console.error('Error opening whiteboard:', error);
-//         return null;
-//     }
-// };
-
-
-// export const uploadWhiteBoard = async (user_id: string, project: Project) => {
-//     try {
-//         const response = await fetch(`${API_BASE_URL}/upload-whiteboard/`, {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify({ user_id, project }),
-//         });
-
-//         if (!response.ok) {
-//             throw new Error('Failed to save project');
-//         }
-
-//         const data = await response.json();
-//         return data;
-//     } catch (error) {
-//         console.error('Error saving whiteboard:', error);
-//         return null;
-//     }
-// };
-
-
-export const PostChatMessage = async (chatMessage: ChatMessageType) => {
-    // const response = await fetch(`${API_BASE_URL}/add-rout-here`, {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(chatMessage),
-    // });
-
-    // if (!response.ok) {
-    //     throw new Error('Failed to create new project');
-    // }
-    
-    // return response.json();
-    console.log('Posting chat message:', chatMessage);
-};
-
+//TODO: attach this to the ONET database
 export const GetSuggestions = async (profession: string) => {
     const tmp = [
-        "Suggestion 1",
-        "Suggestion 2222",
-        "Sugge 3",
-        "Suggestion 42",
-        "Suggestion 5",
-        "Suggestion 6",
-        "Suggestion 7",
-        "Suggestion 8",
-        "Suggestion 9",
-        "Suggestion 10"
+        "Student",
+        "Professor",
+        "Researcher",
+        "Engineer",
+        "Designer",
+        "Writer",
+        "Scientist",
+        "Lawyer",
+        "Doctor",
+        "Businessman"
     ];
     //     try {
 //         const response = await fetch(`${API_BASE_URL}/api-link-here`, {
@@ -162,10 +108,10 @@ export const GetSuggestions = async (profession: string) => {
     return tmp   
 }
 
-export const testChatProcess = async (message: string) => {
+export const LLMChatProcess = async (message: string) => {
     try {
         console.log('Sending message:', message);
-        const response = await fetch('http://localhost:8000/api/v1/chat/process', {
+        const response = await fetch(`${API_BASE_URL}/api/v1/chat/process`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

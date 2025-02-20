@@ -11,8 +11,6 @@ sys.path.append(str(root_dir))
 sys.path.append(str(root_dir / 'version5'))
 sys.path.append(str(root_dir / 'version5' / 'src'))
 
-print(f"Python path includes: {sys.path}")
-
 from version5.run import process_task
 
 router = APIRouter()
@@ -55,6 +53,7 @@ def chat_endpoint(message: Dict[str, Any]):
             )
         #TODO: currently, I use the hardcoded prompt_text. When the AI people finish the prompt engineering, make a API rout that sends to the prompt engineering to fetch for a better prompt and set that as the prompt_text
         #TODO: it also says RAG is not working, so we need to fix that
+        #TODO: it always outputs environment related variables, can you try to change the documents and test it again?
         # Use hardcoded prompt_text instead of message content
         prompt_text = f"""
         Task: Write a comprehensive analytical report on League of Legends, examining its gameplay mechanics, competitive ecosystem, and cultural impact.

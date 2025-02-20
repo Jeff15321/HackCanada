@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useState } from 'react';
 import { ChatMessageType } from '@/types/ChatMessageType';
 import { useUser } from '../UserContext';
-import { PostChatMessage } from '@/services/api';
 import { useSuggestions } from './SuggestionsContext';
-import { testChatProcess } from '@/services/api';
+import { LLMChatProcess } from '@/services/api';
 import { useChatHistory } from './ChatHistoryContext';
 
 interface ChatContextType {
@@ -53,7 +52,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         try {
-            const response = await testChatProcess(messageToSend);
+            const response = await LLMChatProcess(messageToSend);
             console.log("grr", response.merged_result_with_agent);
             // Add AI response to history
             addMessage({

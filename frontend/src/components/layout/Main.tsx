@@ -8,7 +8,7 @@ import Chat from './Chat'
 import NewProjectModal from '../popup/NewProjectModal';
 import { newProject } from '@/services/api';
 import { fetchAllProjects } from '@/services/api';
-import { testChatProcess } from '@/services/api';
+import { LLMChatProcess } from '@/services/api';
 
 interface Collaborator {
     id: string;
