@@ -1,12 +1,22 @@
-import { HistoryChatType } from '@/types/ChatMessageType';
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { HistoryChatType } from '@/types/ChatMessageType';
 
 interface HistoryChatProps {
     historyChat: HistoryChatType[];
 }
 
 const HistoryChat: React.FC<HistoryChatProps> = ({ historyChat }) => {
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [historyChat]);
+
     return (
         <div className='w-full h-full overflow-y-auto'>
             <div className='flex flex-col'>
@@ -20,13 +30,16 @@ const HistoryChat: React.FC<HistoryChatProps> = ({ historyChat }) => {
                                 </div>
                             ) : (
                                 <div className="prose break-words whitespace-pre-wrap max-w-full">
-                                    <ReactMarkdown>{chat.message}</ReactMarkdown>
+                                    <ReactMarkdown>
+                                        {typeof chat.message === 'string' ? chat.message : JSON.stringify(chat.message)}
+                                    </ReactMarkdown>
                                 </div>
                             )}
                         </div>
                     </div>
                 ))}
                 <hr className="border-gray-200 my-4" />
+                <div ref={messagesEndRef} />
             </div>
         </div>
     );

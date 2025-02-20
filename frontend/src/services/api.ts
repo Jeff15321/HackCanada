@@ -176,13 +176,13 @@ export const testChatProcess = async (message: string) => {
         });
 
         const data = await response.json();
-        console.log('Raw response:', data.response);
+        console.log('Raw response:', data);
 
         if (!response.ok) {
             throw new Error(data.detail || 'Failed to process message');
         }
 
-        return data.response;
+        return data;
     } catch (error) {
         console.error('Error in chat process:', error);
         throw new Error(error instanceof Error ? error.message : 'Unknown error occurred');

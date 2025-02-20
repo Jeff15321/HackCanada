@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException
 from typing import Dict, Any
 import sys
+import shutil
 from pathlib import Path
+import traceback
 
 # Add both version5 and version5/src to Python path
 root_dir = Path(__file__).resolve().parents[5]
@@ -15,17 +17,44 @@ from version5.run import process_task
 
 router = APIRouter()
 
-@router.post("/process")
-async def process_message(message: Dict[str, Any]):
-    try:
-        print(sys.path)
-        print(f"Received message: {message}")
-        instructional_pdf = "./documents/Critical Essay Rubric.pdf"  # PDF with general instructions for all agents
-        supplementary_files = [
-            "./documents/Ensmenger2018.pdf"
-        ]
+# Get absolute paths
+BACKEND_DIR = Path(__file__).resolve().parents[3]  # backend/
+DOCUMENTS_DIR = BACKEND_DIR / "documents"
+RUBRIC_FILE = DOCUMENTS_DIR / "Critical Essay Rubric.pdf"
+ENSMENGER_FILE = DOCUMENTS_DIR / "Ensmenger2018.pdf"
 
-        # This is the user prompt
+# Create documents directory if it doesn't exist
+DOCUMENTS_DIR.mkdir(parents=True, exist_ok=True)
+
+# Copy PDF files from version5/documents to backend/documents if they don't exist
+VERSION5_DOCS = root_dir / "version5" / "documents"
+if VERSION5_DOCS.exists():
+    if not RUBRIC_FILE.exists() and (VERSION5_DOCS / "Critical Essay Rubric.pdf").exists():
+        shutil.copy2(VERSION5_DOCS / "Critical Essay Rubric.pdf", RUBRIC_FILE)
+    if not ENSMENGER_FILE.exists() and (VERSION5_DOCS / "Ensmenger2018.pdf").exists():
+        shutil.copy2(VERSION5_DOCS / "Ensmenger2018.pdf", ENSMENGER_FILE)
+
+@router.post("/process")
+def chat_endpoint(message: Dict[str, Any]):
+    """
+    Chat endpoint that processes messages and returns responses
+    """
+    try:
+        print(f"Received message: {message}")
+        
+        # Verify files exist
+        if not RUBRIC_FILE.exists():
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Required file not found: {RUBRIC_FILE}"
+            )
+        if not ENSMENGER_FILE.exists():
+            raise HTTPException(
+                status_code=500,
+                detail=f"Required file not found: {ENSMENGER_FILE}"
+            )
+
+        # Use hardcoded prompt_text instead of message content
         prompt_text = """
         ### Role:
     - You are a **Grad student** specializing in **writing a critical essay on the environmental history of computing**.
@@ -38,9 +67,7 @@ async def process_message(message: Dict[str, Any]):
     5. Identify and list academic sources that discuss the ecological consequences of computing and sustainability solutions.
     6. Critically evaluate the assumptions made in the document regarding computing technologies and their environmental impact.
     7. Propose sustainability solutions based on historical insights and current ecological challenges discussed in the document.
-
-
-    Generated Knowledge Base:
+     Generated Knowledge Base:
     1. **Theoretical Foundations**
     - **Environmental History**: Examines the impact of human activities and technologies on the environment over time.
     - **Technological Determinism vs. Social Constructivism**: Analyzes the influence of technology on society and vice versa, particularly in computing.
@@ -86,16 +113,31 @@ async def process_message(message: Dict[str, Any]):
     6. **Critical Evaluation**: Engaging with the source material critically, questioning assumptions, and synthesizing information from multiple perspectives will strengthen the essay.
     7. **Sustainability Solutions**: Proposing viable solutions based on historical insights will be essential for addressing contemporary ecological challenges.
         """
-        
-        # Process task with both instructional and supplementary files
-        final = process_task(
+
+        # Process the chat message
+        response = process_task(
             prompt=prompt_text,
-            instructional_pdf_path=instructional_pdf,
-            supplementary_files=supplementary_files
+            instructional_pdf_path=str(RUBRIC_FILE),
+            supplementary_files=[str(ENSMENGER_FILE)]
         )
         
-        print(f"Processed result: {final['merged_result_with_agent'][:100]}")
-        return {"response": final['merged_result_with_agent'][:100]}
+        print("Full response:", response)
+        
+        if response is None:
+            raise HTTPException(status_code=500, detail="Process task returned None")
+            
+        if not isinstance(response, dict):
+            raise HTTPException(status_code=500, detail=f"Expected dict response but got {type(response)}")
+            
+        if 'merged_result_with_agent' not in response:
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Response missing merged_result_with_agent. Keys: {response.keys() if isinstance(response, dict) else 'not a dict'}"
+            )
+
+        return response
+
     except Exception as e:
-        print(f"Error processing message: {str(e)}")
+        print(f"Error in chat endpoint: {str(e)}")
+        print("Traceback:", traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))

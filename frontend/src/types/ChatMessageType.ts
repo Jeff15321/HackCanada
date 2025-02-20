@@ -6,7 +6,7 @@ export interface ChatMessageType{
     suggestions: string[];
 }
 
-export interface HistoryChatType{
+export interface HistoryChatType {
     message: string;
     is_user: boolean;
     file_name: string;

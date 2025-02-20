@@ -79,9 +79,6 @@ const Main: React.FC<MainProps> = ({ CurrentView }) => {
                     <Chat />
                 )}
             </div>
-            <div>
-                <button onClick={() => testChatProcess('Hello')}>Test Chat Process</button>
-            </div>
             
             {isModalOpen && (
                 <NewProjectModal 

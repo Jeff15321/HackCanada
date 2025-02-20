@@ -4,6 +4,7 @@ import { useUser } from '../UserContext';
 import { PostChatMessage } from '@/services/api';
 import { useSuggestions } from './SuggestionsContext';
 import { testChatProcess } from '@/services/api';
+import { useChatHistory } from './ChatHistoryContext';
 
 interface ChatContextType {
     message: string;
@@ -15,8 +16,8 @@ interface ChatContextType {
     setResetInputs: (resetInputs: boolean) => void;
     selectedSuggestions: string[];
     setSelectedSuggestions: React.Dispatch<React.SetStateAction<string[]>>;
-    isInputCentered: boolean;
-    setIsInputCentered: (isInputCentered: boolean) => void;
+    isChatInputCentered: boolean;
+    setIsChatInputCentered: (isChatInputCentered: boolean) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -26,32 +27,50 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [resetInputs, setResetInputs] = useState(false);
     const [selectedSuggestions, setSelectedSuggestions] = useState<string[]>([]);
-    const [isInputCentered, setIsInputCentered] = useState(true);
+    const [isChatInputCentered, setIsChatInputCentered] = useState(true);
     const { user } = useUser();
+    const { addMessage } = useChatHistory();
 
     const handleChatSubmit = async () => {
         if (!message && selectedFiles.length === 0) return;
 
-        const chatMessage: ChatMessageType = {
-            files: selectedFiles,
-            message: message,
-            date: new Date(),
-            user_id: Number(user?.id),
-            suggestions: selectedSuggestions
-        };
+        // Store message for API call
+        const messageToSend = message;
 
-        PostChatMessage(chatMessage);
-        console.log(chatMessage);
-        const response = await testChatProcess(message);
-        console.log(response);
-        // Clear inputs
-        setSelectedFiles([]);
+        // Update all states immediately
+        setIsChatInputCentered(false);
         setMessage('');
+        setSelectedFiles([]);
         setResetInputs(true);
-        setIsInputCentered(false);
-        setTimeout(() => setResetInputs(false), 100);
+        
+        // Add user message to history
+        addMessage({
+            message: messageToSend,
+            is_user: true,
+            file_name: '',
+            date: new Date(),
+            user_id: Number(user?.id)
+        });
 
-        return response;
+        try {
+            const response = await testChatProcess(messageToSend);
+            console.log("grr", response.merged_result_with_agent);
+            // Add AI response to history
+            addMessage({
+                message: response.merged_result_with_agent,
+                is_user: false,
+                file_name: '',
+                date: new Date(),
+                user_id: Number(user?.id)
+            });
+
+            // Reset the resetInputs flag after a short delay
+            setTimeout(() => setResetInputs(false), 100);
+
+            return response;
+        } catch (error) {
+            console.error('Error processing message:', error);
+        }
     };
 
     return (
@@ -65,8 +84,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setResetInputs,
             selectedSuggestions,
             setSelectedSuggestions,
-            isInputCentered,
-            setIsInputCentered
+            isChatInputCentered,
+            setIsChatInputCentered
         }}>
             {children}
         </ChatContext.Provider>

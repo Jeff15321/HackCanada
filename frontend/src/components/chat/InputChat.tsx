@@ -20,14 +20,9 @@ const InputChat: React.FC = () => {
         const lineHeight = parseInt(getComputedStyle(textarea).lineHeight) || 20;
         const maxHeight = lineHeight * 8; // 8 rows maximum
         
-        // Show scrollbar if content height exceeds max height
         setShowScroll(textarea.scrollHeight > maxHeight);
-        
         const newHeight = Math.min(textarea.scrollHeight, maxHeight);
         textarea.style.height = `${newHeight}px`;
-
-        // Send message to parent
-        setMessage(textarea.value);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -37,17 +32,15 @@ const InputChat: React.FC = () => {
         }
     };
 
+    // Adjust height when message changes
     useEffect(() => {
-        if (textareaRef.current) {
-            adjustHeight();
-        }
-    }, []);
+        adjustHeight();
+    }, [message]);
 
+    // Reset height when resetInputs changes
     useEffect(() => {
         if (resetInputs && textareaRef.current) {
-            textareaRef.current.value = '';
             textareaRef.current.style.height = 'auto';
-            setMessage('');
         }
     }, [resetInputs]);
 

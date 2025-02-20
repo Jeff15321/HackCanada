@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import InputChat from "@/components/chat/InputChat"
 import ButtonsChat from "@/components/chat/ButtonsChat"
 import SuggestionsChat from "@/components/chat/SuggestionsChat"
@@ -6,48 +6,68 @@ import { ChatProvider, useChat } from '@/contexts/chat/ChatContext';
 import { SuggestionsProvider } from '@/contexts/chat/SuggestionsContext';
 import HistoryChat from '../chat/HistoryChat';
 import { HistoryChatType } from '@/types/ChatMessageType'
+import { ChatHistoryProvider, useChatHistory } from '@/contexts/chat/ChatHistoryContext';
 
 const ChatContent: React.FC = () => {
-    const { isInputCentered } = useChat();
+    const { isChatInputCentered } = useChat();
+    const { chatHistory } = useChatHistory();
     const [isProfessionOpen, setIsProfessionOpen] = useState(false);
     const [isChatInputOpen, setIsChatInputOpen] = useState(true);
+    const inputRef = useRef<HTMLDivElement>(null);
+    const [inputHeight, setInputHeight] = useState('0px');
 
-    const historyChat: HistoryChatType[] = [
-        {
-            message: '# Hello\n\nThis is a longer markdown message that provides more detail. It can include various elements such as **bold text**, *italic text*, and even lists:\n\n- Item 1\n- Item 2\n- Item 3\n\nAdditionally, you can add links like [this](https://example.com) or images:\n\n![Alt text](https://via.placeholder.com/150)\n\nFeel free to expand upon this message as needed.',
-            is_user: false,
-            file_name: 'test.txt',
-            date: new Date(),
-            user_id: 1
-        },
-        {
-            message: 'Hello',
-            is_user: true,
-            file_name: 'test.txt',
-            date: new Date(),
-            user_id: 1
-        },
-        {
-            message: 'Hello',
-            is_user: false,
-            file_name: 'test.txt',
-            date: new Date(),
-            user_id: 1
+    // Update height when input container changes
+    useEffect(() => {
+        const updateHeight = () => {
+            if (inputRef.current) {
+                setInputHeight(`${inputRef.current.offsetHeight}px`);
+            }
+        };
+
+        // Initial update
+        updateHeight();
+
+        // Create observer
+        const resizeObserver = new ResizeObserver(updateHeight);
+        if (inputRef.current) {
+            resizeObserver.observe(inputRef.current);
         }
-    ]
+
+        // Cleanup
+        return () => {
+            if (inputRef.current) {
+                resizeObserver.unobserve(inputRef.current);
+            }
+        };
+    }, [isProfessionOpen]); // Re-run when suggestions are toggled
+
     return (
         <div className="relative w-full h-full bg-gray-100">
-            <div className='absolute top-0 left-[10%] w-[80%] h-full'>
-                <HistoryChat historyChat={historyChat}/>
+            {/* Chat History */}
+            <div className={`absolute inset-x-[10%] top-0 
+                ${isChatInputCentered ? 'hidden' : 'block'}
+                overflow-y-auto
+                ${!isChatInputCentered && isChatInputOpen 
+                    ? 'bottom-[calc(1vh+var(--input-height))]' 
+                    : 'bottom-0'}`}
+                style={{ 
+                    '--input-height': inputHeight
+                } as React.CSSProperties}
+            >
+                <HistoryChat historyChat={chatHistory}/>
             </div>
-            <div className={`absolute 
-                            left-1/2 transform -translate-x-1/2 bg-blue flex flex-col justify-center 
-                            transition-all duration-500 ease-in-out
-                            ${isInputCentered ? 'w-[40vw]' : 'w-[80%] opacity-50 hover:opacity-100'}
-                            ${isInputCentered ? 'top-1/2 -translate-y-1/2' : 'bottom-[1vh]'} 
-                            ${isChatInputOpen ? 'visible' : 'hidden'}`}>
+
+            {/* Chat Input */}
+            <div ref={inputRef}
+                className={`absolute 
+                left-1/2 transform -translate-x-1/2 bg-blue flex flex-col justify-center 
+                transition-all duration-500 ease-in-out
+                ${isChatInputCentered ? 'w-[40vw]' : 'w-[80%]'}
+                ${isChatInputCentered ? 'top-1/2 -translate-y-1/2' : 'bottom-[1vh]'} 
+                ${isChatInputOpen ? 'visible' : 'hidden'}`}
+            >
                 {/*Title container*/}
-                <div className={`flex items-center justify-center gap-2 mx-4 mb-8 ${isInputCentered ? 'opacity-100' : 'opacity-0'}`}>
+                <div className={`flex items-center justify-center gap-2 mx-4 mb-8 ${isChatInputCentered ? 'visible' : 'hidden'}`}>
                     <img 
                         src="/logo/logo.jpg" 
                         alt="Logo" 
@@ -66,11 +86,14 @@ const ChatContent: React.FC = () => {
                     <SuggestionsChat/>
                 </div>
             </div>
-            <div className='absolute bottom-[5vh] left-[5vh] w-16 h-16 rounded-full 
+
+            {/* Chat input toggle button */}
+            <div className={`absolute bottom-[5vh] left-[5vh] w-16 h-16 rounded-full 
                 bg-blue-500 hover:bg-blue-600 cursor-pointer 
                 flex items-center justify-center 
                 transform transition-all duration-200 hover:scale-105 
-                shadow-lg hover:shadow-xl'
+                shadow-lg hover:shadow-xl 
+                ${isChatInputCentered ? 'opacity-0' : 'opacity-100'}`}
                 onClick={() => {
                     setIsChatInputOpen(!isChatInputOpen);
                 }}
@@ -109,11 +132,13 @@ const ChatContent: React.FC = () => {
 
 const Chat: React.FC = () => {
     return (
-        <ChatProvider>
-            <SuggestionsProvider>
-                <ChatContent />
-            </SuggestionsProvider>
-        </ChatProvider>
+        <ChatHistoryProvider>
+            <ChatProvider>
+                <SuggestionsProvider>
+                    <ChatContent />
+                </SuggestionsProvider>
+            </ChatProvider>
+        </ChatHistoryProvider>
     );
 };
 
