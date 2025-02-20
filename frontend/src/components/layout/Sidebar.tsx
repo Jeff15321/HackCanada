@@ -203,25 +203,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isHome, onNewChat }) => {
                     </div>
                 )}
             </div>
-
-            <div className="p-4 border-t mt-auto">
-                <button
-                    onClick={testApi}
-                    className="w-full p-2 text-sm bg-gray-100 hover:bg-gray-200 
-                             rounded-lg transition-colors duration-200 
-                             flex items-center justify-center gap-2"
-                >
-                    <Code size={16} />
-                    Test API Connection
-                </button>
-                
-                {apiMessage && (
-                    <div className="mt-2 text-sm text-center p-2 rounded-lg 
-                                  bg-green-100 text-green-700 border border-green-200">
-                        {apiMessage}
-                    </div>
-                )}
-            </div>
         </div>
     );
 }; 
