@@ -1,4 +1,0 @@
-langchain-text-splitters
-langchain-openai
-langchain-core
-pypdf

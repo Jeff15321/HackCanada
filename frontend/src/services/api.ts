@@ -1,7 +1,7 @@
 import { Model } from "../types/ModelType";
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export const newProject = async (
     user_id: string, 
@@ -163,16 +163,36 @@ export const getSubTasks = async (
     ]
 };
 
-export const newImage = async (userId: string, imageUrl: string) => {
-//   try {
-//     const response = await axios.post(`${API_BASE_URL}/api/images`, {
-//       userId,
-//       imageUrl
-//     });
-//     return response.data;
-//   } catch (error) {
-//     console.error('Error uploading image:', error);
-//     throw error;
-    return "success"
+export const newImage = async (
+  userId: string,
+  imageUrl: string,
+  model_name?: string,
+  model_description?: string,
+  model_image_url?: string,
+  model_image_file?: File | null,
+  model_attributes?: any
+) => {
+  try {
+    const formData = new FormData();
+    formData.append('userId', userId);
+    formData.append('imageUrl', imageUrl);
+    formData.append('model_name', model_name || '');
+    formData.append('model_description', model_description || '');
+    formData.append('model_image_url', model_image_url || '');
+    console.log("file:", model_image_file);
+    if (model_image_file) {
+      formData.append('model_image_file', model_image_file);
+    }
+    formData.append('model_attributes', JSON.stringify(model_attributes || {}));
 
+    const response = await axios.post(`${API_BASE_URL}/v1/model/new/`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    throw error;
+  }
 };

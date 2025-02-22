@@ -9,25 +9,25 @@ interface Collaborator {
     id: string;
 }
 
-interface NewProjectModalProps {
+interface NewProjectModelProps {
     isOpen: boolean;
     onClose: () => void;
     onCreateProject: (projectName: string, collaborators: Collaborator[], isPublic: boolean) => Promise<{ project_id: string }>;
 }
 
-const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onCreateProject }) => {
+const NewProjectModel: React.FC<NewProjectModelProps> = ({ isOpen, onClose, onCreateProject }) => {
     const [projectName, setProjectName] = useState('');
     const [searchEmail, setSearchEmail] = useState('');
     const [allUsers, setAllUsers] = useState<Collaborator[]>([]);
     const [selectedCollaborators, setSelectedCollaborators] = useState<Collaborator[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    const modalRef = useRef<HTMLDivElement>(null);
+    const ModelRef = useRef<HTMLDivElement>(null);
     const { user } = useUser();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const inputRef = useRef<HTMLDivElement>(null);
     const [isPublic, setIsPublic] = useState(false);
 
-    // Fetch all users when modal opens
+    // Fetch all users when Model opens
     useEffect(() => {
 
         if (isOpen) {
@@ -87,7 +87,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onCr
         }
     };
 
-    // Reset state when modal closes
+    // Reset state when Model closes
     useEffect(() => {
         if (!isOpen) {
             setProjectName('');
@@ -100,7 +100,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onCr
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div ref={modalRef} className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
+            <div ref={ModelRef} className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-semibold">Create New Project</h2>
                     <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
@@ -234,4 +234,4 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({ isOpen, onClose, onCr
     );
 };
 
-export default NewProjectModal; 
+export default NewProjectModel; 

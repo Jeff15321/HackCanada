@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import projects, chat, users, auth
+from app.api.v1.endpoints import projects, users, auth, model
 
 api_router = APIRouter()
 
@@ -17,12 +17,6 @@ print("Available project routes:", [
 ])
 
 api_router.include_router(
-    chat.router,
-    prefix="/chat",
-    tags=["chat"]
-)
-
-api_router.include_router(
     users.router,
     prefix="/users",
     tags=["users"]
@@ -33,3 +27,9 @@ api_router.include_router(
     prefix="/auth",
     tags=["auth"]
 ) 
+
+api_router.include_router(
+    model.router,
+    prefix="/model",
+    tags=["model"]
+)

@@ -3,29 +3,39 @@ import { Box, Button, IconButton, Typography, Paper } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
+import { useImage } from '../../contexts/ImageContext';
 
 interface ImageDropProps {
-  onImageCapture: (file: File) => void;
   onSubmit: () => void;
 }
 
-const ImageDrop: React.FC<ImageDropProps> = ({ onImageCapture, onSubmit }) => {
+const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
   const [image, setImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { setSelectedFile, setImageUrl } = useImage();
 
   const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith('image/')) {
+      console.log("Dropped file:", file);
       handleImageSelect(file);
     }
   };
 
   const handleImageSelect = (file: File) => {
+    console.log("Selected file in handleImageSelect:", file);
+    setSelectedFile(file);
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setImageUrl(url);
+      console.log("Created URL:", url);
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       setImage(reader.result as string);
-      onImageCapture(file);
+      console.log("Image set to:", file);
     };
     reader.readAsDataURL(file);
   };
@@ -33,12 +43,15 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onImageCapture, onSubmit }) => {
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      console.log("File input file:", file);
       handleImageSelect(file);
     }
   };
 
   const clearImage = () => {
     setImage(null);
+    setSelectedFile(null);
+    setImageUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 

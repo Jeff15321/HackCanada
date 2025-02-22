@@ -1,5 +1,5 @@
 import React from 'react';
-import ImageDisplay from './ImageDisplay';
+import ImageDisplay from '../../components/layout/ImageDisplay';
 
 const ImagePage = () => {
   return <ImageDisplay />;
