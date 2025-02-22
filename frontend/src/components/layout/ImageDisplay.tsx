@@ -1,16 +1,43 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ImageDrop from './ImageDrop';
 import ImageAnalysis from './ImageAnalysis';
 import ImageLayout from './ImageLayout';
 import { newImage } from '../../services/api';
-import { useModel } from '../../contexts/Model';
+import { useModel } from '../../contexts/ModelContext';
 import { useUser } from '../../contexts/UserContext';
 import { useImage } from '../../contexts/ImageContext';
+
+interface GPTResponse {
+  shape: {
+    analysis: string;
+    rating: string;
+  };
+  color: {
+    analysis: string;
+    rating: string;
+  };
+  health: {
+    analysis: string;
+    rating: string;
+  };
+  development: {
+    analysis: string;
+    rating: string;
+  };
+  attributes: {
+    attribute: string;
+    rarity: string;
+  }[];
+}
 
 const ImageDisplay = () => {
   const { selectedFile, imageUrl, isAnalyzing, setIsAnalyzing } = useImage();
   const { model, setModel } = useModel();
   const { user } = useUser();
+
+  useEffect(() => {
+    console.log("model:", model);
+  }, [model]);
 
   const handleSubmit = async () => {
     try {
@@ -52,7 +79,7 @@ const ImageDisplay = () => {
           .replace(/```$/, '')       // Remove closing markdown
           .trim();                   // Remove extra whitespace
         
-        const api2_data = JSON.parse(cleanJsonString);
+        const api2_data = JSON.parse(cleanJsonString) as GPTResponse;
         console.log("api2_data:", api2_data);
         
         // Update the model with the parsed data
@@ -62,16 +89,24 @@ const ImageDisplay = () => {
           description: cleanJsonString, // Store the cleaned JSON string
           imageUrl: imageUrl,
           image: selectedFile,
+          threeDModel: null,
           attributes: {
-            ...randomAttributes,
-            ...(response.api2_data?.confidence && { confidence: response.api2_data.confidence }),
+            shape: Number(api2_data.shape.rating.replace('%', '')),
+            color: Number(api2_data.color.rating.replace('%', '')),
+            health: Number(api2_data.health.rating.replace('%', '')),
+            development: Number(api2_data.development.rating.replace('%', '')),
+            attributes: api2_data.attributes.map(attr => ({
+              attribute: attr.attribute,
+              rarity: Number(attr.rarity)
+            })),
           }
         });
+
+        // Move setIsAnalyzing after successful model update
+        setIsAnalyzing(true);
       } catch (error) {
         console.error('Error parsing api2_data:', error);
       }
-
-      setIsAnalyzing(true);
       
       // Log the full response
       console.log('Full API Response:', response);

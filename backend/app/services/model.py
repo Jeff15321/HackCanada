@@ -37,23 +37,23 @@ Image Input Description:
 The image shows a vibrant red rose in full bloom. The petals are evenly arranged and glossy with visible dewdrops, supported by lush green leaves and a strong, upright stem. The softly blurred background emphasizes the flower's vivid color and intricate details.
 output in json format as a string:
 {
-  "Shape & Structure": {
+  "shape": {
     "analysis": "The flower exhibits a balanced and symmetrical form with uniformly arranged petals and a robust stem. The well-defined structure of the petals and leaves reflects strong genetic traits and optimal growth conditions.",
     "rating": "95%"
   },
-  "Color & Texture": {
+  "color": {
     "analysis": "The dominant vibrant red hue is complemented by subtle shading that adds depth, and the glossy surface indicates excellent hydration. The uniform, smooth texture underscores the flower's healthy condition.",
     "rating": "93%"
   },
-  "Health": {
+  "health": {
     "analysis": "There are no visible signs of disease, discoloration, or pest damage; the tissues are firm and resilient. The overall appearance confirms that the flower is thriving in a favorable environment.",
     "rating": "96%"
   },
-  "Development": {
+  "development": {
     "analysis": "The flower is captured in full bloom with all petals unfurled, highlighting its reproductive peak. This mature stage is ideal for attracting pollinators and signifies optimal aesthetic and physiological condition.",
     "rating": "95%"
   },
-  "Special Attributes": [
+  "attributes": [
     {
       "attribute": "Rare Fragrance",
       "rarity": "Epic"
@@ -75,23 +75,23 @@ Image Input Description:
 The image depicts a pale, wilted flower with drooping petals and a visibly weakened stem. The background is dull and low-contrast, emphasizing the lack of vibrancy and clear signs of decay such as brown patches and uneven discoloration.
 output in json format as a string that I could easily parse to json through JSON.parse():
 {
-  "Shape & Structure": {
+  "shape": {
     "analysis": "The flower exhibits an irregular, asymmetrical form with drooping, misshapen petals and a weakened stem. The disorganized structure suggests significant physical stress and poor growth conditions.",
     "rating": "35%"
   },
-  "Color & Texture": {
+  "color": {
     "analysis": "The overall color is muted and faded, with brown patches and uneven hues indicating a loss of vitality. The texture is rough and brittle, reflecting dehydration and the early stages of decay.",
     "rating": "15%"
   },
-  "Health": {
+  "health": {
     "analysis": "Obvious signs of distress, such as necrotic spots and widespread discoloration, indicate that the flower is affected by disease or pest infestation. The fragile, compromised tissue further confirms its poor health.",
     "rating": "5%"
   },
-  "Development": {
+  "development": {
     "analysis": "The flower appears wilted with partially closed or disintegrating petals, demonstrating a decline from its optimal bloom stage. This advanced stage of deterioration reflects prolonged exposure to adverse conditions.",
     "rating": "20%"
   },
-  "Special Attributes": [
+  "attributes": [
     {
       "attribute": "Unusual Petal Pattern",
       "rarity": "Common"
