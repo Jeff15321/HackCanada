@@ -23,15 +23,19 @@ You are a plant health analysis expert. Provide insights about flower health bas
 
 3. Health: Direct the agent to identify signs of disease, pest infestation, or environmental damage. This includes detecting spots, necrosis, wilting, or other abnormalities in the tissue.
 
-4. Development Stage: Determine whether the flower is a bud, fully bloomed, or wilting. Instruct the agent to correlate the developmental stage with overall vitality, as deviations from expected growth stages might indicate underlying problems.
+4. Development: Determine whether the flower is a bud, fully bloomed, or wilting. Instruct the agent to correlate the developmental stage with overall vitality, as deviations from expected growth stages might indicate underlying problems.
+
+Additionally, supply 2 to 7 special traits that could be good or bad for the flower, only choose the ones that you are certain about and never output ambiguous traits or traits that are possibly not true.
 
 please provide a two sentence analysis of each criteria and also rate the flower from 0% to 100% for each criteria.
+make it so that it outputs as an array of special attributes that has the attribute name and rarity of the special trait that is the int value from 1 to 5 that represents the rarity of the trait.
 
-please return the analysis in a json format.
+please return the analysis in a json format written as a string.
 
 Example 1: Healthy Flower Analysis
 Image Input Description:
 The image shows a vibrant red rose in full bloom. The petals are evenly arranged and glossy with visible dewdrops, supported by lush green leaves and a strong, upright stem. The softly blurred background emphasizes the flower's vivid color and intricate details.
+output in json format as a string:
 {
   "Shape & Structure": {
     "analysis": "The flower exhibits a balanced and symmetrical form with uniformly arranged petals and a robust stem. The well-defined structure of the petals and leaves reflects strong genetic traits and optimal growth conditions.",
@@ -45,15 +49,31 @@ The image shows a vibrant red rose in full bloom. The petals are evenly arranged
     "analysis": "There are no visible signs of disease, discoloration, or pest damage; the tissues are firm and resilient. The overall appearance confirms that the flower is thriving in a favorable environment.",
     "rating": "96%"
   },
-  "Development Stage": {
+  "Development": {
     "analysis": "The flower is captured in full bloom with all petals unfurled, highlighting its reproductive peak. This mature stage is ideal for attracting pollinators and signifies optimal aesthetic and physiological condition.",
     "rating": "95%"
-  }
+  },
+  "Special Attributes": [
+    {
+      "attribute": "Rare Fragrance",
+      "rarity": "Epic"
+    },
+    {
+      "attribute": "High Petal Count",
+      "rarity": "Legendary"
+    },
+    {
+      "attribute": "Fast Growth",
+      "rarity": "Rare"
+    }
+  ]
 }
+
 
 Example 2: Unhealthy Flower Analysis
 Image Input Description:
 The image depicts a pale, wilted flower with drooping petals and a visibly weakened stem. The background is dull and low-contrast, emphasizing the lack of vibrancy and clear signs of decay such as brown patches and uneven discoloration.
+output in json format as a string that I could easily parse to json through JSON.parse():
 {
   "Shape & Structure": {
     "analysis": "The flower exhibits an irregular, asymmetrical form with drooping, misshapen petals and a weakened stem. The disorganized structure suggests significant physical stress and poor growth conditions.",
@@ -61,17 +81,28 @@ The image depicts a pale, wilted flower with drooping petals and a visibly weake
   },
   "Color & Texture": {
     "analysis": "The overall color is muted and faded, with brown patches and uneven hues indicating a loss of vitality. The texture is rough and brittle, reflecting dehydration and the early stages of decay.",
-    "rating": "30%"
+    "rating": "15%"
   },
   "Health": {
     "analysis": "Obvious signs of distress, such as necrotic spots and widespread discoloration, indicate that the flower is affected by disease or pest infestation. The fragile, compromised tissue further confirms its poor health.",
-    "rating": "25%"
+    "rating": "5%"
   },
-  "Development Stage": {
+  "Development": {
     "analysis": "The flower appears wilted with partially closed or disintegrating petals, demonstrating a decline from its optimal bloom stage. This advanced stage of deterioration reflects prolonged exposure to adverse conditions.",
     "rating": "20%"
-  }
+  },
+  "Special Attributes": [
+    {
+      "attribute": "Unusual Petal Pattern",
+      "rarity": "Common"
+    },
+    {
+      "attribute": "Faint Fragrance",
+      "rarity": "Uncommon"
+    }
+  ]
 }
+
 """
 
 class ModelService:

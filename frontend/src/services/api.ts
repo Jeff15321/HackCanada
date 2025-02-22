@@ -166,35 +166,31 @@ export const getSubTasks = async (
 export const newImage = async (
   userId: string,
   imageUrl: string,
-  model_name?: string,
-  model_description?: string,
-  model_image_url?: string,
-  model_image_file?: File | null,
-  model_attributes?: any
+  modelName?: string,
+  modelDescription?: string,
+  modelImageUrl?: string,
+  modelImageFile?: File,
+  modelAttributes?: Record<string, any>
 ) => {
   try {
     const formData = new FormData();
     formData.append('userId', userId);
     formData.append('imageUrl', imageUrl);
-    formData.append('model_name', model_name || '');
-    formData.append('model_description', model_description || '');
-    formData.append('model_image_url', model_image_url || '');
-    console.log("file:", model_image_file);
-    if (model_image_file) {
-      formData.append('model_image_file', model_image_file);
-    }
-    formData.append('model_attributes', JSON.stringify(model_attributes || {}));
+    if (modelName) formData.append('model_name', modelName);
+    if (modelDescription) formData.append('model_description', modelDescription);
+    if (modelImageUrl) formData.append('model_image_url', modelImageUrl);
+    if (modelImageFile) formData.append('model_image_file', modelImageFile);
+    if (modelAttributes) formData.append('model_attributes', JSON.stringify(modelAttributes));
 
     const response = await axios.post(`${API_BASE_URL}/v1/model/new/`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
-    const { api2_data } = response.data;
-    console.log("api2_data:", api2_data);
-    return api2_data;
+
+    return response.data;
   } catch (error) {
-    console.error('Error uploading image:', error);
+    console.error('Error in newImage:', error);
     throw error;
   }
 };

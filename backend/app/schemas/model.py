@@ -13,3 +13,7 @@ class ModelCreate(BaseModel):
 class ModelResponse(BaseModel):
     success: bool = True
     message: str = "Model created successfully"
+    api1_data: Optional[Dict[str, Any]] = None
+    api2_data: Optional[Dict[str, Any]] = None
+    gpt_analysis: Optional[str] = None
+    combined_score: Optional[float] = None

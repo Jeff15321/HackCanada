@@ -27,7 +27,7 @@ async def new_model(
         if model_image_file:
             print(f"Received image file: {model_image_file.filename}")
 
-        return await ModelService.create_model(
+        result = await ModelService.create_model(
             userId=userId,
             imageUrl=imageUrl,
             model_name=model_name,
@@ -35,6 +35,16 @@ async def new_model(
             model_image_url=model_image_url,
             model_image_file=model_image_file,
             model_attributes=model_attributes_dict
+        )
+
+        # Return the full response including all the analysis data
+        return ModelResponse(
+            success=result["success"],
+            message=result["message"],
+            api1_data=result.get("api1_data"),
+            api2_data=result.get("api2_data"),
+            gpt_analysis=result.get("gpt_analysis"),
+            combined_score=result.get("combined_score")
         )
     except Exception as e:
         print(f"Error creating model: {str(e)}")

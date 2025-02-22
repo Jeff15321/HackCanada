@@ -52,7 +52,9 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
   return (
     <div className="container mx-auto max-w-6xl p-6">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Crypto Botanical Summon</h1>
+        <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 mb-2 font-game">
+          SUMMON YOUR CRYPTO FLOWER
+        </h1>
       </div>
 
       <div className="flex gap-12 items-center">
@@ -121,43 +123,66 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
           
           <button 
             className={`
-              w-full py-6 px-8 rounded-2xl text-2xl font-bold
+              group relative w-full py-7 rounded-lg text-2xl font-black
               transition-all duration-300 transform
-              bg-gradient-to-r from-purple-600/90 to-purple-800/90
-              hover:from-purple-500/90 hover:to-purple-700/90
-              text-white shadow-lg
-              hover:shadow-purple-500/50 hover:scale-105
+              bg-gradient-to-r from-cyan-900 to-cyan-700
+              text-white
+              hover:scale-105
               backdrop-blur-sm
-              border-2 border-purple-400/30
+              font-game
               ${isAnimating && 'opacity-50 cursor-not-allowed hover:scale-100'}
+              before:absolute before:inset-0
+              before:bg-gradient-to-r before:from-transparent before:via-cyan-400 before:to-transparent
+              before:opacity-0 before:transition-opacity before:duration-500
+              hover:before:opacity-20
+              after:absolute after:inset-[2px]
+              after:bg-gradient-to-r after:from-cyan-900 after:to-cyan-700
+              after:rounded-[4px] after:-z-10
             `}
             onClick={() => fileInputRef.current?.click()}
             disabled={isAnimating}
           >
-            Upload Flower
+            <span className="relative z-10 inline-flex items-center justify-center w-full">
+              <span className="bg-gradient-to-r from-cyan-200 to-cyan-400 bg-clip-text text-transparent">
+                UPLOAD FLOWER
+              </span>
+            </span>
           </button>
           
           <button 
             className={`
-              w-full py-6 px-8 rounded-2xl text-2xl font-bold
+              group relative w-full py-7 rounded-lg text-2xl font-black
               transition-all duration-300 transform
-              shadow-lg backdrop-blur-sm
+              font-game
               ${!image 
-                ? 'bg-gray-600/50 cursor-not-allowed text-white/50 border-2 border-gray-400/30' 
+                ? 'bg-gray-800 text-gray-500 cursor-not-allowed' 
                 : `
-                  bg-gradient-to-r from-emerald-600/90 to-emerald-800/90
-                  hover:from-emerald-500/90 hover:to-emerald-700/90
+                  bg-gradient-to-r from-purple-900 to-purple-700
                   text-white
-                  hover:shadow-emerald-500/50 hover:scale-105
-                  border-2 border-emerald-400/30
-                  animate-pulse
+                  hover:scale-105
+                  before:absolute before:inset-0
+                  before:bg-gradient-to-r before:from-transparent before:via-purple-400 before:to-transparent
+                  before:opacity-0 before:transition-opacity before:duration-500
+                  hover:before:opacity-20
+                  after:absolute after:inset-[2px]
+                  after:bg-gradient-to-r after:from-purple-900 after:to-purple-700
+                  after:rounded-[4px] after:-z-10
                 `
               }
             `}
             disabled={!image || isAnimating}
             onClick={handleSubmit}
           >
-            {isAnimating ? 'Summoning...' : 'Summon'}
+            <span className="relative z-10 inline-flex items-center justify-center w-full">
+              <span className={`
+                ${!image 
+                  ? 'text-gray-500'
+                  : 'bg-gradient-to-r from-purple-200 to-purple-400 bg-clip-text text-transparent'
+                }
+              `}>
+                {isAnimating ? 'SUMMONING...' : 'SUMMON'}
+              </span>
+            </span>
           </button>
         </div>
       </div>

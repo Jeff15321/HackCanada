@@ -14,10 +14,6 @@ const ImageDisplay = () => {
 
   const handleSubmit = async () => {
     try {
-      console.log("Submitting with file:", selectedFile);
-      console.log("User:", user);
-      console.log("Image URL:", imageUrl);
-
       if (!selectedFile) {
         throw new Error('Please select an image first');
       }
@@ -37,16 +33,8 @@ const ImageDisplay = () => {
         sunlight: Math.floor(Math.random() * 100)
       };
 
-      setModel({
-        id: crypto.randomUUID(),
-        name: model?.name || 'Default Name',
-        description: model?.description || 'Default Description',
-        imageUrl: imageUrl,
-        image: selectedFile,
-        attributes: randomAttributes
-      });
-      
-      await newImage(
+      // Call the API and store the full response
+      const response = await newImage(
         user.id, 
         imageUrl, 
         model?.name, 
@@ -55,10 +43,41 @@ const ImageDisplay = () => {
         selectedFile, 
         randomAttributes
       );
+
+      try {
+        console.log("analysis:", response.api2_data.analysis);
+        // Remove markdown code block markers and clean the string
+        const cleanJsonString = response.api2_data.analysis
+          .replace(/```json\n/, '')  // Remove opening markdown
+          .replace(/```$/, '')       // Remove closing markdown
+          .trim();                   // Remove extra whitespace
+        
+        const api2_data = JSON.parse(cleanJsonString);
+        console.log("api2_data:", api2_data);
+        
+        // Update the model with the parsed data
+        setModel({
+          id: crypto.randomUUID(),
+          name: model?.name || 'Default Name',
+          description: cleanJsonString, // Store the cleaned JSON string
+          imageUrl: imageUrl,
+          image: selectedFile,
+          attributes: {
+            ...randomAttributes,
+            ...(response.api2_data?.confidence && { confidence: response.api2_data.confidence }),
+          }
+        });
+      } catch (error) {
+        console.error('Error parsing api2_data:', error);
+      }
+
       setIsAnalyzing(true);
+      
+      // Log the full response
+      console.log('Full API Response:', response);
+      
     } catch (error) {
       console.error('Error submitting image:', error);
-      // You might want to show this error to the user
       alert(error instanceof Error ? error.message : 'An error occurred');
     }
   };
