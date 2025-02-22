@@ -1,5 +1,4 @@
 import React from 'react';
-import { Box } from '@mui/material';
 
 interface MainProps {
   children?: React.ReactNode;
@@ -7,17 +6,9 @@ interface MainProps {
 
 const Main: React.FC<MainProps> = ({ children }) => {
   return (
-    <Box
-      component="main"
-      sx={{
-        flexGrow: 1,
-        height: '100vh',
-        overflow: 'auto',
-        position: 'relative',
-      }}
-    >
+    <main className="min-h-screen w-full bg-black overflow-y-auto scrollbar-hide">
       {children}
-    </Box>
+    </main>
   );
 };
 

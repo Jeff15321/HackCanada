@@ -124,30 +124,25 @@ const ImageDisplay = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-emerald-50p p-3">
-      <div className="flex flex-col min-h-[calc(100vh-1.5rem)]">
-      
-      <div className="flex flex-col min-h-full">
-        {/* Navigation at the top */}
-        <div className="flex-none">
-          <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
-        </div>
+    <div className="min-h-screen bg-black">
+      <div className="h-screen flex">
+        <div className="flex-1 overflow-y-auto">
+          {/* Navigation at the top */}
+          <div className="fixed top-[1rem] left-0 right-0 z-10 flex-none">
+            <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+          </div>
 
-        {/* Main content area */}
-        <div className="flex-grow relative w-full max-w-7xl mx-auto">
-          {/* Show content based on active tab */}
-          {activeTab === 'marketplace' && !isAnalyzing && <ImageDrop onSubmit={handleSubmit} />}
-          {activeTab === 'marketplace' && isAnalyzing && <FlowerView />}
-          {activeTab === 'collection' && <Collection />}
-          {activeTab === 'profile' && <Profile />}
-          
-          {/* Decorative elements */}
-          <div className="absolute -top-20 -left-20 w-40 h-40 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-          <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-emerald-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+          {/* Main content area */}
+          <div className="flex-grow relative w-full max-w-7xl mx-auto">
+            {/* Show content based on active tab */}
+            {/* {activeTab === 'marketplace' && !isAnalyzing && <ImageDrop onSubmit={handleSubmit} />}
+            {activeTab === 'marketplace' && isAnalyzing && <FlowerView />} */}
+            {activeTab === 'marketplace' && <Marketplace />}
+            {activeTab === 'collection' && <Collection />}
+            {activeTab === 'profile' && <Profile />}
+          </div>
         </div>
       </div>
-    </div>
     </div>
   );
 };

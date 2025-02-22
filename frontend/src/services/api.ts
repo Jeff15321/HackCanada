@@ -194,3 +194,90 @@ export const newImage = async (
     throw error;
   }
 };
+
+export const fetchAllModels = async (currentModel?: any) => {
+    const randomImages = [
+       
+        'https://picsum.photos/800/800',
+        'https://picsum.photos/800',
+    ];
+
+    const getRandomImage = () => {
+        const randomIndex = Math.floor(Math.random() * randomImages.length);
+        return `${randomImages[randomIndex]}?${Math.random()}`; // Add random query to prevent caching
+    };
+
+    const generateSimilarAttributes = (baseValue: number) => {
+        // Generate a value within ±15 of the base value
+        return Math.min(100, Math.max(0, baseValue + (Math.random() * 30 - 15)));
+    };
+
+    const generateModel = (id: number, baseModel?: any) => {
+        const attributes = baseModel?.attributes || {
+            shape: Math.random() * 100,
+            color: Math.random() * 100,
+            health: Math.random() * 100,
+            development: Math.random() * 100
+        };
+
+        return {
+            id: id.toString(),
+            name: `Mystic Flower ${id}`,
+            description: JSON.stringify({
+                shape: {
+                    analysis: "Unique petal arrangement",
+                    rating: `${generateSimilarAttributes(attributes.shape)}%`
+                },
+                color: {
+                    analysis: "Vibrant hues",
+                    rating: `${generateSimilarAttributes(attributes.color)}%`
+                },
+                health: {
+                    analysis: "Excellent condition",
+                    rating: `${generateSimilarAttributes(attributes.health)}%`
+                },
+                development: {
+                    analysis: "Well developed",
+                    rating: `${generateSimilarAttributes(attributes.development)}%`
+                }
+            }),
+            imageUrl: getRandomImage(),
+            image: new File([""], "placeholder.jpg", { type: "image/jpeg" }),
+            threeDModel: null,
+            attributes: {
+                shape: generateSimilarAttributes(attributes.shape),
+                color: generateSimilarAttributes(attributes.color),
+                health: generateSimilarAttributes(attributes.health),
+                development: generateSimilarAttributes(attributes.development),
+                attributes: [
+                    { attribute: "Rare Pattern", rarity: Math.floor(Math.random() * 5) + 1 },
+                    { attribute: "Unique Color", rarity: Math.floor(Math.random() * 5) + 1 },
+                    { attribute: "Special Trait", rarity: Math.floor(Math.random() * 5) + 1 }
+                ]
+            }
+        };
+    };
+
+    return [
+        generateModel(1, currentModel),
+        generateModel(2, currentModel),
+        generateModel(3, currentModel),
+        generateModel(4, currentModel),
+        generateModel(5, currentModel),
+        generateModel(6, currentModel),
+        generateModel(7, currentModel),
+        generateModel(8, currentModel),
+        generateModel(9, currentModel),
+        generateModel(10, currentModel),
+        generateModel(11, currentModel),
+        generateModel(12, currentModel),
+        generateModel(13, currentModel),
+        generateModel(14, currentModel),
+        generateModel(15, currentModel),
+        generateModel(16, currentModel),
+        
+    ];
+};
+
+
+
