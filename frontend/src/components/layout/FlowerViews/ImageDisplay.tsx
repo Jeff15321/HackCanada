@@ -1,12 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import ImageDrop from './ImageDrop';
 import ImageAnalysis from './ImageAnalysis';
-import ImageLayout from './ImageLayout';
-import { newImage } from '../../services/api';
-import { useModel } from '../../contexts/ModelContext';
-import { useUser } from '../../contexts/UserContext';
-import { useImage } from '../../contexts/ImageContext';
-
+import { newImage } from '../../../services/api';
+import { useModel } from '../../../contexts/ModelContext';
+import { useUser } from '../../../contexts/UserContext';
+import { useImage } from '../../../contexts/ImageContext';
+import Navigation from '../Navigation';
+import Marketplace from '../../sections/Marketplace';
+import Collection from '../../sections/Collection';
+import Profile from '../../sections/Profile';
+import FlowerView from '../FlowerView';
 interface GPTResponse {
   shape: {
     analysis: string;
@@ -30,10 +33,13 @@ interface GPTResponse {
   }[];
 }
 
+type Tab = 'marketplace' | 'collection' | 'profile';
+
 const ImageDisplay = () => {
   const { selectedFile, imageUrl, isAnalyzing, setIsAnalyzing } = useImage();
   const { model, setModel } = useModel();
   const { user } = useUser();
+  const [activeTab, setActiveTab] = useState<Tab>('marketplace');
 
   useEffect(() => {
     console.log("model:", model);
@@ -118,23 +124,31 @@ const ImageDisplay = () => {
   };
 
   return (
-    <ImageLayout>
-      <div className="relative w-full max-w-7xl mx-auto">
-        {/* Optional decorative elements */}
-        <div className="absolute -top-20 -left-20 w-40 h-40 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-        <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-emerald-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-emerald-50p p-3">
+      <div className="flex flex-col min-h-[calc(100vh-1.5rem)]">
+      
+      <div className="flex flex-col min-h-full">
+        {/* Navigation at the top */}
+        <div className="flex-none">
+          <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+        </div>
 
-        {/* Main content */}
-        <div className="relative backdrop-blur-sm">
-          {!isAnalyzing ? (
-            <ImageDrop onSubmit={handleSubmit} />
-          ) : (
-            <ImageAnalysis imageUrl={imageUrl!} />
-          )}
+        {/* Main content area */}
+        <div className="flex-grow relative w-full max-w-7xl mx-auto">
+          {/* Show content based on active tab */}
+          {activeTab === 'marketplace' && !isAnalyzing && <ImageDrop onSubmit={handleSubmit} />}
+          {activeTab === 'marketplace' && isAnalyzing && <FlowerView />}
+          {activeTab === 'collection' && <Collection />}
+          {activeTab === 'profile' && <Profile />}
+          
+          {/* Decorative elements */}
+          <div className="absolute -top-20 -left-20 w-40 h-40 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+          <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-emerald-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
         </div>
       </div>
-    </ImageLayout>
+    </div>
+    </div>
   );
 };
 

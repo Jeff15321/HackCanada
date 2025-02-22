@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { IconButton } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { useImage } from '../../contexts/ImageContext';
+import { useImage } from '../../../contexts/ImageContext';
 
 interface ImageDropProps {
   onSubmit: () => void;
@@ -12,6 +12,7 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
   const [image, setImage] = useState<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [flowerName, setFlowerName] = useState('');
   const { setSelectedFile, setImageUrl } = useImage();
 
   const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -51,13 +52,7 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
 
   return (
     <div className="container mx-auto max-w-6xl p-6">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 mb-2 font-game">
-          SUMMON YOUR CRYPTO FLOWER
-        </h1>
-      </div>
-
-      <div className="flex gap-12 items-center">
+      <div className="flex gap-24 items-center">
         {/* Left side - Summon Circle */}
         <div className="flex-1 relative">
           <div 
@@ -78,12 +73,10 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
             {!image ? (
               <div className="text-center p-8">
                 <CloudUploadIcon className="text-6xl text-white/50 mb-4 animate-bounce" />
-                <p className="text-xl font-semibold text-white/90">
+                <p className="text-3xl font-semibold text-white/90">
                   Drop your flower here
                 </p>
-                <p className="text-sm text-white/70 mt-2">
-                  to begin the summoning ritual
-                </p>
+      
               </div>
             ) : (
               <div className="relative w-full h-full flex items-center justify-center">
@@ -105,14 +98,10 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
             )}
           </div>
 
-          {/* Mystic Effects */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/20 to-emerald-500/20 rounded-full animate-pulse" />
-          </div>
         </div>
 
         {/* Right side - Controls */}
-        <div className="w-96 flex flex-col gap-8">
+        <div className="w-96 flex flex-col gap-16">
           <input
             type="file"
             accept="image/*"
@@ -120,6 +109,32 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
             ref={fileInputRef}
             onChange={(e) => e.target.files?.[0] && handleImageSelect(e.target.files[0])}
           />
+             {/* Epic Name Input */}
+          <div className="space-y-3 relative group">
+            <label className="block text-xl font-bold bg-gradient-to-r from-purple-600 to-cyan-600 bg-clip-text text-transparent">
+              Name Your Flower
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={flowerName}
+                onChange={(e) => setFlowerName(e.target.value)}
+                placeholder="Enter flower name"
+                className="w-full px-6 py-4 rounded-xl text-lg
+                  bg-white/80 backdrop-blur-sm
+                  border-2 border-transparent
+                  group-hover:border-purple-300
+                  focus:border-purple-500
+                  shadow-[0_0_15px_rgba(168,85,247,0.15)]
+                  group-hover:shadow-[0_0_20px_rgba(168,85,247,0.25)]
+                  focus:shadow-[0_0_25px_rgba(168,85,247,0.35)]
+                  transition-all duration-300
+                  outline-none
+                  placeholder:text-gray-400"
+              />
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/20 to-cyan-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+            </div>
+          </div>
           
           <button 
             className={`
@@ -180,7 +195,7 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
                   : 'bg-gradient-to-r from-purple-200 to-purple-400 bg-clip-text text-transparent'
                 }
               `}>
-                {isAnimating ? 'SUMMONING...' : 'SUMMON'}
+                {isAnimating ? 'SUBMITTING...' : 'SUBMIT'}
               </span>
             </span>
           </button>
