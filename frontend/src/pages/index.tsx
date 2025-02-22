@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
 
-import Main from '../components/layout/Main';
+const HomePage = () => {
+  const router = useRouter();
 
-const HomePage: React.FC = () => {
-    
-    return (
-        <Main CurrentView='home' />
-    );
+  useEffect(() => {
+    router.push('/image');
+  }, []);
+
+  return null;
 };
 
 export default HomePage;
