@@ -190,7 +190,9 @@ export const newImage = async (
         'Content-Type': 'multipart/form-data',
       },
     });
-    return response.data;
+    const { api2_data } = response.data;
+    console.log("api2_data:", api2_data);
+    return api2_data;
   } catch (error) {
     console.error('Error uploading image:', error);
     throw error;

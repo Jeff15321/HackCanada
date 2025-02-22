@@ -65,11 +65,21 @@ const ImageDisplay = () => {
 
   return (
     <ImageLayout>
-      {!isAnalyzing ? (
-        <ImageDrop onSubmit={handleSubmit} />
-      ) : (
-        <ImageAnalysis imageUrl={imageUrl!} />
-      )}
+      <div className="relative w-full max-w-7xl mx-auto">
+        {/* Optional decorative elements */}
+        <div className="absolute -top-20 -left-20 w-40 h-40 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+        <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-emerald-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+
+        {/* Main content */}
+        <div className="relative backdrop-blur-sm">
+          {!isAnalyzing ? (
+            <ImageDrop onSubmit={handleSubmit} />
+          ) : (
+            <ImageAnalysis imageUrl={imageUrl!} />
+          )}
+        </div>
+      </div>
     </ImageLayout>
   );
 };

@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Paper, Typography, Divider, Chip } from '@mui/material';
-import { keyframes } from '@emotion/react';
 import LocalFloristIcon from '@mui/icons-material/LocalFlorist';
 import OpacityIcon from '@mui/icons-material/Opacity';
 import WbSunnyIcon from '@mui/icons-material/WbSunny';
@@ -10,50 +8,55 @@ interface ImageAnalysisProps {
   imageUrl: string;
 }
 
-// Animation keyframes
-const slideRight = keyframes`
-  from {
-    width: 0%;
+/* 
+  Ensure you add these keyframes in your global CSS or Tailwind config:
+  
+  @keyframes slideRight {
+    from { width: 0%; }
+    to { width: var(--target-width); }
   }
-  to {
-    width: var(--target-width);
-  }
-`;
+*/
 
 type Rarity = 'Garbage' | 'Common' | 'Rare' | 'Epic' | 'Legendary';
 
-const RARITY_COLORS = {
-  Garbage: '#808080',  // gray
-  Common: '#3498db',   // blue
-  Rare: '#e67e22',     // orange
-  Epic: '#9b59b6',     // purple
-  Legendary: '#f1c40f' // gold
+const RARITY_COLORS: Record<Rarity, string> = {
+  Garbage: '#808080',
+  Common: '#3498db',
+  Rare: '#e67e22',
+  Epic: '#9b59b6',
+  Legendary: '#f1c40f'
 };
 
-const RARITY_BACKGROUNDS = {
-  Garbage: 'linear-gradient(45deg, rgba(128, 128, 128, 0.1) 0%, rgba(128, 128, 128, 0.2) 100%)',
-  Common: 'linear-gradient(45deg, rgba(52, 152, 219, 0.1) 0%, rgba(52, 152, 219, 0.2) 100%)',
-  Rare: 'linear-gradient(45deg, rgba(230, 126, 34, 0.1) 0%, rgba(230, 126, 34, 0.2) 100%)',
-  Epic: 'linear-gradient(45deg, rgba(155, 89, 182, 0.1) 0%, rgba(155, 89, 182, 0.2) 100%)',
-  Legendary: 'linear-gradient(45deg, rgba(241, 196, 15, 0.1) 0%, rgba(241, 196, 15, 0.3) 100%)'
+// Using Tailwind gradients for the overlay background per rarity
+const RARITY_BACKGROUNDS: Record<Rarity, string> = {
+  Garbage: 'bg-gradient-to-r from-gray-100 to-gray-200',
+  Common: 'bg-gradient-to-r from-blue-100 to-blue-200',
+  Rare: 'bg-gradient-to-r from-orange-100 to-orange-200',
+  Epic: 'bg-gradient-to-r from-purple-100 to-purple-200',
+  Legendary: 'bg-gradient-to-r from-yellow-100 to-yellow-200'
+};
+
+// Additional card styles based on rarity
+const RARITY_CARD_STYLES: Record<Rarity, string> = {
+  Garbage: 'border-gray-400',
+  Common: 'border-blue-400',
+  Rare: 'border-orange-400',
+  Epic: 'border-purple-400',
+  Legendary: 'border-yellow-400 shadow-2xl'
 };
 
 const calculateRarity = (stats: { health: number; waterLevel: number; sunlight: number; growth: number }): Rarity => {
   const average = (stats.health + stats.waterLevel + stats.sunlight + stats.growth) / 4;
-  
-  // Equal 20% chance for each rarity
-  if (average >= 55) return 'Legendary';    // Top 20%
-  if (average >= 45) return 'Epic';         // Next 20%
-  if (average >= 30) return 'Rare';         // Next 20%
-  if (average >= 20) return 'Common';       // Next 20%
-  return 'Garbage';                         // Bottom 20%
+  if (average >= 55) return 'Legendary';
+  if (average >= 45) return 'Epic';
+  if (average >= 30) return 'Rare';
+  if (average >= 20) return 'Common';
+  return 'Garbage';
 };
 
 const generateRandomStats = () => {
-  // Generate stats with a normal distribution centered around 80
   const generateStat = () => {
     let stat = 0;
-    // Generate 3 random numbers and take the average for a more normal distribution
     for (let i = 0; i < 3; i++) {
       stat += Math.random() * 100;
     }
@@ -68,19 +71,14 @@ const generateRandomStats = () => {
   };
 };
 
-const AnimatedStat: React.FC<{ value: number; label: string; color: string }> = ({ 
-  value, 
-  label,
-  color 
-}) => {
+const AnimatedStat: React.FC<{ value: number; label: string; color: string }> = ({ value, label, color }) => {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    const duration = 1500; // Animation duration in ms
-    const steps = 60; // Number of steps
+    const duration = 1500;
+    const steps = 60;
     const increment = value / steps;
     const stepDuration = duration / steps;
-
     let currentStep = 0;
 
     const timer = setInterval(() => {
@@ -97,45 +95,34 @@ const AnimatedStat: React.FC<{ value: number; label: string; color: string }> = 
   }, [value]);
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-      <Box sx={{ flex: 1 }}>
-        <Typography variant="body2" color="text.secondary">{label}</Typography>
-        <Box sx={{ 
-          width: '100%', 
-          height: 8, 
-          bgcolor: `${color}20`,
-          borderRadius: 4,
-          overflow: 'hidden'
-        }}>
-          <Box sx={{ 
-            '--target-width': `${value}%`,
-            width: `${value}%`,
-            height: '100%',
-            bgcolor: color,
-            animation: `${slideRight} 1.5s ease-out`,
-            transformOrigin: 'left',
-          }} />
-        </Box>
-      </Box>
-      <Typography variant="body1" fontWeight="bold" sx={{ 
-        minWidth: '3rem',
-        color: color
-      }}>
-        {count}%
-      </Typography>
-    </Box>
+    <div className="flex items-center gap-2">
+      <div className="flex-1">
+        <p className="text-sm text-gray-600">{label}</p>
+        <div className="w-full h-2 rounded overflow-hidden bg-gray-200">
+          <div 
+            className="h-full" 
+            style={{ 
+              width: `${value}%`,
+              backgroundColor: color,
+              animation: 'slideRight 1.5s ease-out',
+              transformOrigin: 'left'
+            }}
+          />
+        </div>
+      </div>
+      <p className="min-w-[3rem] font-bold" style={{ color }}>{count}%</p>
+    </div>
   );
 };
 
 const ImageAnalysis: React.FC<ImageAnalysisProps> = ({ imageUrl }) => {
-  // Generate random stats and calculate rarity
   const stats = generateRandomStats();
   const rarity = calculateRarity(stats);
   const rarityColor = RARITY_COLORS[rarity];
-  
+
   const flowerData = {
     name: "Crypto Rose",
-    rarity: rarity,
+    rarity,
     health: stats.health,
     growth: stats.growth,
     waterLevel: stats.waterLevel,
@@ -145,199 +132,78 @@ const ImageAnalysis: React.FC<ImageAnalysisProps> = ({ imageUrl }) => {
   };
 
   return (
-    <Paper
-      elevation={24}
-      sx={{
-        width: '100%',
-        maxWidth: 1200,
-        borderRadius: 4,
-        overflow: 'hidden',
-        background: 'rgba(255, 255, 255, 0.9)',
-        backdropFilter: 'blur(10px)',
-        border: `1px solid ${rarityColor}`,
-        position: 'relative',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: RARITY_BACKGROUNDS[rarity],
-          pointerEvents: 'none',
-        }
-      }}
-    >
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: { xs: 'column', md: 'row' },
-          minHeight: 600,
-        }}
-      >
-        {/* Left Side - Image Display */}
-        <Box
-          sx={{
-            flex: '1.2',
-            p: 4,
-            borderRight: { xs: 'none', md: '1px solid rgba(46, 20, 55, 0.1)' },
-            borderBottom: { xs: '1px solid rgba(46, 20, 55, 0.1)', md: 'none' },
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Box
-            sx={{
-              width: '100%',
-              height: '100%',
-              borderRadius: 3,
-              overflow: 'hidden',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-              position: 'relative',
-              '&::after': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                boxShadow: 'inset 0 0 100px rgba(27, 153, 139, 0.2)',
-                pointerEvents: 'none',
-              }
-            }}
-          >
-            <img
-              src={imageUrl}
-              alt="Analyzed Flower"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
-              }}
-            />
-          </Box>
-        </Box>
+    <div className={`max-w-5xl mx-auto rounded-lg relative bg-white bg-opacity-90 backdrop-blur-md border ${RARITY_CARD_STYLES[rarity]}`}>
+      {/* Background overlay */}
+      <div className="absolute inset-0 pointer-events-none" style={{ background: RARITY_BACKGROUNDS[rarity] }}></div>
+      
+      <div className="flex flex-col md:flex-row min-h-[600px] p-4">
+        {/* Left: Image Display */}
+        <div className="w-full md:w-7/12 p-4 flex items-center justify-center border-b md:border-b-0 md:border-r border-gray-200">
+          <div className="rounded-md overflow-hidden shadow-lg">
+            <img src={imageUrl} alt="Analyzed Flower" className="object-contain max-h-[80vh]" />
+          </div>
+        </div>
 
-        {/* Right Side - Analysis */}
-        <Box
-          sx={{
-            flex: '1',
-            p: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 3,
-          }}
-        >
-          <Box>
-            <Typography variant="h4" fontWeight="bold" color="#2E1437">
-              {flowerData.name}
-            </Typography>
-            <Chip
-              label={flowerData.rarity}
-              sx={{
-                mt: 1,
-                backgroundColor: rarityColor,
-                color: 'white',
-                fontWeight: 'bold',
-                padding: '8px 16px',
-                height: 32,
-                fontSize: '1rem',
-                border: rarity === 'Legendary' ? '1px solid rgba(255,255,255,0.5)' : 'none',
-                boxShadow: rarity === 'Legendary' ? '0 0 10px rgba(241, 196, 15, 0.5)' : 'none',
-                animation: rarity === 'Legendary' ? 'pulse 2s infinite' : 'none',
-                '@keyframes pulse': {
-                  '0%': {
-                    boxShadow: '0 0 0 0 rgba(241, 196, 15, 0.4)',
-                  },
-                  '70%': {
-                    boxShadow: '0 0 0 10px rgba(241, 196, 15, 0)',
-                  },
-                  '100%': {
-                    boxShadow: '0 0 0 0 rgba(241, 196, 15, 0)',
-                  },
-                },
-              }}
-            />
-          </Box>
+        {/* Right: Analysis */}
+        <div className="w-full md:w-5/12 p-4 flex flex-col gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">{flowerData.name}</h1>
+            <span
+              className={`inline-block mt-1 py-1 px-3 text-sm font-bold text-white rounded ${rarity === 'Legendary' ? 'border border-white/50 shadow-lg' : ''}`}
+              style={{ backgroundColor: rarityColor }}
+            >
+              {flowerData.rarity}
+            </span>
+          </div>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <LocalFloristIcon sx={{ color: flowerData.status === 'Thriving' ? '#1B998B' : '#ff9800' }} />
-            <Typography variant="h6" color={flowerData.status === 'Thriving' ? '#1B998B' : '#ff9800'}>
+          <div className="flex items-center gap-2">
+            <LocalFloristIcon style={{ color: flowerData.status === 'Thriving' ? '#1B998B' : '#FF9800' }} />
+            <h2 className="text-xl" style={{ color: flowerData.status === 'Thriving' ? '#1B998B' : '#FF9800' }}>
               Status: {flowerData.status}
-            </Typography>
-          </Box>
+            </h2>
+          </div>
 
-          <Divider sx={{ borderColor: 'rgba(46, 20, 55, 0.1)' }} />
+          <hr className="border-t border-gray-200" />
 
-          {/* Stats with Animation */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography variant="h6" color="#2E1437" gutterBottom>
-              Vital Statistics
-            </Typography>
-            
-            <AnimatedStat 
-              value={flowerData.health} 
-              label="Health" 
-              color={rarityColor}
-            />
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <OpacityIcon sx={{ color: '#1B998B' }} />
-              <AnimatedStat 
-                value={flowerData.waterLevel} 
-                label="Water Level" 
-                color={rarityColor}
-              />
-            </Box>
+          {/* Vital Stats */}
+          <div className="flex flex-col gap-2">
+            <h2 className="text-xl text-gray-800">Vital Statistics</h2>
+            <AnimatedStat value={flowerData.health} label="Health" color={rarityColor} />
+            <div className="flex items-center gap-2">
+              <OpacityIcon className="text-[#1B998B]" />
+              <AnimatedStat value={flowerData.waterLevel} label="Water Level" color={rarityColor} />
+            </div>
+            <div className="flex items-center gap-2">
+              <WbSunnyIcon className="text-[#1B998B]" />
+              <AnimatedStat value={flowerData.sunlight} label="Sunlight" color={rarityColor} />
+            </div>
+            <div className="flex items-center gap-2">
+              <TimelapseIcon className="text-[#1B998B]" />
+              <AnimatedStat value={flowerData.growth} label="Growth" color={rarityColor} />
+            </div>
+          </div>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <WbSunnyIcon sx={{ color: '#1B998B' }} />
-              <AnimatedStat 
-                value={flowerData.sunlight} 
-                label="Sunlight" 
-                color={rarityColor}
-              />
-            </Box>
-
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <TimelapseIcon sx={{ color: '#1B998B' }} />
-              <AnimatedStat 
-                value={flowerData.growth} 
-                label="Growth" 
-                color={rarityColor}
-              />
-            </Box>
-          </Box>
-
-          <Divider sx={{ borderColor: 'rgba(46, 20, 55, 0.1)' }} />
+          <hr className="border-t border-gray-200" />
 
           {/* Traits */}
-          <Box>
-            <Typography variant="h6" color="#2E1437" gutterBottom>
-              Special Traits
-            </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          <div>
+            <h2 className="text-xl text-gray-800">Special Traits</h2>
+            <div className="flex flex-wrap gap-2 mt-2">
               {flowerData.traits.map((trait, index) => (
-                <Chip
+                <span
                   key={index}
-                  label={trait}
-                  sx={{
-                    backgroundColor: `${rarityColor}20`,
-                    color: rarityColor,
-                    '&:hover': {
-                      backgroundColor: `${rarityColor}30`,
-                    },
-                    border: rarity === 'Legendary' ? `1px solid ${rarityColor}` : 'none',
-                  }}
-                />
+                  className="py-1 px-2 rounded text-sm"
+                  style={{ backgroundColor: `${rarityColor}20`, color: rarityColor }}
+                >
+                  {trait}
+                </span>
               ))}
-            </Box>
-          </Box>
-        </Box>
-      </Box>
-    </Paper>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default ImageAnalysis; 
+export default ImageAnalysis;

@@ -1,8 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { Box, Button, IconButton, Typography, Paper } from '@mui/material';
+import { IconButton } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
-import FileUploadIcon from '@mui/icons-material/FileUpload';
 import { useImage } from '../../contexts/ImageContext';
 
 interface ImageDropProps {
@@ -11,6 +10,7 @@ interface ImageDropProps {
 
 const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
   const [image, setImage] = useState<string | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { setSelectedFile, setImageUrl } = useImage();
 
@@ -18,37 +18,31 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith('image/')) {
-      console.log("Dropped file:", file);
       handleImageSelect(file);
     }
   };
 
   const handleImageSelect = (file: File) => {
-    console.log("Selected file in handleImageSelect:", file);
     setSelectedFile(file);
     if (file) {
       const url = URL.createObjectURL(file);
       setImageUrl(url);
-      console.log("Created URL:", url);
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setImage(reader.result as string);
-      console.log("Image set to:", file);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      console.log("File input file:", file);
-      handleImageSelect(file);
+      const reader = new FileReader();
+      reader.onload = () => setImage(reader.result as string);
+      reader.readAsDataURL(file);
     }
   };
 
-  const clearImage = () => {
+  const handleSubmit = () => {
+    setIsAnimating(true);
+    setTimeout(() => {
+      setIsAnimating(false);
+      onSubmit();
+    }, 2000);
+  };
+
+  const clearImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setImage(null);
     setSelectedFile(null);
     setImageUrl(null);
@@ -56,182 +50,118 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
   };
 
   return (
-    <Paper
-      elevation={24}
-      sx={{
-        width: '100%',
-        maxWidth: 1200,
-        borderRadius: 4,
-        overflow: 'hidden',
-        background: 'rgba(255, 255, 255, 0.9)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        position: 'relative',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'linear-gradient(45deg, rgba(27, 153, 139, 0.1) 0%, rgba(46, 20, 55, 0.1) 100%)',
-          pointerEvents: 'none',
-        }
-      }}
-    >
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: { xs: 'column', md: 'row' },
-          minHeight: 500,
-        }}
-      >
-        {/* Left Side - Drop Zone */}
-        <Box
-          sx={{
-            flex: '2',
-            p: 4,
-            borderRight: { xs: 'none', md: '1px solid rgba(46, 20, 55, 0.1)' },
-            borderBottom: { xs: '1px solid rgba(46, 20, 55, 0.1)', md: 'none' },
-          }}
-        >
-          <Box
-            sx={{
-              width: '100%',
-              height: '100%',
-              border: '3px dashed',
-              borderColor: image ? '#1B998B' : 'rgba(46, 20, 55, 0.2)',
-              borderRadius: 3,
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              position: 'relative',
-              overflow: 'hidden',
-              background: 'rgba(255, 255, 255, 0.5)',
-              '&:hover': {
-                borderColor: '#1B998B',
-                transform: 'scale(1.01)',
-                boxShadow: '0 4px 20px rgba(27, 153, 139, 0.15)',
-              },
-            }}
+    <div className="container mx-auto max-w-6xl p-6">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-white mb-2">Crypto Botanical Summon</h1>
+      </div>
+
+      <div className="flex gap-12 items-center">
+        {/* Left side - Summon Circle */}
+        <div className="flex-1 relative">
+          <div 
+            className={`
+              aspect-square w-full max-w-xl
+              border-4 border-purple-500/50 rounded-full
+              flex items-center justify-center
+              bg-purple-900/20 backdrop-blur-sm
+              transition-all duration-300 cursor-pointer
+              overflow-hidden
+              ${isAnimating ? 'animate-spin' : 'hover:border-purple-400/80'}
+              ${image ? 'border-emerald-500/50' : ''}
+            `}
             onDrop={handleFileDrop}
             onDragOver={(e) => e.preventDefault()}
             onClick={() => fileInputRef.current?.click()}
           >
             {!image ? (
-              <Box sx={{ textAlign: 'center' }}>
-                <CloudUploadIcon sx={{ fontSize: 80, color: '#2E1437', mb: 2 }} />
-                <Typography 
-                  variant="h5" 
-                  gutterBottom 
-                  fontWeight="bold" 
-                  sx={{ color: '#2E1437', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
-                >
-                  Drop your flower image here
-                </Typography>
-                <Typography variant="body1" sx={{ color: 'rgba(46, 20, 55, 0.7)' }}>
-                  for crypto-botanical analysis
-                </Typography>
-              </Box>
+              <div className="text-center p-8">
+                <CloudUploadIcon className="text-6xl text-white/50 mb-4 animate-bounce" />
+                <p className="text-xl font-semibold text-white/90">
+                  Drop your flower here
+                </p>
+                <p className="text-sm text-white/70 mt-2">
+                  to begin the summoning ritual
+                </p>
+              </div>
             ) : (
-              <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
+              <div className="relative w-full h-full flex items-center justify-center">
                 <img
                   src={image}
                   alt="Preview"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'contain',
-                  }}
+                  className={`
+                    max-w-full max-h-full object-contain
+                    ${isAnimating ? 'animate-pulse' : ''}
+                  `}
                 />
                 <IconButton
-                  sx={{
-                    position: 'absolute',
-                    top: 16,
-                    right: 16,
-                    backgroundColor: 'white',
-                    boxShadow: 2,
-                    '&:hover': {
-                      backgroundColor: 'white',
-                      transform: 'scale(1.1)',
-                    },
-                  }}
-                  onClick={(e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    clearImage();
-                  }}
+                  className="absolute top-4 right-4 bg-white/10 hover:bg-white/20"
+                  onClick={clearImage}
                 >
-                  <DeleteIcon color="error" />
+                  <DeleteIcon className="text-white/90" />
                 </IconButton>
-              </Box>
+              </div>
             )}
-          </Box>
-        </Box>
+          </div>
 
-        {/* Right Side - Controls */}
-        <Box
-          sx={{
-            flex: '1',
-            p: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 3,
-            justifyContent: 'center',
-          }}
-        >
+          {/* Mystic Effects */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/20 to-emerald-500/20 rounded-full animate-pulse" />
+          </div>
+        </div>
+
+        {/* Right side - Controls */}
+        <div className="w-96 flex flex-col gap-8">
           <input
             type="file"
             accept="image/*"
             hidden
             ref={fileInputRef}
-            onChange={handleFileInput}
+            onChange={(e) => e.target.files?.[0] && handleImageSelect(e.target.files[0])}
           />
-          <Button
-            fullWidth
-            variant="contained"
-            size="large"
-            startIcon={<FileUploadIcon />}
+          
+          <button 
+            className={`
+              w-full py-6 px-8 rounded-2xl text-2xl font-bold
+              transition-all duration-300 transform
+              bg-gradient-to-r from-purple-600/90 to-purple-800/90
+              hover:from-purple-500/90 hover:to-purple-700/90
+              text-white shadow-lg
+              hover:shadow-purple-500/50 hover:scale-105
+              backdrop-blur-sm
+              border-2 border-purple-400/30
+              ${isAnimating && 'opacity-50 cursor-not-allowed hover:scale-100'}
+            `}
             onClick={() => fileInputRef.current?.click()}
-            sx={{
-              py: 2,
-              borderRadius: 2,
-              textTransform: 'none',
-              fontSize: '1.1rem',
-              backgroundColor: '#1B998B',
-              '&:hover': {
-                backgroundColor: '#168577',
-              },
-            }}
+            disabled={isAnimating}
           >
-            Choose File
-          </Button>
-          <Button
-            fullWidth
-            variant="contained"
-            size="large"
-            disabled={!image}
-            onClick={onSubmit}
-            sx={{
-              py: 2,
-              borderRadius: 2,
-              textTransform: 'none',
-              fontSize: '1.1rem',
-              backgroundColor: '#2E1437',
-              '&:hover': {
-                backgroundColor: '#231029',
-              },
-              '&.Mui-disabled': {
-                backgroundColor: 'rgba(46, 20, 55, 0.3)',
-              },
-            }}
+            Upload Flower
+          </button>
+          
+          <button 
+            className={`
+              w-full py-6 px-8 rounded-2xl text-2xl font-bold
+              transition-all duration-300 transform
+              shadow-lg backdrop-blur-sm
+              ${!image 
+                ? 'bg-gray-600/50 cursor-not-allowed text-white/50 border-2 border-gray-400/30' 
+                : `
+                  bg-gradient-to-r from-emerald-600/90 to-emerald-800/90
+                  hover:from-emerald-500/90 hover:to-emerald-700/90
+                  text-white
+                  hover:shadow-emerald-500/50 hover:scale-105
+                  border-2 border-emerald-400/30
+                  animate-pulse
+                `
+              }
+            `}
+            disabled={!image || isAnimating}
+            onClick={handleSubmit}
           >
-            Submit Photo
-          </Button>
-        </Box>
-      </Box>
-    </Paper>
+            {isAnimating ? 'Summoning...' : 'Summon'}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

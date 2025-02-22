@@ -5,3 +5,4 @@ langchain-core>=0.1.15
 python-dotenv>=1.0.0
 langgraph>=0.0.15 
 pydantic_settings
+Pillow
