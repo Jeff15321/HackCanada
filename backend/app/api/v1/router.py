@@ -1,20 +1,7 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import projects, users, auth, model
+from app.api.v1.endpoints import users, auth, model
 
 api_router = APIRouter()
-
-print("Registering routes...")
-
-api_router.include_router(
-    projects.router,
-    prefix="/projects",
-    tags=["projects"]
-)
-
-print("Available project routes:", [
-    f"{route.path} [{route.methods}]" 
-    for route in projects.router.routes
-])
 
 api_router.include_router(
     users.router,
