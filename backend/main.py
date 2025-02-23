@@ -41,7 +41,8 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 # Mount static files directory
 app.mount("/uploads", StaticFiles(directory="uploads", html=True), name="uploads")
 
-app.include_router(pipeline.router) 
+app.include_router(pipeline.router, prefix="/v1/pipeline", tags=["pipeline"])
+
 # Serve index.html for root path
 @app.get("/")
 async def read_root():

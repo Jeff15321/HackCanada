@@ -2,10 +2,8 @@ import React from 'react';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import CollectionsIcon from '@mui/icons-material/Collections';
 import AddIcon from '@mui/icons-material/Add';
-import TokenIcon from '@mui/icons-material/Token';
-import { useRouter } from 'next/router';
 
-type Tab = 'marketplace' | 'collection' | 'profile' | 'tokens';
+type Tab = 'marketplace' | 'collection' | 'profile';
 
 interface NavigationProps {
   activeTab: Tab;
@@ -13,22 +11,11 @@ interface NavigationProps {
 }
 
 const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
-  const router = useRouter();
-
   const navItems = [
     { id: 'marketplace', icon: StorefrontIcon, tooltip: 'NFT Marketplace' },
     { id: 'collection', icon: CollectionsIcon, tooltip: 'My Collection' },
-    { id: 'profile', icon: AddIcon, tooltip: 'Create New' },
-    { id: 'tokens', icon: TokenIcon, tooltip: 'NFT Tokens', path: '/tokencollection' }
+    { id: 'profile', icon: AddIcon, tooltip: 'Create New' }
   ];
-
-  const handleClick = (id: string) => {
-    if (id === 'tokens') {
-      router.push('/tokencollection');
-    } else {
-      onTabChange(id as Tab);
-    }
-  };
 
   return (
     <div className="fixed left-4 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-50">
@@ -40,7 +27,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
       {navItems.map(({ id, icon: Icon, tooltip }) => (
         <div key={id} className="group relative">
           <button
-            onClick={() => handleClick(id)}
+            onClick={() => onTabChange(id as Tab)}
             className={`
               w-14 h-14 rounded-xl flex items-center justify-center
               transition-all duration-300 transform hover:scale-110

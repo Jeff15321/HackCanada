@@ -41,51 +41,55 @@ interface FlowerModel {
   special: { attribute: string; rarity: number; }[];
 }
 
-interface Model {
-  glbFileUrl: string;
-  parameters: FlowerParameters;
-  name: string;
-  walletID: string;
-  price: number;
-  id: string;
-  imageUrl: string;
-  special: { attribute: string; rarity: number; }[];
-}
-
 const Profile = () => {
   const { user } = useUser();
   const { selectedFile, imageUrl, isAnalyzing, setIsAnalyzing } = useImage();
   const { model, setModel } = useModel();
 
-  const handleSubmit = async (flowerName: string): Promise<Model> => {
+  const handleSubmit = async (flowerName: string) => {
     try {
-      // Create a default Model that matches the expected type
-      const defaultModel: Model = {
-        glbFileUrl: "https://example.com/plant.glb",
-        parameters: {
-          colorVibrancy: { score: 95, explanation: "Vibrant green" },
-          leafAreaIndex: { score: 85, explanation: "Good coverage" },
-          wilting: { score: 90, explanation: "No wilting" },
-          spotting: { score: 100, explanation: "No spots" },
-          symmetry: { score: 88, explanation: "Good symmetry" }
-        },
-        name: flowerName || "TEE Plant #3",
-        walletID: "hackcanada.testnet",
-        price: 1000000000000000000000000,
-        id: "14",
-        imageUrl: "https://example.com/plant.glb",
-        special: []
+      if (!selectedFile || !user?.id || !imageUrl) {
+        throw new Error('Missing required data');
+      }
+
+      const randomAttributes = {
+        health: Math.floor(Math.random() * 100),
+        growth: Math.floor(Math.random() * 100),
+        waterLevel: Math.floor(Math.random() * 100),
+        sunlight: Math.floor(Math.random() * 100)
       };
 
-      // Run the pipeline
-      await runPipelineViaBackend(1);
+      const response = await newImage(
+        user.id, 
+        imageUrl, 
+        flowerName,
+        model?.description, 
+        model?.glbFileUrl,
+        selectedFile, 
+        randomAttributes
+      );
+
+      const newModel: FlowerModel = {
+        ...response,
+        id: response.id || `${user.id}-${Date.now()}`,
+        name: flowerName,
+        imageUrl: response.glbFileUrl || '',
+        special: response.special || []
+      };
+
+      setModel(newModel);
       
-      // Set the model in context
-      setModel(defaultModel);
-      
-      return defaultModel;
+      // Run pipeline instead of direct minting
+      try {
+        const pipelineResponse = await runPipelineViaBackend(newModel);
+        console.log('Pipeline Response:', pipelineResponse);
+      } catch (pipelineError) {
+        console.error('Pipeline error:', pipelineError);
+      }
+
+      return newModel;
     } catch (error) {
-      console.error('Error in handleSubmit:', error);
+      console.error('Error submitting image:', error);
       throw error;
     }
   };

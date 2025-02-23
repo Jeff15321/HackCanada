@@ -319,27 +319,42 @@ export async function runPipeline() {
   
 export const runPipelineViaBackend = async (modelData: any): Promise<any> => {
   try {
-    // Create a working example payload regardless of input
-    const cleanModelData = {
-      token_id: "plant-tee-14",
-      receiver_id: "hackcanada.testnet",
+    // Create payload matching the working pipeline format
+    const pipelineData = {
+      token_id: `${Date.now() + modelData.id}`,
+      receiver_id: modelData.walletID || "hackcanada.testnet",
       plant_metadata: {
-        glb_file_url: "https://example.com/plant.glb",
+        glb_file_url: modelData.glbFileUrl || "https://example.com/plant.glb",
         parameters: {
-          color_vibrancy: { score: 95, explanation: "Vibrant green" },
-          leaf_area_index: { score: 85, explanation: "Good coverage" },
-          wilting: { score: 90, explanation: "No wilting" },
-          spotting: { score: 100, explanation: "No spots" },
-          symmetry: { score: 88, explanation: "Good symmetry" }
+          color_vibrancy: { 
+            score: modelData.parameters?.colorVibrancy?.score || 95,
+            explanation: modelData.parameters?.colorVibrancy?.explanation || "Vibrant green"
+          },
+          leaf_area_index: { 
+            score: modelData.parameters?.leafAreaIndex?.score || 85,
+            explanation: modelData.parameters?.leafAreaIndex?.explanation || "Good coverage"
+          },
+          wilting: { 
+            score: modelData.parameters?.wilting?.score || 90,
+            explanation: modelData.parameters?.wilting?.explanation || "No wilting"
+          },
+          spotting: { 
+            score: modelData.parameters?.spotting?.score || 100,
+            explanation: modelData.parameters?.spotting?.explanation || "No spots"
+          },
+          symmetry: { 
+            score: modelData.parameters?.symmetry?.score || 88,
+            explanation: modelData.parameters?.symmetry?.explanation || "Good symmetry"
+          }
         },
-        name: "TEE Plant #3",
+        name: modelData.name || "TEE Plant #3",
         wallet_id: "hackcanada.testnet",
         price: "1000000000000000000000000"
       }
     };
 
-    console.log('Pipeline Payload:', JSON.stringify(cleanModelData, null, 2));
-    const response = await axios.post(`${API_BASE_URL}/v1/pipeline/run`, cleanModelData);
+    console.log('Pipeline Payload:', JSON.stringify(pipelineData, null, 2));
+    const response = await axios.post(`${API_BASE_URL}/v1/pipeline/run`, pipelineData);
     return response.data;
   } catch (error) {
     console.error('Error running pipeline:', error);
