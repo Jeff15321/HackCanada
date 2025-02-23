@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     MONGODB_URL: str
     MONGODB_DB_NAME: str
 
+    # NEAR API URL
+    NEAR_API_URL: str = "https://hackcanadanear.onrender.com/api/nft"
+
     class Config:
         env_file = ".env"
         case_sensitive = True

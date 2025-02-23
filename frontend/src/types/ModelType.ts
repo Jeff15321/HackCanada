@@ -25,7 +25,7 @@ export interface Model {
     name: string;
     walletID: string;
     price: number;
-    id?: string;
+    id: string;
     imageUrl?: string;
     special?: { attribute: string; rarity: number; }[];
     description?: string;

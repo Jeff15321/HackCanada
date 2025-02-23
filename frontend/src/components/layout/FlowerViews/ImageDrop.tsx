@@ -31,11 +31,11 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [rarity, setRarity] = useState(0);
   const colors = [
-    { bg: 'rgba(75, 85, 99, 0.2)', border: 'rgb(156, 163, 175)' },     // Gray
-    { bg: 'rgba(59, 130, 246, 0.2)', border: 'rgb(96, 165, 250)' },    // Blue
-    { bg: 'rgba(249, 115, 22, 0.2)', border: 'rgb(251, 146, 60)' },    // Orange
-    { bg: 'rgba(147, 51, 234, 0.2)', border: 'rgb(192, 132, 252)' },   // Purple
-    { bg: 'rgba(234, 179, 8, 0.2)', border: 'rgb(250, 204, 21)' },     // Yellow
+    { bg: 'rgba(75, 85, 99, 0.3)', border: 'rgb(200, 210, 225)' },     // Gray - brighter
+    { bg: 'rgba(59, 130, 246, 0.3)', border: 'rgb(147, 197, 253)' },   // Blue - brighter
+    { bg: 'rgba(249, 115, 22, 0.3)', border: 'rgb(253, 186, 116)' },   // Orange - brighter
+    { bg: 'rgba(147, 51, 234, 0.3)', border: 'rgb(216, 180, 254)' },   // Purple - brighter
+    { bg: 'rgba(234, 179, 8, 0.3)', border: 'rgb(253, 224, 71)' },     // Yellow - brighter
   ];
 
   const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -193,8 +193,7 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
             flex items-center gap-4 text-white animate-pulse
             ${styles.fadeInDelayed}
           `}>
-            <ArrowBackIcon className="text-8xl" />
-
+            <ArrowBackIcon sx={{ fontSize: 128 }} className="text-white" />
             <p className="text-8xl font-bold">Click me!</p>
           </div>
         </>
@@ -205,23 +204,23 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
           <div 
             className={`
               aspect-square w-full
-              border-[8px] border-purple-500
+              border-[12px]
               rounded-full
               flex items-center justify-center
-              bg-purple-900/20 backdrop-blur-sm
+              bg-purple-900/30
+              backdrop-blur-sm
               cursor-pointer
               overflow-hidden
-              shadow-[0_0_50px_rgba(168,85,247,0.5)]
               transition-all duration-300
               ${styles.coin}
               ${isFlipping ? (isHeads ? styles.flipHeads : styles.flipTails) : ''}
               ${isCoinMovingRight ? styles.moveRight : ''}
             `}
             style={{
-              borderColor: isFlipping ? colors[colorCounter].border : 'rgb(168,85,247)',
+              borderColor: isFlipping ? colors[colorCounter].border : 'rgb(192,132,252)',
               boxShadow: isFlipping 
-                ? `0 0 50px ${colors[colorCounter].border}80` 
-                : '0 0 50px rgba(168,85,247,0.5)'
+                ? `0 0 80px ${colors[colorCounter].border}`
+                : '0 0 80px rgba(192,132,252, 0.8)'
             }}
             onDrop={handleFileDrop}
             onDragOver={(e) => e.preventDefault()}

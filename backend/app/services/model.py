@@ -7,6 +7,9 @@ from openai import AsyncOpenAI, OpenAI
 import os
 import base64
 from dotenv import load_dotenv
+import httpx
+from app.core.config import settings
+import time
 
 # Load environment variables
 load_dotenv()
@@ -129,7 +132,47 @@ Return only the final JSON string as your output.
 
 """
 
+import aiohttp
+import json
+from typing import Dict, Any
+
 class ModelService:
+    
+    API_URL = "https://hackcanadanear.onrender.com/api/nft/mint"
+
+    @staticmethod
+    async def mint_nft(token_id: str, receiver_id: str, plant_metadata: Dict[str, Any]):
+        """
+        Mint an NFT on the NEAR blockchain using the plant metadata
+        """
+
+
+        url = "https://hackcanadanear.onrender.com/api/nft/mint"
+
+        payload = {
+            "token_id": "1543675436543654375",
+            "receiver_id": "your-account.testnet",
+            "plant_metadata": {
+                "glb_file_url": "https://example.com/plant.glb",
+                "parameters": {
+                    "color_vibrancy": { "score": 85, "explanation": "Vibrant color" },
+                    "leaf_area_index": { "score": 90, "explanation": "High coverage" },
+                    "wilting": { "score": 5, "explanation": "No wilting" },
+                    "spotting": { "score": 2, "explanation": "Minor spots" },
+                    "symmetry": { "score": 92, "explanation": "Well balanced" }
+                },
+                "name": "Test Plant NFT",
+                "wallet_id": "your-account.testnet",
+                "price": "1000000000000000000000000"
+            }
+        }
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, json=payload)
+
+        return response.json()
+
+
     @staticmethod
     async def create_model(
         userId: str,
@@ -293,6 +336,8 @@ async def analyze_local_image(image_path: str):
     except Exception as e:
         print(f"Error in ChatGPT API call: {str(e)}")
         return f"Failed to analyze image: {str(e)}"
+    
+
 
 # class ProjectService:
 #     @staticmethod

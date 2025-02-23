@@ -38,6 +38,7 @@ interface FlowerModel {
   price: number;
   imageUrl: string;
   special: { attribute: string; rarity: number; }[];
+  id: string;
 }
 
 const Profile = () => {

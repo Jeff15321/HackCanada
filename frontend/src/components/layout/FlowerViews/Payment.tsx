@@ -1,11 +1,49 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@mui/material';
-import { ViewInAr, ShoppingCart } from '@mui/icons-material';
+import { ViewInAr, ShoppingCart, CheckCircle } from '@mui/icons-material';
 import { useModel } from '../../../contexts/ModelContext';
 import { calculateRarity, RARITY_COLORS } from './ImageAnalysis';
+import { mintNFT } from '../../../services/api';
 
 const Payment: React.FC = () => {
   const { model } = useModel();
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const handlePurchase = () => {
+    // if (!model?.id || !model?.name || !model?.glbFileUrl || !model?.walletID) {
+    //   console.error('Missing required model data');
+    //   return;
+    // }
+       
+    // (async () => {
+    //   try {
+    //     const response = await mintNFT(
+    //       Math.random().toString(36).substring(2, 15),
+    //       "your-account.testnet",
+    //       "https://example.com/plant.glb",
+    //       "Test Plant NFT",
+    //       "your-account.testnet",
+    //       "1000000000000000000000000",
+    //       {
+    //         color_vibrancy: { score: 85, explanation: "Vibrant color" },
+    //         leaf_area_index: { score: 90, explanation: "High coverage" },
+    //         wilting: { score: 5, explanation: "No wilting" },
+    //         spotting: { score: 2, explanation: "Minor spots" },
+    //         symmetry: { score: 92, explanation: "Well balanced" }
+    //       }
+    //     );
+
+    //     console.log("NFT Minted Successfully:", response);
+    //   } catch (error) {
+    //     console.error("Minting failed:", error);
+    //   }
+    // })();
+
+
+    
+    // setShowSuccess(true);
+    // setTimeout(() => setShowSuccess(false), 3000);
+  }
   
   const stats = {
     colorVibrancy: model?.parameters?.colorVibrancy || { score: 0, explanation: '' },
@@ -19,7 +57,19 @@ const Payment: React.FC = () => {
   const rarityColor = RARITY_COLORS[rarity];
 
   return (
-    <div className="flex flex-col gap-4 h-full">
+    <div className="relative flex flex-col gap-4 h-full">
+      {/* Success Popup */}
+      {showSuccess && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div className="relative bg-gray-900 rounded-xl border border-cyan-400/20 p-8 flex flex-col items-center gap-4 animate-fadeIn">
+            <CheckCircle className="text-cyan-400 text-6xl animate-bounce" />
+            <h2 className="text-2xl font-bold text-white">Purchase Successful!</h2>
+            <p className="text-cyan-400">Your NFT has been minted</p>
+          </div>
+        </div>
+      )}
+
       {/* Top Box - Name and Rarity */}
       <div className="bg-gray-900 rounded-xl border border-cyan-400/20 p-6">
         <div className="flex flex-col gap-6 py-6 justify-between items-start">
@@ -52,7 +102,7 @@ const Payment: React.FC = () => {
           {/* Action Buttons */}
           <div className="space-y-3 mt-auto pt-6">
             <button
-              onClick={() => console.log('Purchase clicked')}
+              onClick={() => handlePurchase()}
               className="w-full h-[7rem] flex items-center justify-center gap-2 
                 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg
                 border border-cyan-400/50 transition-all duration-300"

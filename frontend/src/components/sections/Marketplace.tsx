@@ -5,9 +5,23 @@ import ItemMenu from '../layout/FlowerViews/ItemMenu';
 import { useUser } from '@/contexts/UserContext';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import SearchIcon from '@mui/icons-material/Search';
+import { calculateRarity } from '../layout/FlowerViews/ImageAnalysis';
 
 // New component for the search/filter bar
-const SearchBar = () => {
+const SearchBar = ({ onSearch }: { onSearch: (query: string, rarity: string) => void }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRarity, setSelectedRarity] = useState('All Rarities');
+
+  const handleSearch = () => {
+    onSearch(searchQuery, selectedRarity);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   return (
     <div className="bg-gray-900/50 backdrop-blur-md rounded-xl p-4 mb-8 
       border border-cyan-400/20">
@@ -16,6 +30,9 @@ const SearchBar = () => {
           <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400/50" />
           <input
             type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={handleKeyPress}
             placeholder="Search NFTs..."
             className="w-full pl-10 pr-4 py-2 rounded-lg 
               bg-gray-800/50 border border-cyan-400/20
@@ -24,19 +41,30 @@ const SearchBar = () => {
               transition-colors duration-300"
           />
         </div>
-        <select className="px-4 py-2 rounded-lg 
-          bg-gray-800/50 border border-cyan-400/20
-          text-white focus:border-cyan-400 focus:outline-none 
-          transition-colors duration-300">
+        <select 
+          value={selectedRarity}
+          onChange={(e) => {
+            setSelectedRarity(e.target.value);
+            onSearch(searchQuery, e.target.value);
+          }}
+          className="px-4 py-2 rounded-lg 
+            bg-gray-800/50 border border-cyan-400/20
+            text-white focus:border-cyan-400 focus:outline-none 
+            transition-colors duration-300"
+        >
           <option>All Rarities</option>
-          <option>Common</option>
-          <option>Rare</option>
-          <option>Epic</option>
           <option>Legendary</option>
+          <option>Epic</option>
+          <option>Rare</option>
+          <option>Common</option>
+          <option>Garbage</option>
         </select>
-        <button className="px-6 py-2 bg-cyan-500 hover:bg-cyan-600 
-          text-white rounded-lg transition-colors duration-300
-          border border-cyan-400/50">
+        <button 
+          onClick={handleSearch}
+          className="px-6 py-2 bg-cyan-500 hover:bg-cyan-600 
+            text-white rounded-lg transition-colors duration-300
+            border border-cyan-400/50"
+        >
           Search
         </button>
       </div>
@@ -46,15 +74,45 @@ const SearchBar = () => {
 
 const Marketplace = () => {
   const [models, setModels] = useState<Model[]>([]);
+  const [filteredModels, setFilteredModels] = useState<Model[]>([]);
   const { user } = useUser();
 
   useEffect(() => {
     const loadModels = async () => {
       const fetchedModels = await fetchAllModels();
-      setModels(fetchedModels.filter((model) => model.id !== user?.id));
+      const userModels = fetchedModels.filter((model) => model.id !== user?.id);
+      setModels(userModels);
+      setFilteredModels(userModels);
     };
     loadModels();
-  }, []);
+  }, [user?.id]);
+
+  const handleSearch = (query: string, rarity: string) => {
+    let filtered = [...models];
+
+    // Filter by name
+    if (query) {
+      filtered = filtered.filter(model => 
+        model.name.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+
+    // Filter by rarity
+    if (rarity !== 'All Rarities') {
+      filtered = filtered.filter(model => {
+        const stats = {
+          colorVibrancy: model.parameters.colorVibrancy,
+          leafAreaIndex: model.parameters.leafAreaIndex,
+          wilting: model.parameters.wilting,
+          spotting: model.parameters.spotting,
+          symmetry: model.parameters.symmetry
+        };
+        return calculateRarity(stats) === rarity;
+      });
+    }
+
+    setFilteredModels(filtered);
+  };
 
   return (
     <div className="min-h-screen bg-transparent">
@@ -78,19 +136,15 @@ const Marketplace = () => {
                   </p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-gray-400">Floor Price</p>
-                <p className="text-2xl font-bold text-white">2.5 ETH</p>
-              </div>
             </div>
           </div>
 
           {/* Search Bar */}
-          <SearchBar />
+          <SearchBar onSearch={handleSearch} />
 
           {/* Content */}
           <div className="max-w-7xl mx-auto">
-            <ItemMenu models={models} />
+            <ItemMenu models={filteredModels} />
           </div>
         </div>
       </div>

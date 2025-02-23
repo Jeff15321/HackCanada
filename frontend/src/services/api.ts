@@ -202,7 +202,7 @@ export const newImage = async (
       name: modelName || 'Default Name',
       walletID: userId,
       price: analysisData.price || 0,
-      id: userId,
+      id: response.data.id || `${Date.now()}_${userId}`,
       imageUrl: imageUrl,
       special: analysisData.special || []
     };
@@ -297,5 +297,49 @@ export const getModelById = async (id: string): Promise<Model> => {
   return model;
 };
 
+export const mintNFT = async (
+    tokenId: string,
+    receiverId: string,
+    glbFileUrl: string,
+    name: string,
+    walletId: string,
+    price: string,
+    parameters: Record<string, any>
+) => {
+    try {
+        const payload = {
+            token_id: tokenId,
+            receiver_id: receiverId,
+            plant_metadata: {
+                glb_file_url: glbFileUrl,
+                parameters,
+                name,
+                wallet_id: walletId,
+                price: price.toString()
+            }
+        };
 
+        console.log("Sending mint request with payload:", payload);
+
+        const response = await axios.post(
+            `${API_BASE_URL}/v1/model/mint/`, 
+            payload,
+            {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        console.log("Mint response:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Error minting NFT:", error);
+        if (axios.isAxiosError(error) && error.response) {
+            console.error("Response status:", error.response.status);
+            console.error("Response data:", error.response.data);
+        }
+        throw error;
+    }
+};
 
