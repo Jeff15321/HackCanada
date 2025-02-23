@@ -13,7 +13,7 @@ import FlowerView from '../FlowerView';
 import BackgroundWrapper from './BackgroundWrapper';
 
 
-type Tab = 'marketplace' | 'collection' | 'profile';
+type Tab = 'marketplace' | 'collection' | 'profile' | 'tokens';
 
 const ImageDisplay = () => {
   const { model, setModel } = useModel();
@@ -23,6 +23,9 @@ const ImageDisplay = () => {
     console.log("model:", model);
   }, [model]);
 
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab);
+  };
 
   return (
     <BackgroundWrapper>
@@ -30,7 +33,7 @@ const ImageDisplay = () => {
         <div className="flex-1 overflow-y-auto">
           {/* Navigation at the top */}
           <div className="fixed top-[1rem] left-0 right-0 z-10 flex-none">
-            <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+            <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
           </div>
 
           {/* Main content area */}

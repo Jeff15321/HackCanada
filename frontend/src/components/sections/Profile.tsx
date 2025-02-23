@@ -1,7 +1,7 @@
 import React from 'react';
 import WalletLogin from '../auth/WalletLogin';
 import ImageDrop from '../layout/FlowerViews/ImageDrop';
-import { newImage } from '@/services/api';
+import { newImage, runPipelineViaBackend } from '@/services/api';
 import { useUser } from '@/contexts/UserContext';
 import { useModel } from '@/contexts/ModelContext';
 import { useImage } from '@/contexts/ImageContext';
@@ -31,6 +31,7 @@ interface FlowerParameters {
 }
 
 interface FlowerModel {
+  id: string;
   glbFileUrl: string;
   parameters: FlowerParameters;
   name: string;
@@ -40,45 +41,51 @@ interface FlowerModel {
   special: { attribute: string; rarity: number; }[];
 }
 
+interface Model {
+  glbFileUrl: string;
+  parameters: FlowerParameters;
+  name: string;
+  walletID: string;
+  price: number;
+  id: string;
+  imageUrl: string;
+  special: { attribute: string; rarity: number; }[];
+}
+
 const Profile = () => {
   const { user } = useUser();
   const { selectedFile, imageUrl, isAnalyzing, setIsAnalyzing } = useImage();
   const { model, setModel } = useModel();
 
-  const handleSubmit = async (flowerName: string) => {
+  const handleSubmit = async (flowerName: string): Promise<Model> => {
     try {
-      if (!selectedFile || !user?.id || !imageUrl) {
-        throw new Error('Missing required data');
-      }
-
-      const randomAttributes = {
-        health: Math.floor(Math.random() * 100),
-        growth: Math.floor(Math.random() * 100),
-        waterLevel: Math.floor(Math.random() * 100),
-        sunlight: Math.floor(Math.random() * 100)
+      // Create a default Model that matches the expected type
+      const defaultModel: Model = {
+        glbFileUrl: "https://example.com/plant.glb",
+        parameters: {
+          colorVibrancy: { score: 95, explanation: "Vibrant green" },
+          leafAreaIndex: { score: 85, explanation: "Good coverage" },
+          wilting: { score: 90, explanation: "No wilting" },
+          spotting: { score: 100, explanation: "No spots" },
+          symmetry: { score: 88, explanation: "Good symmetry" }
+        },
+        name: flowerName || "TEE Plant #3",
+        walletID: "hackcanada.testnet",
+        price: 1000000000000000000000000,
+        id: "14",
+        imageUrl: "https://example.com/plant.glb",
+        special: []
       };
 
-      const response = await newImage(
-        user.id, 
-        imageUrl, 
-        flowerName,
-        model?.description, 
-        model?.glbFileUrl,
-        selectedFile, 
-        randomAttributes
-      );
-
-      const newModel: FlowerModel = {
-        ...response,
-        name: flowerName,
-        imageUrl: response.glbFileUrl || '',
-        special: response.special || []
-      };
-
-      setModel(newModel);
-      return newModel;
+      // Run the pipeline
+      await runPipelineViaBackend(1);
+      
+      // Set the model in context
+      setModel(defaultModel);
+      
+      return defaultModel;
     } catch (error) {
-      console.error('Error submitting image:', error);
+      console.error('Error in handleSubmit:', error);
       throw error;
     }
   };

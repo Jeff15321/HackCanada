@@ -133,3 +133,15 @@ async def update_owner(model_id: str, new_owner_id: str = Form(...)):
     except Exception as e:
         print(f"Error in update_owner endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/pipeline/run")
+async def run_pipeline(data: dict):
+    """
+    Run the pipeline with test data
+    """
+    try:
+        result = await ModelService.run_pipeline(data)
+        return result
+    except Exception as e:
+        print(f"Error in run_pipeline endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))

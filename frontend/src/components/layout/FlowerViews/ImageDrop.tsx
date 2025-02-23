@@ -65,7 +65,16 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
       const response = await onSubmit(flowerName);
       
       // Run the pipeline after model creation
-      await runPipelineViaBackend(response);
+      try {
+        const pipelineResponse = await runPipelineViaBackend(response);
+        console.log('Pipeline Response:', {
+          mint: pipelineResponse.mint,
+          ownerTokens: pipelineResponse.ownerTokens
+        });
+      } catch (pipelineError: any) {  // Type as 'any' to access response property
+        console.error('Pipeline error:', pipelineError?.response?.data || pipelineError);
+        // Continue with the flow even if pipeline fails
+      }
       
       setIsAnimating(false);
       
@@ -91,6 +100,7 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
       setRarity(rarityToFlips[rarityLevel]);
       setIsFlipping(true);
     } catch (error) {
+      console.error('Submit error:', error);
       setIsAnimating(false);
     }
   };

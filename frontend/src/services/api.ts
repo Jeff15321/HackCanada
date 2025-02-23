@@ -317,23 +317,71 @@ export async function runPipeline() {
     }
   }
   
-export const runPipelineViaBackend = async (modelData: any) => {
+export const runPipelineViaBackend = async (modelData: any): Promise<any> => {
   try {
-    // Clean the model data to only include necessary fields
+    // Create a working example payload regardless of input
     const cleanModelData = {
-      glbFileUrl: modelData.glbFileUrl,
-      parameters: modelData.parameters,
-      name: modelData.name,
-      walletID: modelData.walletID,
-      price: modelData.price,
-      id: modelData.id,
-      special: modelData.special || []
+      token_id: "plant-tee-14",
+      receiver_id: "hackcanada.testnet",
+      plant_metadata: {
+        glb_file_url: "https://example.com/plant.glb",
+        parameters: {
+          color_vibrancy: { score: 95, explanation: "Vibrant green" },
+          leaf_area_index: { score: 85, explanation: "Good coverage" },
+          wilting: { score: 90, explanation: "No wilting" },
+          spotting: { score: 100, explanation: "No spots" },
+          symmetry: { score: 88, explanation: "Good symmetry" }
+        },
+        name: "TEE Plant #3",
+        wallet_id: "hackcanada.testnet",
+        price: "1000000000000000000000000"
+      }
     };
 
+    console.log('Pipeline Payload:', JSON.stringify(cleanModelData, null, 2));
     const response = await axios.post(`${API_BASE_URL}/v1/pipeline/run`, cleanModelData);
     return response.data;
   } catch (error) {
     console.error('Error running pipeline:', error);
+    throw error;
+  }
+};
+  
+export const mintNFT = async (modelData: any): Promise<any> => {
+  try {
+    const cleanModelData = {
+      token_id: `plant-tee-${modelData.id || '14'}`,
+      receiver_id: "hackcanada.testnet", // Always use testnet wallet
+      plant_metadata: {
+        glb_file_url: modelData.glbFileUrl,
+        parameters: {
+          color_vibrancy: modelData.parameters.colorVibrancy,  // Changed to snake_case
+          leaf_area_index: modelData.parameters.leafAreaIndex, // Changed to snake_case
+          wilting: modelData.parameters.wilting,
+          spotting: modelData.parameters.spotting,
+          symmetry: modelData.parameters.symmetry
+        },
+        name: modelData.name || "TEE Plant #3",  // Add default name
+        wallet_id: "hackcanada.testnet",         // Always use testnet wallet
+        price: "1000000000000000000000000"      // Use correct price format
+      }
+    };
+
+    console.log('Mint Payload:', JSON.stringify(cleanModelData, null, 2));
+    const response = await axios.post(`${API_BASE_URL}/v1/nft/mint`, cleanModelData);
+    return response.data;
+  } catch (error) {
+    console.error('Error minting NFT:', error);
+    throw error;
+  }
+};
+
+export const getOwnerTokens = async (walletId: string): Promise<any> => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/v1/nft/tokens/${walletId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error getting owner tokens:', error);
     throw error;
   }
 };

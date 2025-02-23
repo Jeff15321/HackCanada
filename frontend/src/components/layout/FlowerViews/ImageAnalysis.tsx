@@ -198,12 +198,12 @@ const ImageAnalysis: React.FC<ImageAnalysisProps> = ({ model }) => {
   };
 
   // Add state for selected attribute
-  const [selectedAttribute, setSelectedAttribute] = useState<AttributeType | null>(null);
+  const [selectedAttribute, setSelectedAttribute] = useState<string | null>(null);
   
   // Add this function to get the description from the model
   const getAttributeDescription = () => {
-    if (!selectedAttribute || !contextModel?.parameters) return null;
-    return contextModel.parameters[selectedAttribute].explanation;
+    if (!selectedAttribute || !model?.parameters) return '';
+    return model.parameters[selectedAttribute as keyof typeof model.parameters]?.explanation || '';
   };
 
   useEffect(() => {
@@ -266,35 +266,50 @@ const ImageAnalysis: React.FC<ImageAnalysisProps> = ({ model }) => {
             {/* Vital Stats - flex-grow-0 to maintain size */}
             <div className="flex-shrink-0">
               <div className="flex flex-col gap-3">
-                <div className="cursor-pointer transition-all hover:opacity-80" onClick={() => setSelectedAttribute('colorVibrancy')}>
+                <div 
+                  className="cursor-pointer transition-all hover:opacity-80" 
+                  onClick={() => setSelectedAttribute('colorVibrancy')}
+                >
                   <AnimatedStat 
                     value={Math.floor(stats.colorVibrancy.score)}
                     label="Color Vibrancy" 
                     color={selectedAttribute === 'colorVibrancy' ? rarityColor : '#0ea5e9'}
                   />
                 </div>
-                <div className="cursor-pointer transition-all hover:opacity-80" onClick={() => setSelectedAttribute('leafAreaIndex')}>
+                <div 
+                  className="cursor-pointer transition-all hover:opacity-80" 
+                  onClick={() => setSelectedAttribute('leafAreaIndex')}
+                >
                   <AnimatedStat 
                     value={Math.floor(stats.leafAreaIndex.score)}
                     label="Leaf Area Index" 
                     color={selectedAttribute === 'leafAreaIndex' ? rarityColor : '#0ea5e9'}
                   />
                 </div>
-                <div className="cursor-pointer transition-all hover:opacity-80" onClick={() => setSelectedAttribute('wilting')}>
+                <div 
+                  className="cursor-pointer transition-all hover:opacity-80" 
+                  onClick={() => setSelectedAttribute('wilting')}
+                >
                   <AnimatedStat 
                     value={Math.floor(stats.wilting.score)}
                     label="Wilting" 
                     color={selectedAttribute === 'wilting' ? rarityColor : '#0ea5e9'}
                   />
                 </div>
-                <div className="cursor-pointer transition-all hover:opacity-80" onClick={() => setSelectedAttribute('spotting')}>
+                <div 
+                  className="cursor-pointer transition-all hover:opacity-80" 
+                  onClick={() => setSelectedAttribute('spotting')}
+                >
                   <AnimatedStat 
                     value={Math.floor(stats.spotting.score)}
                     label="Spotting" 
                     color={selectedAttribute === 'spotting' ? rarityColor : '#0ea5e9'}
                   />
                 </div>
-                <div className="cursor-pointer transition-all hover:opacity-80" onClick={() => setSelectedAttribute('symmetry')}>
+                <div 
+                  className="cursor-pointer transition-all hover:opacity-80" 
+                  onClick={() => setSelectedAttribute('symmetry')}
+                >
                   <AnimatedStat 
                     value={Math.floor(stats.symmetry.score)}
                     label="Symmetry" 

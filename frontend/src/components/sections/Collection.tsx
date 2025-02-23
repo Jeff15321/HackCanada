@@ -8,6 +8,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import WalletLogin from '../auth/WalletLogin';
 import { searchModels } from '@/utils/search';
 import { calculateRarity } from '../layout/FlowerViews/ImageAnalysis';
+import { getOwnerTokens } from '@/services/api';
 
 // Add interface for SearchBar props
 interface SearchBarProps {
@@ -49,11 +50,24 @@ const SearchBar = ({ searchTerm, setSearchTerm, rarityFilter, setRarityFilter }:
   );
 };
 
+interface TokenData {
+  token_id: string;
+  owner_id: string;
+  metadata: {
+    title: string;
+    media: string;
+    description: string;
+    price?: string;
+  };
+}
+
 const Collection = () => {
   const [models, setModels] = useState<Model[]>([]);
   const { user } = useUser();
   const [searchTerm, setSearchTerm] = useState('');
   const [rarityFilter, setRarityFilter] = useState('');
+  const [tokens, setTokens] = useState<TokenData[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -64,6 +78,23 @@ const Collection = () => {
       loadModels();
     }
   }, [user]);
+
+  useEffect(() => {
+    const fetchTokens = async () => {
+      if (user?.id) {
+        try {
+          const response = await getOwnerTokens(user.id);
+          setTokens(response);
+        } catch (error) {
+          console.error('Error fetching tokens:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchTokens();
+  }, [user?.id]);
 
   const filteredModels = models
     .filter(model => {
@@ -83,6 +114,14 @@ const Collection = () => {
       return matchesSearch && matchesRarity;
     })
     .reverse();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-cyan-500"></div>
+      </div>
+    );
+  }
 
   return (
     <WalletLogin>

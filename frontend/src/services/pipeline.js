@@ -5,7 +5,7 @@ async function runPipeline() {
 
     console.log('Calling /api/nft/mint...');
     const mintPayload = {
-      token_id: "plant-tee-14",
+      token_id: "plant-tee-10894",
       receiver_id: "hackcanada.testnet",
       plant_metadata: {
         glb_file_url: "https://example.com/plant.glb",

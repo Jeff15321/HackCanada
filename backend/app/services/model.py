@@ -13,6 +13,7 @@ from fastapi import HTTPException
 from pathlib import Path
 import shutil
 from bson import ObjectId
+import aiohttp
 
 # Load environment variables
 load_dotenv()
@@ -339,6 +340,7 @@ class ModelService:
         except Exception as e:
             print(f"Error updating owner: {str(e)}")
             raise HTTPException(status_code=500, detail=str(e))
+
 
 def encode_image(image_path: str) -> str:
     """

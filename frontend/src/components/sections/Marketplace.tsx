@@ -8,7 +8,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import WalletLogin from '../auth/WalletLogin';
 import { searchModels } from '@/utils/search';
 import { calculateRarity } from '../layout/FlowerViews/ImageAnalysis';
-import { runPipelineViaBackend } from '@/services/api';
+import { runPipelineViaBackend, getOwnerTokens  } from '@/services/api';
 // Add interface for SearchBar props
 interface MarketProps {
   searchTerm: string;
@@ -20,7 +20,10 @@ interface MarketProps {
 const SearchBar = ({ searchTerm, setSearchTerm, rarityFilter, setRarityFilter }: MarketProps) => {
   return (
     <div className="bg-gray-900/50 backdrop-blur-md rounded-xl p-4 mb-8 border border-cyan-400/20">
-        <button className="bg-cyan-400 text-white px-4 py-2 rounded-lg" onClick={runPipelineViaBackend}>Run Pipeline</button>
+        <button className="bg-cyan-400 text-white px-4 py-2 rounded-lg" onClick={async () => {
+          const tokens = await getOwnerTokens("hackcanada.testnet");
+          console.log(tokens);
+        }}>Run Pipeline</button>
 
       <div className="flex flex-wrap gap-4">
         <div className="flex-1 min-w-[200px] relative">
