@@ -13,7 +13,7 @@ import FlowerView from '../FlowerView';
 import BackgroundWrapper from './BackgroundWrapper';
 
 
-type Tab = 'marketplace' | 'collection' | 'profile' | 'tokens';
+type Tab = 'marketplace' | 'collection' | 'profile';
 
 const ImageDisplay = () => {
   const { model, setModel } = useModel();
