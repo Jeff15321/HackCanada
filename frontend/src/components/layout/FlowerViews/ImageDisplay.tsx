@@ -36,8 +36,7 @@ const ImageDisplay = () => {
           {/* Main content area */}
           <div className="flex-grow relative w-full max-w-7xl mx-auto">
             {/* Show content based on active tab */}
-            {/* {activeTab === 'marketplace' && !isAnalyzing && <ImageDrop onSubmit={handleSubmit} />}
-            {activeTab === 'marketplace' && isAnalyzing && <FlowerView />} */}
+
             {activeTab === 'marketplace' && <Marketplace />}
             {activeTab === 'collection' && <Collection />}
             {activeTab === 'profile' && <Profile />}

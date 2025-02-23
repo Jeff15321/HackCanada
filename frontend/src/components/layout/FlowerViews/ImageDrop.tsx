@@ -5,6 +5,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useImage } from '@/contexts/ImageContext';
 import styles from '@/styles/CoinFlip.module.css';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import router from 'next/router';
 
 interface ImageDropProps {
   onSubmit: () => void;
@@ -49,12 +50,17 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setIsAnimating(true);
-    setTimeout(() => {
+    try {
+      const response = await onSubmit();
+      console.log('API Response:', response);
       setIsAnimating(false);
-      onSubmit();
-    }, 2000);
+      setIsFlipping(true);
+    } catch (error) {
+      setIsAnimating(false);
+      // Handle error if needed
+    }
   };
 
   const clearImage = (e: React.MouseEvent) => {
@@ -108,9 +114,13 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
       setTimeout(() => {
         setIsFadingOut(true);  // Trigger fade out
         setTimeout(() => {
+          router.push('/image/163426555534756543783');
+        }, 800);
+        setTimeout(() => {
           setIsFlipping(false);
           setShowTrailText(false);
           setIsFadingOut(false);
+
         }, 1000);
       }, 2000);
     }
@@ -285,10 +295,10 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
                 }
               `}
               disabled={!image || isAnimating}
-            //   onClick={handleSubmit}
-              onClick={() => {
-                setIsFlipping(true);
-              }}
+              onClick={
+                handleSubmit
+              }
+
             >
               <span className="relative z-10 inline-flex items-center justify-center w-full">
                 <span className={`

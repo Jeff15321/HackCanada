@@ -99,14 +99,12 @@ const Profile = () => {
         });
 
         // Move setIsAnalyzing after successful model update
-        setIsAnalyzing(true);
-        router.push('/image/163426555534756543783');
       } catch (error) {
         console.error('Error parsing api2_data:', error);
       }
       
       // Log the full response
-      console.log('Full API Response:', response);
+      return response;
       
     } catch (error) {
       console.error('Error submitting image:', error);
