@@ -7,7 +7,7 @@ interface BackgroundWrapperProps {
 const BackgroundWrapper: React.FC<BackgroundWrapperProps> = ({ children }) => {
   return (
     <div className="min-h-screen relative bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] 
-      from-purple-900/20 via-black to-black">
+      from-purple-900/20 via-black to-black flex items-center">
       {/* Ambient background effects */}
       <div className="fixed inset-0 pointer-events-none">
         {/* Base grid pattern - thick but less dense */}
@@ -34,11 +34,11 @@ const BackgroundWrapper: React.FC<BackgroundWrapperProps> = ({ children }) => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10">
+      <div className="relative bg-gray-900 z-10 w-full">
         {children}
       </div>
     </div>
   );
 };
 
-export default BackgroundWrapper; 
+export default BackgroundWrapper;

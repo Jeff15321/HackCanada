@@ -16,19 +16,17 @@ const FlowerView: React.FC = () => {
 
   return (
     <BackgroundWrapper>
-      <div className="min-h-screen w-[90vw] ml-[5vw]">
-        <div className="container mx-auto py-6">
-          <div className="flex lg:flex-row gap-8">
+      <div className="h-[95vh] w-[90vw] ml-[5vw]">
+        <div className="h-[100%] mx-auto py-6">
+          <div className="flex flex-row gap-8">
             {/* Left side - Image Analysis */}
             <div className="flex-1">
-              <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl border border-cyan-400/20 p-6">
                 <ImageAnalysis />
-              </div>
             </div>
 
             {/* Right side - Payment and Details */}
-            <div className="w-[25vw]">
-               <Payment value={1500} />
+            <div className="w-[20vw]">
+               <Payment value={1500} /> 
             </div>
           </div>
         </div>

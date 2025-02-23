@@ -179,10 +179,9 @@ const ImageAnalysis: React.FC = () => {
   };
 
   return (
-    <div className={`h-[85vh] rounded-lg relative bg-gray-900 border border-cyan-400/20`}>
-      <div className="flex flex-col md:flex-row h-full">
+    <div className={`h-[90vh] flex flex-row rounded-lg relative bg-gray-900 border border-cyan-400/20`}>
         {/* Left: Image Display */}
-        <div className="w-full md:w-7/12 p-6 flex flex-col">
+        <div className="w-full md:w-7/12 pl-6 flex flex-col">
           <div className="flex-1 flex items-center justify-center">
             {/* Square container with fixed aspect ratio */}
             <div className="relative w-full pt-[100%]"> {/* Creates a square container */}
@@ -306,7 +305,6 @@ const ImageAnalysis: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 };

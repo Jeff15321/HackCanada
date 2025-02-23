@@ -48,8 +48,8 @@ const Payment: React.FC<PaymentProps> = ({
         <div className="flex flex-col h-full">
           {/* Value Display */}
           <div className="flex-1">
-            <h2 className="text-lg text-gray-400 mb-2">Estimated Value</h2>
-            <div className="bg-gray-800 rounded-xl p-4 border border-cyan-400/20">
+            <h2 className="text-2xl text-gray-400 my-8">Estimated Value</h2>
+            <div className="bg-gray-800 rounded-xl p-8 border border-cyan-400/20">
               <div className="text-4xl font-bold text-white">
                 {value.toLocaleString()} ETH
               </div>
@@ -63,7 +63,7 @@ const Payment: React.FC<PaymentProps> = ({
           <div className="space-y-3 mt-auto pt-6">
             <button
               onClick={onPurchase}
-              className="w-full h-12 flex items-center justify-center gap-2 
+              className="w-full h-[7rem] flex items-center justify-center gap-2 
                 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg
                 border border-cyan-400/50 transition-all duration-300"
             >
