@@ -6,6 +6,8 @@ import TimelapseIcon from '@mui/icons-material/Timelapse';
 import { useModel } from '@/contexts/ModelContext';
 import { useRouter } from 'next/router';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { Model } from '@/types/ModelType';
+import { useImage } from '@/contexts/ImageContext';
 
 
 /* 
@@ -157,9 +159,16 @@ interface Trait {
   rarity: number;
 }
 
-const ImageAnalysis: React.FC = () => {
-  const { model } = useModel();
+interface ImageAnalysisProps {
+  model: Model | null;  // Allow null
+}
+
+const ImageAnalysis: React.FC<ImageAnalysisProps> = ({ model }) => {
+  const { model: contextModel } = useModel();
   const router = useRouter();
+  const { imageUrl } = useImage();
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [displayUrl, setDisplayUrl] = useState<string | null>(null);
   
   const handleBack = () => {
     router.back();
@@ -167,24 +176,24 @@ const ImageAnalysis: React.FC = () => {
 
   // Get stats from model attributes
   const stats = {
-    colorVibrancy: model?.parameters?.colorVibrancy || { score: 0, explanation: '' },
-    leafAreaIndex: model?.parameters?.leafAreaIndex || { score: 0, explanation: '' },
-    wilting: model?.parameters?.wilting || { score: 0, explanation: '' },
-    spotting: model?.parameters?.spotting || { score: 0, explanation: '' },
-    symmetry: model?.parameters?.symmetry || { score: 0, explanation: '' }
+    colorVibrancy: contextModel?.parameters?.colorVibrancy || { score: 0, explanation: '' },
+    leafAreaIndex: contextModel?.parameters?.leafAreaIndex || { score: 0, explanation: '' },
+    wilting: contextModel?.parameters?.wilting || { score: 0, explanation: '' },
+    spotting: contextModel?.parameters?.spotting || { score: 0, explanation: '' },
+    symmetry: contextModel?.parameters?.symmetry || { score: 0, explanation: '' }
   };
 
   const rarity = calculateRarity(stats);
   const rarityColor = RARITY_COLORS[rarity];
 
   const flowerData = {
-    name: model?.name || "Crypto Rose",
+    name: contextModel?.name || "Crypto Rose",
     rarity,
     health: stats.colorVibrancy.score,
     shape: stats.leafAreaIndex.score,
     color: stats.wilting.score,
     development: stats.spotting.score,
-    traits: Array.isArray(model?.special) ? model.special : [],
+    traits: Array.isArray(contextModel?.special) ? contextModel.special : [],
     status: stats.colorVibrancy.score > 70 ? "Thriving" : "Struggling",
   };
 
@@ -193,17 +202,40 @@ const ImageAnalysis: React.FC = () => {
   
   // Add this function to get the description from the model
   const getAttributeDescription = () => {
-    if (!selectedAttribute || !model?.parameters) return null;
-    return model.parameters[selectedAttribute].explanation;
+    if (!selectedAttribute || !contextModel?.parameters) return null;
+    return contextModel.parameters[selectedAttribute].explanation;
   };
 
+  useEffect(() => {
+    // Try loading glbFileUrl first
+    if (model?.glbFileUrl) {
+      const img = new Image();
+      img.src = model.glbFileUrl;
+      img.onload = () => {
+        setDisplayUrl(model.glbFileUrl);
+        setImageLoaded(true);
+      };
+      img.onerror = () => {
+        // Fallback to imageUrl if glbFileUrl fails
+        if (imageUrl) {
+          setDisplayUrl(imageUrl);
+          setImageLoaded(true);
+        }
+      };
+    } else if (imageUrl) {
+      // If no glbFileUrl, use imageUrl directly
+      setDisplayUrl(imageUrl);
+      setImageLoaded(true);
+    }
+  }, [model?.glbFileUrl, imageUrl]);
+
   return (
-    <div className={`h-[90vh] flex flex-row rounded-lg relative bg-gray-900 border border-cyan-400/20`}>
+    <div className="relative w-full h-full">
+      <div className={`h-[90vh] flex flex-row rounded-lg relative bg-gray-900 border border-cyan-400/20`}>
         {/* Left: Image Display */}
         <div className="w-full md:w-7/12 pl-6 flex flex-col">
           <div className="flex-1 flex items-center justify-center">
-            {/* Square container with fixed aspect ratio */}
-            <div className="relative w-full pt-[100%]"> {/* Creates a square container */}
+            <div className="relative w-full pt-[100%]">
               <div className="absolute inset-0 rounded-xl overflow-hidden shadow-2xl">
                 <button 
                   onClick={handleBack}
@@ -215,11 +247,13 @@ const ImageAnalysis: React.FC = () => {
                   <ArrowBackIcon className="text-cyan-400 text-xl" />
                 </button>
 
-                <img 
-                  src={model?.glbFileUrl} 
-                  alt="Analyzed Flower" 
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
+                {displayUrl && (
+                  <img 
+                    src={displayUrl}
+                    alt={model?.name || "Flower"}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -314,6 +348,7 @@ const ImageAnalysis: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
     </div>
   );
 };

@@ -7,6 +7,7 @@ import os
 from app.core.config import settings
 from app.api.v1.router import api_router
 from app.core.database import connect_to_mongo, close_mongo_connection
+from app.routers import pipeline
 
 # Create uploads directory if it doesn't exist
 os.makedirs("uploads/images", exist_ok=True)
@@ -40,6 +41,7 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 # Mount static files directory
 app.mount("/uploads", StaticFiles(directory="uploads", html=True), name="uploads")
 
+app.include_router(pipeline.router) 
 # Serve index.html for root path
 @app.get("/")
 async def read_root():

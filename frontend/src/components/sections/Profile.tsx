@@ -63,7 +63,7 @@ const Profile = () => {
         imageUrl, 
         flowerName,
         model?.description, 
-        model?.imageUrl, 
+        model?.glbFileUrl,
         selectedFile, 
         randomAttributes
       );
@@ -71,7 +71,7 @@ const Profile = () => {
       const newModel: FlowerModel = {
         ...response,
         name: flowerName,
-        imageUrl: response.imageUrl || '',
+        imageUrl: response.glbFileUrl || '',
         special: response.special || []
       };
 

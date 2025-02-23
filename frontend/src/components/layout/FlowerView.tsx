@@ -20,9 +20,11 @@ const FlowerView: React.FC = () => {
         <div className="h-[100%] mx-auto py-6">
           <div className="flex flex-row gap-8">
             {/* Left side - Image Analysis */}
-            <div className="flex-1">
-                <ImageAnalysis />
-            </div>
+            {model && (
+              <div className="flex-1">
+                <ImageAnalysis model={model} />
+              </div>
+            )}
 
             {/* Right side - Payment and Details */}
             <div className="w-[20vw]">

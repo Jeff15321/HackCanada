@@ -174,3 +174,31 @@
 .properFadeOut {
   animation: properFadeOut 0.5s forwards;
 }
+
+.particleContainer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.particle {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  animation: particleAnim 0.5s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+@keyframes particleAnim {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}

@@ -8,6 +8,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import router from 'next/router';
 import { calculateRarity, RARITY_COLORS } from './ImageAnalysis';
 import { Model } from '@/types/ModelType';
+import { runPipelineViaBackend } from '@/services/api';
 
 interface ImageDropProps {
   onSubmit: (flowerName: string) => Promise<Model>;
@@ -30,6 +31,7 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
   const [showTrailText, setShowTrailText] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [rarity, setRarity] = useState(0);
+  const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number }>>([]);
   const colors = [
     { bg: 'rgba(75, 85, 99, 0.2)', border: 'rgb(156, 163, 175)' },     // Gray
     { bg: 'rgba(59, 130, 246, 0.2)', border: 'rgb(96, 165, 250)' },    // Blue
@@ -61,6 +63,10 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
     setIsAnimating(true);
     try {
       const response = await onSubmit(flowerName);
+      
+      // Run the pipeline after model creation
+      await runPipelineViaBackend(response);
+      
       setIsAnimating(false);
       
       // Calculate rarity from model parameters
@@ -97,7 +103,7 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const flipCoin = () => {
+  const flipCoin = (e: React.MouseEvent) => {
     if (!isFlipping) {
       fileInputRef.current?.click();
       return;
@@ -110,6 +116,7 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
         const nextColor = colors[colorCounter];
         circle.style.backgroundColor = nextColor.bg;
         circle.style.borderColor = nextColor.border;
+        createParticles(e, nextColor.border);
         setColorCounter((prev) => (prev + 1) % 5);
         if (colorCounter >= rarity - 2) {
           const clickMeContainer = document.querySelector(`.${styles.fadeInDelayed}`) as HTMLElement;
@@ -130,6 +137,16 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
         }
       }
     }, 300);
+  };
+
+  const createParticles = (e: React.MouseEvent, color: string) => {
+    const newParticles = Array.from({ length: 8 }).map(() => ({
+      id: Math.random(),
+      x: e.clientX - 10, // Center on click
+      y: e.clientY - 10
+    }));
+    setParticles(newParticles);
+    setTimeout(() => setParticles([]), 500);
   };
 
   useEffect(() => {
@@ -250,7 +267,22 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
             )}
           </div>
 
-          
+          <div className={styles.particleContainer}>
+            {particles.map(particle => (
+              <div
+                key={particle.id}
+                className={styles.particle}
+                style={{
+                  left: '50%',
+                  top: '50%',
+                  backgroundColor: colors[colorCounter].border,
+                  boxShadow: `0 0 20px ${colors[colorCounter].border}`,
+                  '--x': particle.x,
+                  '--y': particle.y
+                } as any}
+              />
+            ))}
+          </div>
         </div>
 
         {/* Right side - Upload Controls */}
