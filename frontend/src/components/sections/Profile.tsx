@@ -100,7 +100,7 @@ const Profile = () => {
 
         // Move setIsAnalyzing after successful model update
         setIsAnalyzing(true);
-        router.push('/image/1');
+        router.push('/image/163426555534756543783');
       } catch (error) {
         console.error('Error parsing api2_data:', error);
       }
