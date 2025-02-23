@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
 
 class ModelCreate(BaseModel):
     userId: str
@@ -15,5 +15,5 @@ class ModelResponse(BaseModel):
     message: str = "Model created successfully"
     api1_data: Optional[Dict[str, Any]] = None
     api2_data: Optional[Dict[str, Any]] = None
-    gpt_analysis: Optional[str] = None
+    gpt_analysis: Union[str, Dict[str, Any]] = "No analysis available"
     combined_score: Optional[float] = None

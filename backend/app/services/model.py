@@ -3,16 +3,17 @@ from typing import Dict, Any, Optional
 from fastapi import UploadFile
 import random
 import asyncio
-from openai import AsyncOpenAI, OpenAI
+from openai import AsyncOpenAI
 import os
 import base64
 from dotenv import load_dotenv
+from app.core.database import get_database
 
 # Load environment variables
 load_dotenv()
 
-# Configure OpenAI
-client = AsyncOpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+# Initialize OpenAI client properly
+openai_client = AsyncOpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 prompt = """
 You are a plant health analysis expert. Your task is to analyze a flower's condition based on an image input and provide your insights in a JSON formatted string that exactly matches the schema below. Do not include any additional commentary or text outside of the JSON string.
@@ -141,6 +142,7 @@ class ModelService:
         model_attributes: Dict[str, Any] = {}
     ):
         try:
+            db = await get_database()
             print(f"Received model data: userId={userId}, imageUrl={imageUrl}")
 
             async def api_call_1():
@@ -159,16 +161,13 @@ class ModelService:
                             "confidence": 0
                         }
 
-                    # Read image file
                     contents = await model_image_file.read()
                     base64_image = base64.b64encode(contents).decode('utf-8')
                     await model_image_file.seek(0)
 
-                    print("Sending request to OpenAI API...")
-
-                    # Use the vision model and include the base64 image string in the request
-                    response = await client.chat.completions.create(
-                        model="gpt-4o-mini",  # Use a model with vision capabilities
+                    # Use openai_client instead of client
+                    response = await openai_client.chat.completions.create(
+                        model="gpt-4o-mini",
                         messages=[
                             {
                                 "role": "user",
@@ -189,27 +188,17 @@ class ModelService:
                         max_tokens=300
                     )
 
-                    print("Received response from OpenAI API")
-
                     analysis = response.choices[0].message.content
-
-                    try:
-                        import re
-                        scores = re.findall(r'(\d{1,3})/100|score.*?(\d{1,3})|health.*?(\d{1,3})', analysis.lower())
-                        confidence = int(scores[0][0]) if scores else random.randint(70, 90)
-                    except:
-                        confidence = random.randint(70, 90)
-
                     return {
                         "api2_result": "success",
                         "analysis": analysis,
-                        "confidence": confidence
+                        "confidence": random.randint(70, 90)
                     }
                 except Exception as e:
                     print(f"Error in ChatGPT API call: {str(e)}")
                     return {
                         "api2_result": "error",
-                        "analysis": f"Failed to analyze image: {str(e)}",
+                        "analysis": str(e),
                         "confidence": 0
                     }
 
@@ -218,25 +207,17 @@ class ModelService:
                 chat_gpt_analysis()
             )
 
-            print("API 1 Result:", api1_result)
-            print("API 2 Result (ChatGPT):", api2_result)
-
-            if model_image_file:
-                contents = await model_image_file.read()
-                print(f"Image file size: {len(contents)} bytes")
-                await model_image_file.seek(0)
-
             combined_result = {
                 "success": True,
                 "message": "Model created successfully",
                 "api1_data": api1_result,
                 "api2_data": api2_result,
                 "combined_score": (api1_result["score"] + api2_result["confidence"]) / 2,
-                "gpt_analysis": api2_result.get("analysis", "No analysis available")
+                "gpt_analysis": api2_result["analysis"]
             }
 
             return combined_result
-            
+
         except Exception as e:
             print(f"Error in create_model: {str(e)}")
             raise e
@@ -260,7 +241,7 @@ async def analyze_local_image(image_path: str):
     try:
         print("Sending request to OpenAI for image analysis...")
 
-        response = await client.chat.completions.create(
+        response = await openai_client.chat.completions.create(
             model="gpt-4o-mini",  # Ensure you have access to a vision-capable model
             messages=[
                 {
