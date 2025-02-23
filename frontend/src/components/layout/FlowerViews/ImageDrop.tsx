@@ -80,11 +80,18 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
         circle.style.borderColor = nextColor.border;
         setColorCounter((prev) => (prev + 1) % 5);
         if (colorCounter >= tmp_rarity - 1) {
+          const clickMeContainer = document.querySelector(`.${styles.fadeInDelayed}`) as HTMLElement;
+        
+          if (clickMeContainer) {
+            clickMeContainer.style.animation = `${styles.properFadeOut} 1s forwards`;
+          }
+  
           const clickMeElement = document.querySelector(`.${styles.fadeInDelayed}`) as HTMLElement;
           if (clickMeElement) {
-            clickMeElement.classList.add(styles.fadeOut);
+            clickMeElement.style.animation = `${styles.properFadeOut} 0.5s forwards`;
           }
           
+          // Wait for fade-out to complete before moving coin
           setTimeout(() => {
             setIsCoinMovingRight(true);
           }, 500);

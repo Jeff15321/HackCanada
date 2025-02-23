@@ -77,15 +77,34 @@
   animation: fadeIn 0.5s ease-in-out forwards;
 }
 
-@keyframes moveRight {
+@keyframes moveRightHeads {
   0% {
-    transform: translateX(0);
+    transform: translateX(0) rotateY(180deg);
     opacity: 1;
   }
   100% {
-    transform: translateX(150vw);
+    transform: translateX(150vw) rotateY(180deg);
     opacity: 0;
   }
+}
+
+@keyframes moveRightTails {
+  0% {
+    transform: translateX(0) rotateY(360deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(150vw) rotateY(360deg);
+    opacity: 0;
+  }
+}
+
+.coin.moveRight.flipHeads {
+  animation: flipHeads 1s forwards, moveRightHeads 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.coin.moveRight.flipTails {
+  animation: flipTails 1s forwards, moveRightTails 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 @keyframes textRevealWidth {
@@ -97,15 +116,6 @@
     width: 100vw;
     opacity: 1;
   }
-}
-
-.moveRight {
-  animation: moveRight 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-@keyframes fadeOutText {
-  0% { opacity: 1; }
-  100% { opacity: 0; }
 }
 
 .textTrail {
@@ -139,9 +149,9 @@
              fadeOutText 1s ease-in-out forwards;
 }
 
-@keyframes fadeOut {
-  from { opacity: 1; }
-  to { opacity: 0; }
+@keyframes fadeOutText {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 .fadeOut {
@@ -155,3 +165,12 @@
 .fadeInDelayed.fadeOut {
   animation: fadeOut 0.5s forwards;
 } 
+
+@keyframes properFadeOut {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.properFadeOut {
+  animation: properFadeOut 0.5s forwards;
+}
