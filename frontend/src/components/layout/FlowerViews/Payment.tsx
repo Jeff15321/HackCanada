@@ -4,25 +4,15 @@ import { ViewInAr, ShoppingCart } from '@mui/icons-material';
 import { useModel } from '../../../contexts/ModelContext';
 import { calculateRarity, RARITY_COLORS } from './ImageAnalysis';
 
-interface PaymentProps {
-  value: number;
-  onVRView?: () => void;
-  onPurchase?: () => void;
-}
-
-const Payment: React.FC<PaymentProps> = ({ 
-  value = 1500, // Default value for testing
-  onVRView = () => console.log('VR View clicked'),
-  onPurchase = () => console.log('Purchase clicked')
-}) => {
+const Payment: React.FC = () => {
   const { model } = useModel();
   
-  // Calculate rarity and color based on stats
   const stats = {
-    health: model?.attributes?.health || 0,
-    waterLevel: model?.attributes?.shape || 0,
-    sunlight: model?.attributes?.color || 0,
-    growth: model?.attributes?.development || 0
+    colorVibrancy: model?.parameters?.colorVibrancy || { score: 0, explanation: '' },
+    leafAreaIndex: model?.parameters?.leafAreaIndex || { score: 0, explanation: '' },
+    wilting: model?.parameters?.wilting || { score: 0, explanation: '' },
+    spotting: model?.parameters?.spotting || { score: 0, explanation: '' },
+    symmetry: model?.parameters?.symmetry || { score: 0, explanation: '' }
   };
 
   const rarity = calculateRarity(stats);
@@ -33,7 +23,7 @@ const Payment: React.FC<PaymentProps> = ({
       {/* Top Box - Name and Rarity */}
       <div className="bg-gray-900 rounded-xl border border-cyan-400/20 p-6">
         <div className="flex flex-col gap-6 py-6 justify-between items-start">
-          <h1 className="text-3xl font-bold text-white">{model?.name || "Unnamed Flower"}</h1>
+          <h1 className="text-3xl font-bold text-white">{model?.name}</h1>
           <span
             className="px-3 py-1 text-xl font-bold rounded-lg bg-gray-800"
             style={{ color: rarityColor, borderColor: `${rarityColor}40` }}
@@ -51,10 +41,10 @@ const Payment: React.FC<PaymentProps> = ({
             <h2 className="text-2xl text-gray-400 my-8">Estimated Value</h2>
             <div className="bg-gray-800 rounded-xl p-8 border border-cyan-400/20">
               <div className="text-4xl font-bold text-white">
-                {value.toLocaleString()} ETH
+                {(Number(model?.price) / 10000).toLocaleString()} ETH
               </div>
               <div className="text-sm text-cyan-400 mt-1">
-                ≈ ${(value * 2800).toLocaleString()} USD
+                ≈ ${((Number(model?.price) / 10000) * 2800).toLocaleString()} USD
               </div>
             </div>
           </div>
@@ -62,7 +52,7 @@ const Payment: React.FC<PaymentProps> = ({
           {/* Action Buttons */}
           <div className="space-y-3 mt-auto pt-6">
             <button
-              onClick={onPurchase}
+              onClick={() => console.log('Purchase clicked')}
               className="w-full h-[7rem] flex items-center justify-center gap-2 
                 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg
                 border border-cyan-400/50 transition-all duration-300"

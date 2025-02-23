@@ -6,10 +6,16 @@ import { useImage } from '@/contexts/ImageContext';
 import styles from '@/styles/CoinFlip.module.css';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import router from 'next/router';
+import { calculateRarity, RARITY_COLORS } from './ImageAnalysis';
+import { Model } from '@/types/ModelType';
 
 interface ImageDropProps {
-  onSubmit: () => void;
+  onSubmit: (flowerName: string) => Promise<Model>;
 }
+
+type RarityTextMap = {
+  [key: number]: { text: string; color: string; }
+};
 
 const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
   const [image, setImage] = useState<string | null>(null);
@@ -23,12 +29,13 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
   const [isCoinMovingRight, setIsCoinMovingRight] = useState(false);
   const [showTrailText, setShowTrailText] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
+  const [rarity, setRarity] = useState(0);
   const colors = [
-    { bg: 'rgba(75, 85, 99, 0.2)', border: 'rgba(75, 85, 99, 1)' },    // Gray
-    { bg: 'rgba(59, 130, 246, 0.2)', border: 'rgba(59, 130, 246, 1)' }, // Blue
-    { bg: 'rgba(249, 115, 22, 0.2)', border: 'rgba(249, 115, 22, 1)' }, // Orange
-    { bg: 'rgba(147, 51, 234, 0.2)', border: 'rgba(147, 51, 234, 1)' }, // Purple
-    { bg: 'rgba(234, 179, 8, 0.2)', border: 'rgba(234, 179, 8, 1)' },   // Yellow
+    { bg: 'rgba(75, 85, 99, 0.2)', border: 'rgb(156, 163, 175)' },     // Gray
+    { bg: 'rgba(59, 130, 246, 0.2)', border: 'rgb(96, 165, 250)' },    // Blue
+    { bg: 'rgba(249, 115, 22, 0.2)', border: 'rgb(251, 146, 60)' },    // Orange
+    { bg: 'rgba(147, 51, 234, 0.2)', border: 'rgb(192, 132, 252)' },   // Purple
+    { bg: 'rgba(234, 179, 8, 0.2)', border: 'rgb(250, 204, 21)' },     // Yellow
   ];
 
   const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -53,13 +60,32 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
   const handleSubmit = async () => {
     setIsAnimating(true);
     try {
-      const response = await onSubmit();
-      console.log('API Response:', response);
+      const response = await onSubmit(flowerName);
       setIsAnimating(false);
+      
+      // Calculate rarity from model parameters
+      const stats = {
+        colorVibrancy: response.parameters.colorVibrancy,
+        leafAreaIndex: response.parameters.leafAreaIndex,
+        wilting: response.parameters.wilting,
+        spotting: response.parameters.spotting,
+        symmetry: response.parameters.symmetry
+      };
+      
+      // Map rarity levels to number of flips
+      const rarityToFlips = {
+        'Legendary': 5,
+        'Epic': 4,
+        'Rare': 3,
+        'Common': 2,
+        'Garbage': 1
+      };
+
+      const rarityLevel = calculateRarity(stats);
+      setRarity(rarityToFlips[rarityLevel]);
       setIsFlipping(true);
     } catch (error) {
       setIsAnimating(false);
-      // Handle error if needed
     }
   };
 
@@ -85,7 +111,7 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
         circle.style.backgroundColor = nextColor.bg;
         circle.style.borderColor = nextColor.border;
         setColorCounter((prev) => (prev + 1) % 5);
-        if (colorCounter >= tmp_rarity - 1) {
+        if (colorCounter >= rarity - 2) {
           const clickMeContainer = document.querySelector(`.${styles.fadeInDelayed}`) as HTMLElement;
         
           if (clickMeContainer) {
@@ -105,8 +131,6 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
       }
     }, 300);
   };
-
-  const tmp_rarity = 4
 
   useEffect(() => {
     if (isCoinMovingRight) {
@@ -135,6 +159,15 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
     zIndex: 40,
   } as const : {};
 
+  // Add rarity text mapping
+  const rarityText: RarityTextMap = {
+    5: { text: "LEGENDARY!", color: RARITY_COLORS.Legendary },
+    4: { text: "EPIC!", color: RARITY_COLORS.Epic },
+    3: { text: "RARE!", color: RARITY_COLORS.Rare },
+    2: { text: "COMMON!", color: RARITY_COLORS.Common },
+    1: { text: "GARBAGE!", color: RARITY_COLORS.Garbage }
+  };
+
   return (
     <div className="container mx-auto max-w-6xl h-screen flex items-center justify-center">
       {showTrailText && (
@@ -144,10 +177,11 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
             position: 'fixed',
             top: '50%',
             left: '50%',
-            transform: 'translate(-50%, -50%)'
+            transform: 'translate(-50%, -50%)',
+            color: rarityText[rarity]?.color || '#fff'
           }}
         >
-          <p>Epic!</p>
+          <p className="text-8xl font-bold">{rarityText[rarity]?.text || 'Epic!'}</p>
         </div>
       )}
       
@@ -171,15 +205,24 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
           <div 
             className={`
               aspect-square w-full
-              border-4 border-purple-500/50 rounded-full
+              border-[8px] border-purple-500
+              rounded-full
               flex items-center justify-center
               bg-purple-900/20 backdrop-blur-sm
               cursor-pointer
               overflow-hidden
+              shadow-[0_0_50px_rgba(168,85,247,0.5)]
+              transition-all duration-300
               ${styles.coin}
               ${isFlipping ? (isHeads ? styles.flipHeads : styles.flipTails) : ''}
               ${isCoinMovingRight ? styles.moveRight : ''}
             `}
+            style={{
+              borderColor: isFlipping ? colors[colorCounter].border : 'rgb(168,85,247)',
+              boxShadow: isFlipping 
+                ? `0 0 50px ${colors[colorCounter].border}80` 
+                : '0 0 50px rgba(168,85,247,0.5)'
+            }}
             onDrop={handleFileDrop}
             onDragOver={(e) => e.preventDefault()}
             onClick={flipCoin}
@@ -198,16 +241,11 @@ const ImageDrop: React.FC<ImageDropProps> = ({ onSubmit }) => {
                   src={image}
                   alt="Preview"
                   className={`
-                    max-w-full max-h-full object-contain
+                    w-full h-full object-cover
                     ${isAnimating ? 'animate-pulse' : ''}
                   `}
                 />
-                <IconButton
-                  className="absolute top-4 right-4 bg-white/10 hover:bg-white/20"
-                  onClick={clearImage}
-                >
-                  <DeleteIcon className="text-white/90" />
-                </IconButton>
+            
               </div>
             )}
           </div>

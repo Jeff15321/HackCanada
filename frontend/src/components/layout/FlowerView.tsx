@@ -26,7 +26,7 @@ const FlowerView: React.FC = () => {
 
             {/* Right side - Payment and Details */}
             <div className="w-[20vw]">
-               <Payment value={1500} /> 
+               <Payment /> 
             </div>
           </div>
         </div>

@@ -7,27 +7,37 @@ import { useModel } from '@/contexts/ModelContext';
 import { useImage } from '@/contexts/ImageContext';
 import router from 'next/router';
 
-interface GPTResponse {
-  shape: {
-    analysis: string;
-    rating: string;
+interface FlowerParameters {
+  colorVibrancy: {
+    score: number;
+    explanation: string;
   };
-  color: {
-    analysis: string;
-    rating: string;
+  leafAreaIndex: {
+    score: number;
+    explanation: string;
   };
-  health: {
-    analysis: string;
-    rating: string;
+  wilting: {
+    score: number;
+    explanation: string;
   };
-  development: {
-    analysis: string;
-    rating: string;
+  spotting: {
+    score: number;
+    explanation: string;
   };
-  attributes: {
-    attribute: string;
-    rarity: string;
-  }[];
+  symmetry: {
+    score: number;
+    explanation: string;
+  };
+}
+
+interface FlowerModel {
+  glbFileUrl: string;
+  parameters: FlowerParameters;
+  name: string;
+  walletID: string;
+  price: number;
+  imageUrl: string;
+  special: { attribute: string; rarity: number; }[];
 }
 
 const Profile = () => {
@@ -35,18 +45,10 @@ const Profile = () => {
   const { selectedFile, imageUrl, isAnalyzing, setIsAnalyzing } = useImage();
   const { model, setModel } = useModel();
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (flowerName: string) => {
     try {
-      if (!selectedFile) {
-        throw new Error('Please select an image first');
-      }
-      
-      if (!user?.id) {
-        throw new Error('Please log in to submit an image');
-      }
-
-      if (!imageUrl) {
-        throw new Error('Image URL not found');
+      if (!selectedFile || !user?.id || !imageUrl) {
+        throw new Error('Missing required data');
       }
 
       const randomAttributes = {
@@ -56,59 +58,28 @@ const Profile = () => {
         sunlight: Math.floor(Math.random() * 100)
       };
 
-      // Call the API and store the full response
       const response = await newImage(
         user.id, 
         imageUrl, 
-        model?.name, 
+        flowerName,
         model?.description, 
         model?.imageUrl, 
         selectedFile, 
         randomAttributes
       );
 
-      try {
-        console.log("analysis:", response.api2_data.analysis);
-        // Remove markdown code block markers and clean the string
-        const cleanJsonString = response.api2_data.analysis
-          .replace(/```json\n/, '')  // Remove opening markdown
-          .replace(/```$/, '')       // Remove closing markdown
-          .trim();                   // Remove extra whitespace
-        
-        const api2_data = JSON.parse(cleanJsonString) as GPTResponse;
-        console.log("api2_data:", api2_data);
-        
-        // Update the model with the parsed data
-        setModel({
-          id: crypto.randomUUID(),
-          name: model?.name || 'Default Name',
-          description: cleanJsonString, // Store the cleaned JSON string
-          imageUrl: imageUrl,
-          image: selectedFile,
-          threeDModel: null,
-          attributes: {
-            shape: Number(api2_data.shape.rating.replace('%', '')),
-            color: Number(api2_data.color.rating.replace('%', '')),
-            health: Number(api2_data.health.rating.replace('%', '')),
-            development: Number(api2_data.development.rating.replace('%', '')),
-            attributes: api2_data.attributes.map(attr => ({
-              attribute: attr.attribute,
-              rarity: Number(attr.rarity)
-            })),
-          }
-        });
+      const newModel: FlowerModel = {
+        ...response,
+        name: flowerName,
+        imageUrl: response.imageUrl || '',
+        special: response.special || []
+      };
 
-        // Move setIsAnalyzing after successful model update
-      } catch (error) {
-        console.error('Error parsing api2_data:', error);
-      }
-      
-      // Log the full response
-      return response;
-      
+      setModel(newModel);
+      return newModel;
     } catch (error) {
       console.error('Error submitting image:', error);
-      alert(error instanceof Error ? error.message : 'An error occurred');
+      throw error;
     }
   };
   return (

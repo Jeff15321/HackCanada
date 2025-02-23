@@ -20,10 +20,11 @@ const ItemMenu: React.FC<ItemMenuProps> = ({ models }) => {
 
   const getRarityColor = (model: Model) => {
     const stats = {
-      health: model?.attributes?.health || 0,
-      waterLevel: model?.attributes?.shape || 0,
-      sunlight: model?.attributes?.color || 0,
-      growth: model?.attributes?.development || 0
+      colorVibrancy: model?.parameters?.colorVibrancy || { score: 0, explanation: '' },
+      leafAreaIndex: model?.parameters?.leafAreaIndex || { score: 0, explanation: '' },
+      wilting: model?.parameters?.wilting || { score: 0, explanation: '' },
+      spotting: model?.parameters?.spotting || { score: 0, explanation: '' },
+      symmetry: model?.parameters?.symmetry || { score: 0, explanation: '' }
     };
     const rarity = calculateRarity(stats);
     return RARITY_COLORS[rarity];
@@ -44,7 +45,7 @@ const ItemMenu: React.FC<ItemMenuProps> = ({ models }) => {
             {/* Image */}
             <div className="w-full h-[40vh] overflow-hidden">
               <img 
-                src={model.imageUrl} 
+                src={model.glbFileUrl} 
                 alt={model.name}
                 className="w-full h-full object-cover transform group-hover:scale-110 
                   transition-transform duration-300"

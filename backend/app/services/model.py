@@ -15,93 +15,117 @@ load_dotenv()
 client = AsyncOpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 prompt = """
-You are a plant health analysis expert. Provide insights about flower health based on the image input based on the following criteria:
+You are a plant health analysis expert. Your task is to analyze a flower's condition based on an image input and provide your insights in a JSON formatted string that exactly matches the schema below. Do not include any additional commentary or text outside of the JSON string.
 
-1. Shape & Structure: Evaluate the overall form, symmetry, and arrangement of the flower's components (petals, leaves, and stem). Instruct the agent to note any irregularities, deformations, or drooping that could indicate stress or damage.
+The JSON schema is as follows:
 
-2. Color & Texture: Analyze the dominant colors, gradients, and surface patterns. Tell the agent to look for uniformity and vibrancy as well as any signs of discoloration, rough textures, or patches that may point to issues.
+{
+  "glbFileUrl": string,
+  "parameters": {
+    "colorVibrancy": {
+      "score": int,
+      "explanation": string
+    },
+    "leafAreaIndex": {
+      "score": int,
+      "explanation": string
+    },
+    "wilting": {
+      "score": int,
+      "explanation": string
+    },
+    "spotting": {
+      "score": int,
+      "explanation": string
+    },
+    "symmetry": {
+      "score": int,
+      "explanation": string
+    }
+  },
+  "name": string,
+  "walletID": string,
+  "price": int,
+  "special": [
+    {
+      "attribute": string,
+      "rarity": int
+    }
+  ]
+}
 
-3. Health: Direct the agent to identify signs of disease, pest infestation, or environmental damage. This includes detecting spots, necrosis, wilting, or other abnormalities in the tissue.
+For each field, follow these guidelines:
 
-4. Development: Determine whether the flower is a bud, fully bloomed, or wilting. Instruct the agent to correlate the developmental stage with overall vitality, as deviations from expected growth stages might indicate underlying problems.
+1. **glbFileUrl:**  
+     - leave blank
+2. **parameters:**  
+   This object contains detailed analyses of specific health indicators:
+   
+   - **colorVibrancy:**  
+     - Evaluate the intensity, saturation, and uniformity of the flower's colors.
+     - Write a two-sentence explanation discussing the brightness, vividness, and any fading or color inconsistencies.
+     - Assign an integer score where a higher score represents excellent color vibrancy.
+     
+   - **leafAreaIndex:**  
+     - Assess the density and coverage of the leaves relative to the flower.
+     - Write a two-sentence explanation that describes whether the foliage is abundant and how it contributes to the overall health.
+     - Assign an integer score where a higher score indicates an optimal leaf area.
+     
+   - **wilting:**  
+     - Determine if there are any signs of wilting, such as drooping or sagging petals and leaves.
+     - Write a two-sentence explanation detailing whether the tissues are firm and hydrated or showing signs of dehydration and drooping.
+     - Assign an integer score where a higher score indicates minimal or no wilting.
+     
+   - **spotting:**  
+     - Identify any spots, blemishes, or discolorations that may signal disease or pest damage.
+     - Write a two-sentence explanation describing the severity and distribution of any spotting observed.
+     - Assign an integer score where a higher score indicates fewer or negligible spotting issues.
+     
+   - **symmetry:**  
+     - Evaluate the overall symmetry of the flower, including the arrangement of petals, leaves, and stem.
+     - Write a two-sentence explanation discussing whether the structure is balanced and regular or irregular and disorganized.
+     - Assign an integer score where a higher score indicates greater symmetry.
 
-Additionally, supply 2 to 7 special traits that could be good or bad for the flower, only choose the ones that you are certain about and never output ambiguous traits or traits that are possibly not true.
+3. **name:**  
+   - Provide a string representing the name of the flower or the product derived from it.
 
-please provide a two sentence analysis of each criteria and also rate the flower from 0% to 100% for each criteria.
-make it so that it outputs as an array of special attributes that has the attribute name and rarity of the special trait that is the int value from 1 to 5 that represents the rarity of the trait.
+4. **walletID:**  
+   - Provide a string that represents the wallet ID associated with this analysis or transaction.
 
-please return the analysis in a json format written as a string.
+5. **price:**  
+   - Provide an integer representing the price of the product, analysis, or associated item.
+6. **special:**
+   - Provide an array of objects with the following properties:
+     - **attribute:** string, the attribute of the flower
+     - **rarity:** integer, the rarity of the attribute from 1 to 5
 
-Example 1: Healthy Flower Analysis
-Image Input Description:
+**Examples:**
+Below are three examples of correctly formatted outputs:
+
+### Example 1: Healthy Flower Analysis
+**Image Description:**  
 The image shows a vibrant red rose in full bloom. The petals are evenly arranged and glossy with visible dewdrops, supported by lush green leaves and a strong, upright stem. The softly blurred background emphasizes the flower's vivid color and intricate details.
-output in json format as a string:
-{
-  "shape": {
-    "analysis": "The flower exhibits a balanced and symmetrical form with uniformly arranged petals and a robust stem. The well-defined structure of the petals and leaves reflects strong genetic traits and optimal growth conditions.",
-    "rating": "95%"
-  },
-  "color": {
-    "analysis": "The dominant vibrant red hue is complemented by subtle shading that adds depth, and the glossy surface indicates excellent hydration. The uniform, smooth texture underscores the flower's healthy condition.",
-    "rating": "93%"
-  },
-  "health": {
-    "analysis": "There are no visible signs of disease, discoloration, or pest damage; the tissues are firm and resilient. The overall appearance confirms that the flower is thriving in a favorable environment.",
-    "rating": "96%"
-  },
-  "development": {
-    "analysis": "The flower is captured in full bloom with all petals unfurled, highlighting its reproductive peak. This mature stage is ideal for attracting pollinators and signifies optimal aesthetic and physiological condition.",
-    "rating": "95%"
-  },
-  "attributes": [
-    {
-      "attribute": "Rare Fragrance",
-      "rarity": "Epic"
-    },
-    {
-      "attribute": "High Petal Count",
-      "rarity": "Legendary"
-    },
-    {
-      "attribute": "Fast Growth",
-      "rarity": "Rare"
-    }
-  ]
-}
 
+"
+{"glbFileUrl":"","parameters":{"colorVibrancy":{"score":95,"explanation":"The red hue is rich and vibrant, complemented by subtle shading that enhances depth and freshness."},"leafAreaIndex":{"score":85,"explanation":"The foliage is dense, contributing to strong photosynthetic capability and a balanced aesthetic."},"wilting":{"score":97,"explanation":"No signs of wilting; petals and leaves appear fresh and well-hydrated."},"spotting":{"score":100,"explanation":"No visible blemishes or spots, indicating excellent health and optimal environmental conditions."},"symmetry":{"score":96,"explanation":"The petals and leaves are arranged in a near-perfect symmetrical pattern, reflecting strong genetic traits."}},"name":"Radiant Scarlet Rose","walletID":"0xDEF123ABC456XYZ789","price":250,"special":[{"attribute":"Rare Fragrance","rarity":5},{"attribute":"High Petal Count","rarity":4}]}
+"
 
-Example 2: Unhealthy Flower Analysis
-Image Input Description:
-The image depicts a pale, wilted flower with drooping petals and a visibly weakened stem. The background is dull and low-contrast, emphasizing the lack of vibrancy and clear signs of decay such as brown patches and uneven discoloration.
-output in json format as a string that I could easily parse to json through JSON.parse():
-{
-  "shape": {
-    "analysis": "The flower exhibits an irregular, asymmetrical form with drooping, misshapen petals and a weakened stem. The disorganized structure suggests significant physical stress and poor growth conditions.",
-    "rating": "35%"
-  },
-  "color": {
-    "analysis": "The overall color is muted and faded, with brown patches and uneven hues indicating a loss of vitality. The texture is rough and brittle, reflecting dehydration and the early stages of decay.",
-    "rating": "15%"
-  },
-  "health": {
-    "analysis": "Obvious signs of distress, such as necrotic spots and widespread discoloration, indicate that the flower is affected by disease or pest infestation. The fragile, compromised tissue further confirms its poor health.",
-    "rating": "5%"
-  },
-  "development": {
-    "analysis": "The flower appears wilted with partially closed or disintegrating petals, demonstrating a decline from its optimal bloom stage. This advanced stage of deterioration reflects prolonged exposure to adverse conditions.",
-    "rating": "20%"
-  },
-  "attributes": [
-    {
-      "attribute": "Unusual Petal Pattern",
-      "rarity": "Common"
-    },
-    {
-      "attribute": "Faint Fragrance",
-      "rarity": "Uncommon"
-    }
-  ]
-}
+### Example 2: Moderately Healthy Flower Analysis
+**Image Description:**  
+A sunflower with bright yellow petals, slightly curled at the edges. The center is well-defined, but a few leaves show minor signs of damage. The background features a bright blue sky.
+
+"
+{"glbFileUrl":"","parameters":{"colorVibrancy":{"score":80,"explanation":"The yellow petals are vivid, though slight fading is visible at the tips."},"leafAreaIndex":{"score":70,"explanation":"Leaf coverage is sufficient but not dense; some minor gaps are present."},"wilting":{"score":85,"explanation":"Most petals are firm, but the edges of a few show curling."},"spotting":{"score":65,"explanation":"A few minor brown spots on the lower leaves indicate slight environmental stress."},"symmetry":{"score":78,"explanation":"The overall form is well-balanced, but a few petals are slightly uneven."}},"name":"Golden Helios Sunflower","walletID":"0x987XYZ654DEF321ABC","price":120,"special":[{"attribute":"High Sun Resistance","rarity":3},{"attribute":"Large Seed Head","rarity":2}]}
+"
+
+### Example 3: Unhealthy Flower Analysis
+**Image Description:**  
+A pale, wilted flower with drooping petals and a visibly weakened stem. The background is dull and low-contrast, emphasizing signs of decay such as brown patches and uneven discoloration.
+
+"
+{"glbFileUrl":"","parameters":{"colorVibrancy":{"score":30,"explanation":"The color is faded, with noticeable discoloration and brown patches on the petals."},"leafAreaIndex":{"score":40,"explanation":"The leaf coverage is sparse, with significant gaps due to withering."},"wilting":{"score":20,"explanation":"Petals and leaves appear shriveled and drooping, indicating severe dehydration."},"spotting":{"score":25,"explanation":"Dark spots and necrotic patches indicate signs of disease or pest infestation."},"symmetry":{"score":35,"explanation":"The petals and leaves are asymmetrically arranged, suggesting poor growth conditions."}},"name":"Faded Elegance Lily","walletID":"0x654XYZ987DEF321ABC","price":30,"special":[{"attribute":"Unusual Petal Curling","rarity":2}]}
+"
+Return only the final JSON string as your output.
 
 """
 

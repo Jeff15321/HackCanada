@@ -188,7 +188,26 @@ export const newImage = async (
       },
     });
 
-    return response.data;
+    // Clean and parse the API response
+    const cleanJsonString = response.data.api2_data.analysis
+      .replace(/```json\n/, '')  // Remove opening markdown
+      .replace(/\n```$/, '')     // Remove closing markdown
+      .trim();                   // Remove extra whitespace
+
+    const analysisData = JSON.parse(cleanJsonString);
+
+    const model: Model = {
+      glbFileUrl: imageUrl,
+      parameters: analysisData.parameters,
+      name: modelName || 'Default Name',
+      walletID: userId,
+      price: analysisData.price || 0,
+      id: userId,
+      imageUrl: imageUrl,
+      special: analysisData.special || []
+    };
+
+    return model;
   } catch (error) {
     console.error('Error in newImage:', error);
     throw error;
@@ -212,49 +231,37 @@ export const fetchAllModels = async (currentModel?: any) => {
         return Math.min(100, Math.max(0, baseValue + (Math.random() * 30 - 15)));
     };
 
-    const generateModel = (id: number, baseModel?: any) => {
-        const attributes = baseModel?.attributes || {
-            shape: Math.random() * 100,
-            color: Math.random() * 100,
-            health: Math.random() * 100,
-            development: Math.random() * 100
-        };
+    const generateModel = (id: number, currentModel?: Model): Model => {
+        const imageUrl = `https://picsum.photos/800/800?random=${id}`;
+        
+        // Generate 1-3 random special traits
+        const specialTraits = Array.from({ length: Math.floor(Math.random() * 3) + 1 }, () => ({
+            attribute: ["Rare Pattern", "Unique Color", "Golden Ratio", "Perfect Symmetry", "Vibrant Aura"][Math.floor(Math.random() * 5)],
+            rarity: Math.floor(Math.random() * 5) + 1
+        }));
 
         return {
+            glbFileUrl: imageUrl,
+            parameters: {
+                colorVibrancy: { score: Math.random() * 100, explanation: "Color analysis" },
+                leafAreaIndex: { score: Math.random() * 100, explanation: "Leaf analysis" },
+                wilting: { score: Math.random() * 100, explanation: "Wilting analysis" },
+                spotting: { score: Math.random() * 100, explanation: "Spotting analysis" },
+                symmetry: { score: Math.random() * 100, explanation: "Symmetry analysis" }
+            },
+            name: `Flower ${id}`,
+            walletID: `wallet_${id}`,
+            price: Math.floor(Math.random() * 1000),
             id: id.toString(),
-            name: `Mystic Flower ${id}`,
+            imageUrl: imageUrl,
+            special: specialTraits,
             description: JSON.stringify({
-                shape: {
-                    analysis: "Unique petal arrangement",
-                    rating: `${generateSimilarAttributes(attributes.shape)}%`
-                },
-                color: {
-                    analysis: "Vibrant hues",
-                    rating: `${generateSimilarAttributes(attributes.color)}%`
-                },
-                health: {
-                    analysis: "Excellent condition",
-                    rating: `${generateSimilarAttributes(attributes.health)}%`
-                },
-                development: {
-                    analysis: "Well developed",
-                    rating: `${generateSimilarAttributes(attributes.development)}%`
-                }
-            }),
-            imageUrl: getRandomImage(),
-            image: new File([""], "placeholder.jpg", { type: "image/jpeg" }),
-            threeDModel: null,
-            attributes: {
-                shape: generateSimilarAttributes(attributes.shape),
-                color: generateSimilarAttributes(attributes.color),
-                health: generateSimilarAttributes(attributes.health),
-                development: generateSimilarAttributes(attributes.development),
-                attributes: [
-                    { attribute: "Rare Pattern", rarity: Math.floor(Math.random() * 5) + 1 },
-                    { attribute: "Unique Color", rarity: Math.floor(Math.random() * 5) + 1 },
-                    { attribute: "Special Trait", rarity: Math.floor(Math.random() * 5) + 1 }
-                ]
-            }
+                colorVibrancy: { analysis: "Detailed color analysis" },
+                leafAreaIndex: { analysis: "Detailed leaf analysis" },
+                wilting: { analysis: "Detailed wilting analysis" },
+                spotting: { analysis: "Detailed spotting analysis" },
+                symmetry: { analysis: "Detailed symmetry analysis" }
+            })
         };
     };
 

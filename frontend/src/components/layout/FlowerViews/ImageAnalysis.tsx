@@ -53,8 +53,21 @@ const TRAIT_RARITY_COLORS: Record<number, string> = {
   5: RARITY_COLORS.Legendary    // Legendary
 };
 
-export const calculateRarity = (stats: { health: number; waterLevel: number; sunlight: number; growth: number }): Rarity => {
-  const average = (stats.health + stats.waterLevel + stats.sunlight + stats.growth) / 4;
+export const calculateRarity = (stats: { 
+  colorVibrancy: { score: number; explanation: string };
+  leafAreaIndex: { score: number; explanation: string };
+  wilting: { score: number; explanation: string };
+  spotting: { score: number; explanation: string };
+  symmetry: { score: number; explanation: string };
+}): Rarity => {
+  const average = (
+    stats.colorVibrancy.score + 
+    stats.leafAreaIndex.score + 
+    stats.wilting.score + 
+    stats.spotting.score + 
+    stats.symmetry.score
+  ) / 5;
+
   if (average >= 80) return 'Legendary';
   if (average >= 60) return 'Epic';
   if (average >= 40) return 'Rare';
@@ -79,7 +92,13 @@ const generateRandomStats = () => {
   };
 };
 
-const AnimatedStat: React.FC<{ value: number; label: string; color: string }> = ({ value, label, color }) => {
+interface AnimatedStatProps {
+  value: number;
+  label: string;
+  color: string;
+}
+
+const AnimatedStat: React.FC<AnimatedStatProps> = ({ value, label, color }) => {
   const [width, setWidth] = useState(0);
   const [count, setCount] = useState(0);
   
@@ -120,7 +139,7 @@ const AnimatedStat: React.FC<{ value: number; label: string; color: string }> = 
             className="h-full transition-all duration-[1500ms] ease-out"
             style={{ 
               width: `${width}%`,
-              backgroundColor: color || '#0ea5e9',
+              backgroundColor: color,
             }}
           />
         </div>
@@ -131,7 +150,12 @@ const AnimatedStat: React.FC<{ value: number; label: string; color: string }> = 
 };
 
 // Add this type at the top with other interfaces
-type AttributeType = 'shape' | 'color' | 'health' | 'development';
+type AttributeType = 'colorVibrancy' | 'leafAreaIndex' | 'wilting' | 'spotting' | 'symmetry';
+
+interface Trait {
+  attribute: string;
+  rarity: number;
+}
 
 const ImageAnalysis: React.FC = () => {
   const { model } = useModel();
@@ -143,10 +167,11 @@ const ImageAnalysis: React.FC = () => {
 
   // Get stats from model attributes
   const stats = {
-    health: model?.attributes?.health || 0,
-    waterLevel: model?.attributes?.shape || 0,
-    sunlight: model?.attributes?.color || 0,
-    growth: model?.attributes?.development || 0
+    colorVibrancy: model?.parameters?.colorVibrancy || { score: 0, explanation: '' },
+    leafAreaIndex: model?.parameters?.leafAreaIndex || { score: 0, explanation: '' },
+    wilting: model?.parameters?.wilting || { score: 0, explanation: '' },
+    spotting: model?.parameters?.spotting || { score: 0, explanation: '' },
+    symmetry: model?.parameters?.symmetry || { score: 0, explanation: '' }
   };
 
   const rarity = calculateRarity(stats);
@@ -155,12 +180,12 @@ const ImageAnalysis: React.FC = () => {
   const flowerData = {
     name: model?.name || "Crypto Rose",
     rarity,
-    health: stats.health,
-    shape: stats.waterLevel,
-    color: stats.sunlight,
-    development: stats.growth,
-    traits: model?.attributes?.attributes || [],
-    status: stats.health > 70 ? "Thriving" : "Struggling",
+    health: stats.colorVibrancy.score,
+    shape: stats.leafAreaIndex.score,
+    color: stats.wilting.score,
+    development: stats.spotting.score,
+    traits: Array.isArray(model?.special) ? model.special : [],
+    status: stats.colorVibrancy.score > 70 ? "Thriving" : "Struggling",
   };
 
   // Add state for selected attribute
@@ -168,14 +193,8 @@ const ImageAnalysis: React.FC = () => {
   
   // Add this function to get the description from the model
   const getAttributeDescription = () => {
-    if (!selectedAttribute || !model?.description) return null;
-    try {
-      const data = JSON.parse(model.description);
-      return data[selectedAttribute]?.analysis || null;
-    } catch (error) {
-      console.error('Error parsing description:', error);
-      return null;
-    }
+    if (!selectedAttribute || !model?.parameters) return null;
+    return model.parameters[selectedAttribute].explanation;
   };
 
   return (
@@ -207,101 +226,91 @@ const ImageAnalysis: React.FC = () => {
         </div>
 
         {/* Right: Analysis */}
-        <div className="w-full md:w-5/12 p-6 flex flex-col">
-          {/* Vital Stats */}
-          <div className="flex flex-col gap-6">
-            <div 
-              className="cursor-pointer transition-all hover:opacity-80"
-              onClick={() => setSelectedAttribute('health')}
-            >
-              <AnimatedStat 
-                value={Math.round(flowerData.health)}
-                label="Health" 
-                color={selectedAttribute === 'health' ? rarityColor : '#0ea5e9'} 
-              />
-            </div>
-            <div 
-              className="cursor-pointer transition-all hover:opacity-80"
-              onClick={() => setSelectedAttribute('shape')}
-            >
-              <div className="flex items-center gap-3">
-                <OpacityIcon className="text-cyan-400" />
-                <AnimatedStat 
-                  value={Math.round(flowerData.shape)}
-                  label="Shape & Structure" 
-                  color={selectedAttribute === 'shape' ? rarityColor : '#0ea5e9'} 
-                />
+        <div className="w-full md:w-5/12 p-6 flex flex-col h-full">
+          {/* Main content wrapper with flex */}
+          <div className="flex flex-col h-full gap-4">
+            {/* Vital Stats - flex-grow-0 to maintain size */}
+            <div className="flex-shrink-0">
+              <div className="flex flex-col gap-3">
+                <div className="cursor-pointer transition-all hover:opacity-80" onClick={() => setSelectedAttribute('colorVibrancy')}>
+                  <AnimatedStat 
+                    value={Math.floor(stats.colorVibrancy.score)}
+                    label="Color Vibrancy" 
+                    color={selectedAttribute === 'colorVibrancy' ? rarityColor : '#0ea5e9'}
+                  />
+                </div>
+                <div className="cursor-pointer transition-all hover:opacity-80" onClick={() => setSelectedAttribute('leafAreaIndex')}>
+                  <AnimatedStat 
+                    value={Math.floor(stats.leafAreaIndex.score)}
+                    label="Leaf Area Index" 
+                    color={selectedAttribute === 'leafAreaIndex' ? rarityColor : '#0ea5e9'}
+                  />
+                </div>
+                <div className="cursor-pointer transition-all hover:opacity-80" onClick={() => setSelectedAttribute('wilting')}>
+                  <AnimatedStat 
+                    value={Math.floor(stats.wilting.score)}
+                    label="Wilting" 
+                    color={selectedAttribute === 'wilting' ? rarityColor : '#0ea5e9'}
+                  />
+                </div>
+                <div className="cursor-pointer transition-all hover:opacity-80" onClick={() => setSelectedAttribute('spotting')}>
+                  <AnimatedStat 
+                    value={Math.floor(stats.spotting.score)}
+                    label="Spotting" 
+                    color={selectedAttribute === 'spotting' ? rarityColor : '#0ea5e9'}
+                  />
+                </div>
+                <div className="cursor-pointer transition-all hover:opacity-80" onClick={() => setSelectedAttribute('symmetry')}>
+                  <AnimatedStat 
+                    value={Math.floor(stats.symmetry.score)}
+                    label="Symmetry" 
+                    color={selectedAttribute === 'symmetry' ? rarityColor : '#0ea5e9'}
+                  />
+                </div>
               </div>
             </div>
-            <div 
-              className="cursor-pointer transition-all hover:opacity-80"
-              onClick={() => setSelectedAttribute('color')}
-            >
-              <div className="flex items-center gap-2">
-                <WbSunnyIcon className="text-[#1B998B]" />
-                <AnimatedStat 
-                  value={Math.round(flowerData.color)}
-                  label="Color & Texture" 
-                  color={selectedAttribute === 'color' ? rarityColor : '#0ea5e9'} 
-                />
+
+            <hr className="border-t border-gray-700" />
+
+            {/* Special Traits - flex-grow-0 to maintain size */}
+            <div className="flex-shrink-0">
+              <div className="bg-gray-800/50 rounded-xl p-3 border border-cyan-400/20">
+                <div className="flex flex-wrap gap-2">
+                  {flowerData.traits.map((trait: Trait, index: number) => {
+                    const traitColor = TRAIT_RARITY_COLORS[trait.rarity] || '#0ea5e9';
+                    return (
+                      <span
+                        key={index}
+                        className={`
+                          py-1.5 px-3 rounded-lg text-sm font-medium
+                          transition-all duration-300 hover:scale-105
+                          bg-gray-800 border border-cyan-400/20
+                        `}
+                        style={{ 
+                          color: traitColor,
+                          boxShadow: trait.rarity === 5 ? `0 0 10px ${traitColor}30` : 'none'
+                        }}
+                      >
+                        <span className="font-bold">{trait.attribute}</span>
+                        <span className="opacity-75 ml-1">({trait.rarity})</span>
+                      </span>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-            <div 
-              className="cursor-pointer transition-all hover:opacity-80"
-              onClick={() => setSelectedAttribute('development')}
-            >
-              <div className="flex items-center gap-2">
-                <TimelapseIcon className="text-[#1B998B]" />
-                <AnimatedStat 
-                  value={Math.round(flowerData.development)} 
-                  label="Development" 
-                  color={selectedAttribute === 'development' ? rarityColor : '#0ea5e9'} 
-                />
+
+            <hr className="border-t border-gray-700" />
+
+            {/* Attribute Description - flex-grow-1 to fill remaining space */}
+            <div className="flex-grow">
+              <div className="h-full rounded-lg bg-gray-800/50 border border-cyan-400/20 p-4 overflow-y-auto">
+                {selectedAttribute ? (
+                  <p className="text-gray-300">{getAttributeDescription()}</p>
+                ) : (
+                  <p className="text-gray-400 italic">Click on any attribute above to see its detailed analysis</p>
+                )}
               </div>
-            </div>
-          </div>
-
-          <hr className="border-t border-gray-700 my-6" />
-
-          {/* Special Traits */}
-          <div className="bg-gray-800/50 rounded-xl p-4 border border-cyan-400/20">
-            <div className="flex flex-wrap gap-3">
-              {flowerData.traits.map((trait, index) => {
-                const traitColor = TRAIT_RARITY_COLORS[trait.rarity] || '#0ea5e9';
-                return (
-                  <span
-                    key={index}
-                    className={`
-                      py-1.5 px-3 rounded-lg text-sm font-medium
-                      transition-all duration-300 hover:scale-105
-                      bg-gray-800 border border-cyan-400/20
-                    `}
-                    style={{ 
-                      color: traitColor,
-                      boxShadow: trait.rarity === 5 ? `0 0 10px ${traitColor}30` : 'none'
-                    }}
-                  >
-                    <span className="font-bold">{trait.attribute}</span>
-                    <span className="opacity-75 ml-1">({trait.rarity})</span>
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-
-          <hr className="border-t border-gray-700 my-6" />
-
-          {/* Attribute Description */}
-          <div className="flex-1">
-            <div className={`
-              p-4 rounded-lg transition-all duration-300
-              h-full max-h-[25vh] overflow-y-auto bg-gray-800/50 border border-cyan-400/20
-            `}>
-              {selectedAttribute ? (
-                <p className="text-gray-300">{getAttributeDescription()}</p>
-              ) : (
-                <p className="text-gray-400 italic">Click on any attribute above to see its detailed analysis</p>
-              )}
             </div>
           </div>
         </div>
