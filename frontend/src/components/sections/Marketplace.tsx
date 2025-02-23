@@ -57,7 +57,7 @@ const Marketplace = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-transparent">
       <div className="h-full flex flex-col">
         <div className="flex-1 overflow-y-auto scrollbar-hide">
           {/* Header */}

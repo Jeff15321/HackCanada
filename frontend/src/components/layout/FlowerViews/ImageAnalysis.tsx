@@ -4,6 +4,8 @@ import OpacityIcon from '@mui/icons-material/Opacity';
 import WbSunnyIcon from '@mui/icons-material/WbSunny';
 import TimelapseIcon from '@mui/icons-material/Timelapse';
 import { useModel } from '@/contexts/ModelContext';
+import { useRouter } from 'next/router';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 
 /* 
@@ -53,9 +55,9 @@ const TRAIT_RARITY_COLORS: Record<number, string> = {
 
 export const calculateRarity = (stats: { health: number; waterLevel: number; sunlight: number; growth: number }): Rarity => {
   const average = (stats.health + stats.waterLevel + stats.sunlight + stats.growth) / 4;
-  if (average >= 55) return 'Legendary';
-  if (average >= 45) return 'Epic';
-  if (average >= 30) return 'Rare';
+  if (average >= 80) return 'Legendary';
+  if (average >= 60) return 'Epic';
+  if (average >= 40) return 'Rare';
   if (average >= 20) return 'Common';
   return 'Garbage';
 };
@@ -78,10 +80,15 @@ const generateRandomStats = () => {
 };
 
 const AnimatedStat: React.FC<{ value: number; label: string; color: string }> = ({ value, label, color }) => {
+  const [width, setWidth] = useState(0);
   const [count, setCount] = useState(0);
-  const { model } = useModel();
   
   useEffect(() => {
+    // Reset to 0 when value changes
+    setWidth(0);
+    setCount(0);
+
+    // Animate to target value
     const duration = 1500;
     const steps = 60;
     const increment = value / steps;
@@ -91,10 +98,13 @@ const AnimatedStat: React.FC<{ value: number; label: string; color: string }> = 
     const timer = setInterval(() => {
       currentStep++;
       if (currentStep === steps) {
+        setWidth(value);
         setCount(value);
         clearInterval(timer);
       } else {
-        setCount(Math.min(Math.floor(increment * currentStep), value));
+        const newValue = Math.min(increment * currentStep, value);
+        setWidth(newValue);
+        setCount(Math.floor(newValue));
       }
     }, stepDuration);
 
@@ -104,20 +114,18 @@ const AnimatedStat: React.FC<{ value: number; label: string; color: string }> = 
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1">
-        <p className="text-sm text-gray-600">{label}</p>
-        <div className="w-full h-2 rounded overflow-hidden bg-gray-200">
+        <p className="text-sm text-gray-400">{label}</p>
+        <div className="w-full h-2 rounded overflow-hidden bg-gray-800 border border-cyan-400/10">
           <div 
-            className="h-full" 
+            className="h-full transition-all duration-[1500ms] ease-out"
             style={{ 
-              width: `${value}%`,
-              backgroundColor: color,
-              animation: 'slideRight 1.5s ease-out',
-              transformOrigin: 'left'
+              width: `${width}%`,
+              backgroundColor: color || '#0ea5e9',
             }}
           />
         </div>
       </div>
-      <p className="min-w-[3rem] font-bold" style={{ color }}>{count}%</p>
+      <p className="min-w-[3rem] font-bold text-white">{count}%</p>
     </div>
   );
 };
@@ -127,7 +135,12 @@ type AttributeType = 'shape' | 'color' | 'health' | 'development';
 
 const ImageAnalysis: React.FC = () => {
   const { model } = useModel();
+  const router = useRouter();
   
+  const handleBack = () => {
+    router.back();
+  };
+
   // Get stats from model attributes
   const stats = {
     health: model?.attributes?.health || 0,
@@ -166,43 +179,58 @@ const ImageAnalysis: React.FC = () => {
   };
 
   return (
-    <div className={`h-[85vh] rounded-lg relative bg-white bg-opacity-90 backdrop-blur-md border ${RARITY_CARD_STYLES[rarity]}`}>
-      {/* Background overlay */}
-      <div className="absolute inset-0 pointer-events-none rounded-lg" style={{ background: RARITY_BACKGROUNDS[rarity] }}></div>
-      
-      <div className="flex flex-col md:flex-row h-full p-4">
+    <div className={`h-[85vh] rounded-lg relative bg-gray-900 border border-cyan-400/20`}>
+      <div className="flex flex-col md:flex-row h-full">
         {/* Left: Image Display */}
-        <div className="w-full md:w-7/12 p-4 flex items-center justify-center border-b md:border-b-0 md:border-r border-gray-200">
-          <div className="rounded-md overflow-hidden shadow-lg">
-            <img src={model?.imageUrl} alt="Analyzed Flower" className="object-contain max-h-[70vh]" />
+        <div className="w-full md:w-7/12 p-6 flex flex-col">
+          <div className="flex-1 flex items-center justify-center">
+            {/* Square container with fixed aspect ratio */}
+            <div className="relative w-full pt-[100%]"> {/* Creates a square container */}
+              <div className="absolute inset-0 rounded-xl overflow-hidden shadow-2xl">
+                <button 
+                  onClick={handleBack}
+                  className="absolute top-4 left-4 z-10 p-2
+                    bg-gray-900/80 hover:bg-gray-800 text-white rounded-full
+                    border border-cyan-400/20 backdrop-blur-sm transition-all duration-300
+                    hover:scale-110"
+                >
+                  <ArrowBackIcon className="text-cyan-400 text-xl" />
+                </button>
+
+                <img 
+                  src={model?.imageUrl} 
+                  alt="Analyzed Flower" 
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Right: Analysis */}
-        <div className="w-full md:w-5/12 p-4 flex flex-col gap-3">
+        <div className="w-full md:w-5/12 p-6 flex flex-col">
           {/* Vital Stats */}
-          <div className="flex flex-col gap-2">
-            <h2 className="text-xl text-gray-800">Vital Statistics</h2>
+          <div className="flex flex-col gap-6">
             <div 
               className="cursor-pointer transition-all hover:opacity-80"
               onClick={() => setSelectedAttribute('health')}
             >
               <AnimatedStat 
-                value={flowerData.health} 
+                value={Math.round(flowerData.health)}
                 label="Health" 
-                color={selectedAttribute === 'health' ? rarityColor : '#666'} 
+                color={selectedAttribute === 'health' ? rarityColor : '#0ea5e9'} 
               />
             </div>
             <div 
               className="cursor-pointer transition-all hover:opacity-80"
               onClick={() => setSelectedAttribute('shape')}
             >
-              <div className="flex items-center gap-2">
-                <OpacityIcon className="text-[#1B998B]" />
+              <div className="flex items-center gap-3">
+                <OpacityIcon className="text-cyan-400" />
                 <AnimatedStat 
-                  value={flowerData.shape} 
+                  value={Math.round(flowerData.shape)}
                   label="Shape & Structure" 
-                  color={selectedAttribute === 'shape' ? rarityColor : '#666'} 
+                  color={selectedAttribute === 'shape' ? rarityColor : '#0ea5e9'} 
                 />
               </div>
             </div>
@@ -213,9 +241,9 @@ const ImageAnalysis: React.FC = () => {
               <div className="flex items-center gap-2">
                 <WbSunnyIcon className="text-[#1B998B]" />
                 <AnimatedStat 
-                  value={flowerData.color} 
+                  value={Math.round(flowerData.color)}
                   label="Color & Texture" 
-                  color={selectedAttribute === 'color' ? rarityColor : '#666'} 
+                  color={selectedAttribute === 'color' ? rarityColor : '#0ea5e9'} 
                 />
               </div>
             </div>
@@ -226,36 +254,31 @@ const ImageAnalysis: React.FC = () => {
               <div className="flex items-center gap-2">
                 <TimelapseIcon className="text-[#1B998B]" />
                 <AnimatedStat 
-                  value={flowerData.development} 
+                  value={Math.round(flowerData.development)} 
                   label="Development" 
-                  color={selectedAttribute === 'development' ? rarityColor : '#666'} 
+                  color={selectedAttribute === 'development' ? rarityColor : '#0ea5e9'} 
                 />
               </div>
             </div>
           </div>
 
-          <hr className="border-t border-gray-200" />
+          <hr className="border-t border-gray-700 my-6" />
 
           {/* Special Traits */}
-          <div>
-            <h2 className="text-xl text-gray-800">Special Traits</h2>
-            <div className="flex flex-wrap gap-2 mt-2">
+          <div className="bg-gray-800/50 rounded-xl p-4 border border-cyan-400/20">
+            <div className="flex flex-wrap gap-3">
               {flowerData.traits.map((trait, index) => {
-                const traitColor = TRAIT_RARITY_COLORS[trait.rarity] || rarityColor;
+                const traitColor = TRAIT_RARITY_COLORS[trait.rarity] || '#0ea5e9';
                 return (
                   <span
                     key={index}
                     className={`
                       py-1.5 px-3 rounded-lg text-sm font-medium
                       transition-all duration-300 hover:scale-105
-                      ${trait.rarity === 5 ? 'shadow-lg' : ''}
+                      bg-gray-800 border border-cyan-400/20
                     `}
                     style={{ 
-                      backgroundColor: `${traitColor}15`,
                       color: traitColor,
-                      borderWidth: '1.5px',
-                      borderStyle: 'solid',
-                      borderColor: `${traitColor}40`,
                       boxShadow: trait.rarity === 5 ? `0 0 10px ${traitColor}30` : 'none'
                     }}
                   >
@@ -267,23 +290,18 @@ const ImageAnalysis: React.FC = () => {
             </div>
           </div>
 
-          <hr className="border-t border-gray-200" />
+          <hr className="border-t border-gray-700 my-6" />
 
           {/* Attribute Description */}
-          <div className="mt-2">
-            <h2 className="text-xl text-gray-800 mb-2">Analysis Details</h2>
+          <div className="flex-1">
             <div className={`
               p-4 rounded-lg transition-all duration-300
-              h-[20vh] overflow-y-auto
-              ${selectedAttribute 
-                ? 'bg-white/50 border border-gray-200' 
-                : 'bg-gray-100/50 border border-gray-200/50'
-              }
+              h-full max-h-[25vh] overflow-y-auto bg-gray-800/50 border border-cyan-400/20
             `}>
               {selectedAttribute ? (
-                <p className="text-gray-700">{getAttributeDescription()}</p>
+                <p className="text-gray-300">{getAttributeDescription()}</p>
               ) : (
-                <p className="text-gray-500 italic">Click on any attribute above to see its detailed analysis</p>
+                <p className="text-gray-400 italic">Click on any attribute above to see its detailed analysis</p>
               )}
             </div>
           </div>

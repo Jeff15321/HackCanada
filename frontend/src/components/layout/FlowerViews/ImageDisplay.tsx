@@ -10,6 +10,8 @@ import Marketplace from '../../sections/Marketplace';
 import Collection from '../../sections/Collection';
 import Profile from '../../sections/Profile';
 import FlowerView from '../FlowerView';
+import BackgroundWrapper from './BackgroundWrapper';
+
 interface GPTResponse {
   shape: {
     analysis: string;
@@ -124,7 +126,7 @@ const ImageDisplay = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <BackgroundWrapper>
       <div className="h-screen flex">
         <div className="flex-1 overflow-y-auto">
           {/* Navigation at the top */}
@@ -143,7 +145,7 @@ const ImageDisplay = () => {
           </div>
         </div>
       </div>
-    </div>
+    </BackgroundWrapper>
   );
 };
 

@@ -1,14 +1,8 @@
-import { useEffect } from 'react';
-import { useRouter } from 'next/router';
+import React from 'react';
+import ImageDisplay from '../components/layout/FlowerViews/ImageDisplay';
 
-const HomePage = () => {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.push('/image');
-  }, []);
-
-  return null;
+const IndexPage = () => {
+  return <ImageDisplay />;
 };
 
-export default HomePage;
+export default IndexPage; 

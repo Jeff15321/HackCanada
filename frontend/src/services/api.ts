@@ -279,5 +279,16 @@ export const fetchAllModels = async (currentModel?: any) => {
     ];
 };
 
+export const getModelById = async (id: string): Promise<Model> => {
+  const allModels = await fetchAllModels();
+  const model = allModels.find(m => m.id === id);
+  
+  if (!model) {
+    throw new Error('Model not found');
+  }
+  
+  return model;
+};
+
 
 
