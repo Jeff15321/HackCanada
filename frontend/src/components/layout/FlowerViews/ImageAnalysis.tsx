@@ -216,7 +216,7 @@ const ImageAnalysis: React.FC = () => {
                 </button>
 
                 <img 
-                  src={model?.imageUrl} 
+                  src={model?.glbFileUrl} 
                   alt="Analyzed Flower" 
                   className="absolute inset-0 w-full h-full object-cover"
                 />

@@ -50,6 +50,17 @@ async def new_model(
         print(f"Error creating model: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/all/")
+async def get_all_models():
+    """
+    Get all models
+    """
+    try:
+        models = await ModelService.get_all_models()
+        return models
+    except Exception as e:
+        print(f"Error in get_all_models endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # @router.get("/all/")
 # async def get_all_projects(user_id: str):
@@ -109,3 +120,16 @@ async def new_model(
 #         raise HTTPException(
 #             status_code=500, 
 #             detail=f"Failed to get chat history: {str(e)}"
+#         )
+
+@router.post("/{model_id}/update-owner")
+async def update_owner(model_id: str, new_owner_id: str = Form(...)):
+    """
+    Update the owner of a model
+    """
+    try:
+        result = await ModelService.update_owner(model_id, new_owner_id)
+        return result
+    except Exception as e:
+        print(f"Error in update_owner endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))

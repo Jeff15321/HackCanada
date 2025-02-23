@@ -8,12 +8,21 @@ import os
 import base64
 from dotenv import load_dotenv
 from app.core.database import get_database
+from datetime import datetime
+from fastapi import HTTPException
+from pathlib import Path
+import shutil
+from bson import ObjectId
 
 # Load environment variables
 load_dotenv()
 
 # Initialize OpenAI client properly
 openai_client = AsyncOpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+
+# Add this at the top of the file
+UPLOAD_DIR = Path("uploads/images")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 prompt = """
 You are a plant health analysis expert. Your task is to analyze a flower's condition based on an image input and provide your insights in a JSON formatted string that exactly matches the schema below. Do not include any additional commentary or text outside of the JSON string.
@@ -100,6 +109,7 @@ For each field, follow these guidelines:
      - **attribute:** string, the attribute of the flower
      - **rarity:** integer, the rarity of the attribute from 1 to 5
 
+Try to keep the attribute's percentage values from 50% to 70%, but if you think they excel in that field, dont hold back to give very high percentage.
 **Examples:**
 Below are three examples of correctly formatted outputs:
 
@@ -108,7 +118,7 @@ Below are three examples of correctly formatted outputs:
 The image shows a vibrant red rose in full bloom. The petals are evenly arranged and glossy with visible dewdrops, supported by lush green leaves and a strong, upright stem. The softly blurred background emphasizes the flower's vivid color and intricate details.
 
 "
-{"glbFileUrl":"","parameters":{"colorVibrancy":{"score":95,"explanation":"The red hue is rich and vibrant, complemented by subtle shading that enhances depth and freshness."},"leafAreaIndex":{"score":85,"explanation":"The foliage is dense, contributing to strong photosynthetic capability and a balanced aesthetic."},"wilting":{"score":97,"explanation":"No signs of wilting; petals and leaves appear fresh and well-hydrated."},"spotting":{"score":100,"explanation":"No visible blemishes or spots, indicating excellent health and optimal environmental conditions."},"symmetry":{"score":96,"explanation":"The petals and leaves are arranged in a near-perfect symmetrical pattern, reflecting strong genetic traits."}},"name":"Radiant Scarlet Rose","walletID":"0xDEF123ABC456XYZ789","price":250,"special":[{"attribute":"Rare Fragrance","rarity":5},{"attribute":"High Petal Count","rarity":4}]}
+{"glbFileUrl":"","parameters":{"colorVibrancy":{"score":85,"explanation":"The red hue is rich and vibrant, complemented by subtle shading that enhances depth and freshness."},"leafAreaIndex":{"score":85,"explanation":"The foliage is dense, contributing to strong photosynthetic capability and a balanced aesthetic."},"wilting":{"score":97,"explanation":"No signs of wilting; petals and leaves appear fresh and well-hydrated."},"spotting":{"score":90,"explanation":"No visible blemishes or spots, indicating excellent health and optimal environmental conditions."},"symmetry":{"score":80,"explanation":"The petals and leaves are arranged in a near-perfect symmetrical pattern, reflecting strong genetic traits."}},"name":"Radiant Scarlet Rose","walletID":"0xDEF123ABC456XYZ789","price":250,"special":[{"attribute":"Rare Fragrance","rarity":5},{"attribute":"High Petal Count","rarity":4}]}
 "
 
 ### Example 2: Moderately Healthy Flower Analysis
@@ -116,7 +126,7 @@ The image shows a vibrant red rose in full bloom. The petals are evenly arranged
 A sunflower with bright yellow petals, slightly curled at the edges. The center is well-defined, but a few leaves show minor signs of damage. The background features a bright blue sky.
 
 "
-{"glbFileUrl":"","parameters":{"colorVibrancy":{"score":80,"explanation":"The yellow petals are vivid, though slight fading is visible at the tips."},"leafAreaIndex":{"score":70,"explanation":"Leaf coverage is sufficient but not dense; some minor gaps are present."},"wilting":{"score":85,"explanation":"Most petals are firm, but the edges of a few show curling."},"spotting":{"score":65,"explanation":"A few minor brown spots on the lower leaves indicate slight environmental stress."},"symmetry":{"score":78,"explanation":"The overall form is well-balanced, but a few petals are slightly uneven."}},"name":"Golden Helios Sunflower","walletID":"0x987XYZ654DEF321ABC","price":120,"special":[{"attribute":"High Sun Resistance","rarity":3},{"attribute":"Large Seed Head","rarity":2}]}
+{"glbFileUrl":"","parameters":{"colorVibrancy":{"score":50,"explanation":"The yellow petals are vivid, though slight fading is visible at the tips."},"leafAreaIndex":{"score":60,"explanation":"Leaf coverage is sufficient but not dense; some minor gaps are present."},"wilting":{"score":60,"explanation":"Most petals are firm, but the edges of a few show curling."},"spotting":{"score":55,"explanation":"A few minor brown spots on the lower leaves indicate slight environmental stress."},"symmetry":{"score":57,"explanation":"The overall form is well-balanced, but a few petals are slightly uneven."}},"name":"Golden Helios Sunflower","walletID":"0x887XYZ654DEF321ABC","price":80,"special":[{"attribute":"High Sun Resistance","rarity":3},{"attribute":"Large Seed Head","rarity":2}]}
 "
 
 ### Example 3: Unhealthy Flower Analysis
@@ -207,13 +217,66 @@ class ModelService:
                 chat_gpt_analysis()
             )
 
+            # Parse GPT response into JSON
+            try:
+                # Clean the markdown formatting if present
+                analysis_text = api2_result["analysis"]
+                clean_json = analysis_text.replace("```json\n", "").replace("\n```", "").strip()
+                analysis_data = json.loads(clean_json)
+
+                # Save the uploaded file
+                if model_image_file:
+                    # Create a unique filename
+                    file_extension = Path(model_image_file.filename).suffix
+                    unique_filename = f"{datetime.utcnow().timestamp()}{file_extension}"
+                    file_path = UPLOAD_DIR / unique_filename
+                    
+                    # Save the file
+                    with file_path.open("wb") as buffer:
+                        contents = await model_image_file.read()
+                        buffer.write(contents)
+                    await model_image_file.seek(0)
+                    
+                    # Update the URL to point to our saved file
+                    saved_image_url = f"/uploads/images/{unique_filename}"
+                else:
+                    saved_image_url = imageUrl
+
+                # Transform into MongoDB document with the required schema
+                model_doc = {
+                    "glbFileUrl": saved_image_url,
+                    "parameters": {
+                        "colorVibrancy": analysis_data.get("parameters", {}).get("colorVibrancy", {"score": 0, "explanation": ""}),
+                        "leafAreaIndex": analysis_data.get("parameters", {}).get("leafAreaIndex", {"score": 0, "explanation": ""}),
+                        "wilting": analysis_data.get("parameters", {}).get("wilting", {"score": 0, "explanation": ""}),
+                        "spotting": analysis_data.get("parameters", {}).get("spotting", {"score": 0, "explanation": ""}),
+                        "symmetry": analysis_data.get("parameters", {}).get("symmetry", {"score": 0, "explanation": ""})
+                    },
+                    "name": model_name or analysis_data.get("name", ""),
+                    "walletID": userId,
+                    "price": analysis_data.get("price", 0),
+                    "special": analysis_data.get("special", []),
+                    "created_at": datetime.utcnow(),
+                    "combined_score": (api1_result["score"] + api2_result["confidence"]) / 2
+                }
+
+                # Save to MongoDB
+                result = await db.models.insert_one(model_doc)
+
+            except json.JSONDecodeError as e:
+                print(f"Error parsing GPT response as JSON: {str(e)}")
+                raise HTTPException(status_code=500, detail="Failed to parse GPT analysis")
+
+            # Return response with MongoDB ID and saved image URL
             combined_result = {
                 "success": True,
                 "message": "Model created successfully",
+                "model_id": str(result.inserted_id),
+                "saved_image_url": saved_image_url,
                 "api1_data": api1_result,
                 "api2_data": api2_result,
-                "combined_score": (api1_result["score"] + api2_result["confidence"]) / 2,
-                "gpt_analysis": api2_result["analysis"]
+                "combined_score": model_doc["combined_score"],
+                "gpt_analysis": analysis_data
             }
 
             return combined_result
@@ -221,6 +284,61 @@ class ModelService:
         except Exception as e:
             print(f"Error in create_model: {str(e)}")
             raise e
+
+    @staticmethod
+    async def get_all_models():
+        try:
+            db = await get_database()
+            cursor = db.models.find({})
+            models = await cursor.to_list(length=100)
+            
+            # Convert ObjectId to string and format response
+            formatted_models = []
+            for model in models:
+                model['_id'] = str(model['_id'])  # Convert ObjectId to string
+                formatted_models.append({
+                    "glbFileUrl": model.get("glbFileUrl", ""),  # This should be the saved file path
+                    "parameters": model.get("parameters", {}),
+                    "name": model.get("name", ""),
+                    "walletID": model.get("walletID", ""),
+                    "price": model.get("price", 0),
+                    "special": model.get("special", []),
+                    "id": model['_id'],
+                    "created_at": model.get("created_at", "")
+                })
+            
+            print("Returning models with URLs:", [m["glbFileUrl"] for m in formatted_models])  # Debug print
+            return formatted_models
+        except Exception as e:
+            print(f"Error fetching models: {str(e)}")
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @staticmethod
+    async def update_owner(model_id: str, new_owner_id: str):
+        try:
+            db = await get_database()
+            
+            # Check if model exists
+            model = await db.models.find_one({"_id": ObjectId(model_id)})
+            if not model:
+                raise HTTPException(status_code=404, detail="Model not found")
+            
+            # Update the owner
+            result = await db.models.update_one(
+                {"_id": ObjectId(model_id)},
+                {"$set": {"walletID": new_owner_id}}
+            )
+            
+            if result.modified_count == 0:
+                raise HTTPException(status_code=400, detail="Failed to update owner")
+            
+            return {
+                "success": True,
+                "message": "Owner updated successfully"
+            }
+        except Exception as e:
+            print(f"Error updating owner: {str(e)}")
+            raise HTTPException(status_code=500, detail=str(e))
 
 def encode_image(image_path: str) -> str:
     """

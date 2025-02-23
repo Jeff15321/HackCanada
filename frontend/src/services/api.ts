@@ -173,6 +173,12 @@ export const newImage = async (
   modelAttributes?: Record<string, any>
 ) => {
   try {
+    // Store the image URL temporarily
+    if (modelImageFile) {
+      const tempImageUrl = URL.createObjectURL(modelImageFile);
+      localStorage.setItem(`temp_image_${userId}`, tempImageUrl);
+    }
+
     const formData = new FormData();
     formData.append('userId', userId);
     formData.append('imageUrl', imageUrl);
@@ -188,22 +194,30 @@ export const newImage = async (
       },
     });
 
-    // Clean and parse the API response
     const cleanJsonString = response.data.api2_data.analysis
-      .replace(/```json\n/, '')  // Remove opening markdown
-      .replace(/\n```$/, '')     // Remove closing markdown
-      .trim();                   // Remove extra whitespace
+      .replace(/```json\n/, '')
+      .replace(/\n```$/, '')
+      .trim();
 
     const analysisData = JSON.parse(cleanJsonString);
 
+    const getImageUrl = (path: string) => {
+      if (path.startsWith('http')) return path;
+      return `${API_BASE_URL}${path}`;
+    };
+
+    // Use temporary URL if available, otherwise use server URL
+    const tempUrl = localStorage.getItem(`temp_image_${userId}`);
+    const serverUrl = getImageUrl(response.data.gpt_analysis.glbFileUrl);
+
     const model: Model = {
-      glbFileUrl: imageUrl,
+      glbFileUrl: serverUrl,
       parameters: analysisData.parameters,
       name: modelName || 'Default Name',
       walletID: userId,
       price: analysisData.price || 0,
       id: userId,
-      imageUrl: imageUrl,
+      imageUrl: tempUrl || serverUrl,  // Use temp URL first
       special: analysisData.special || []
     };
 
@@ -214,76 +228,27 @@ export const newImage = async (
   }
 };
 
-export const fetchAllModels = async (currentModel?: any) => {
-    const randomImages = [
-       
-        'https://picsum.photos/800/800',
-        'https://picsum.photos/800',
-    ];
+const getImageUrl = (path: string) => {
+  if (path.startsWith('http')) return path;
+  return `${API_BASE_URL}${path}`;
+};
 
-    const getRandomImage = () => {
-        const randomIndex = Math.floor(Math.random() * randomImages.length);
-        return `${randomImages[randomIndex]}?${Math.random()}`; // Add random query to prevent caching
-    };
-
-    const generateSimilarAttributes = (baseValue: number) => {
-        // Generate a value within ±15 of the base value
-        return Math.min(100, Math.max(0, baseValue + (Math.random() * 30 - 15)));
-    };
-
-    const generateModel = (id: number, currentModel?: Model): Model => {
-        const imageUrl = `https://picsum.photos/800/800?random=${id}`;
-        
-        // Generate 1-3 random special traits
-        const specialTraits = Array.from({ length: Math.floor(Math.random() * 3) + 1 }, () => ({
-            attribute: ["Rare Pattern", "Unique Color", "Golden Ratio", "Perfect Symmetry", "Vibrant Aura"][Math.floor(Math.random() * 5)],
-            rarity: Math.floor(Math.random() * 5) + 1
-        }));
-
-        return {
-            glbFileUrl: imageUrl,
-            parameters: {
-                colorVibrancy: { score: Math.random() * 100, explanation: "Color analysis" },
-                leafAreaIndex: { score: Math.random() * 100, explanation: "Leaf analysis" },
-                wilting: { score: Math.random() * 100, explanation: "Wilting analysis" },
-                spotting: { score: Math.random() * 100, explanation: "Spotting analysis" },
-                symmetry: { score: Math.random() * 100, explanation: "Symmetry analysis" }
-            },
-            name: `Flower ${id}`,
-            walletID: `wallet_${id}`,
-            price: Math.floor(Math.random() * 1000),
-            id: id.toString(),
-            imageUrl: imageUrl,
-            special: specialTraits,
-            description: JSON.stringify({
-                colorVibrancy: { analysis: "Detailed color analysis" },
-                leafAreaIndex: { analysis: "Detailed leaf analysis" },
-                wilting: { analysis: "Detailed wilting analysis" },
-                spotting: { analysis: "Detailed spotting analysis" },
-                symmetry: { analysis: "Detailed symmetry analysis" }
-            })
-        };
-    };
-
-    return [
-        generateModel(1, currentModel),
-        generateModel(2, currentModel),
-        generateModel(3, currentModel),
-        generateModel(4, currentModel),
-        generateModel(5, currentModel),
-        generateModel(6, currentModel),
-        generateModel(7, currentModel),
-        generateModel(8, currentModel),
-        generateModel(9, currentModel),
-        generateModel(10, currentModel),
-        generateModel(11, currentModel),
-        generateModel(12, currentModel),
-        generateModel(13, currentModel),
-        generateModel(14, currentModel),
-        generateModel(15, currentModel),
-        generateModel(16, currentModel),
-        
-    ];
+export const fetchAllModels = async (): Promise<Model[]> => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/v1/model/all/`);
+    return response.data.map((model: any) => {
+      // Check for temporary image URL
+      const tempUrl = localStorage.getItem(`temp_image_${model.walletID}`);
+      return {
+        ...model,
+        glbFileUrl: getImageUrl(model.glbFileUrl),
+        imageUrl: tempUrl || getImageUrl(model.glbFileUrl)
+      };
+    });
+  } catch (error) {
+    console.error('Error fetching models:', error);
+    throw error;
+  }
 };
 
 export const getModelById = async (id: string): Promise<Model> => {

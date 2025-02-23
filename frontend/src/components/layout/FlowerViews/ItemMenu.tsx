@@ -70,7 +70,7 @@ const ItemMenu: React.FC<ItemMenuProps> = ({ models }) => {
               <div>
                 <p className="text-xs text-gray-400">Price</p>
                 <p className="text-base font-bold text-white">
-                  {Math.floor(1000 + Math.random() * 9000)} ETH
+                  {Number((model.price / 10000).toFixed(3))} ETH
                 </p>
               </div>
             </div>
